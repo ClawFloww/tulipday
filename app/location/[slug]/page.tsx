@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft, MapPin, Clock, ParkingCircle, Footprints,
   Users, Camera, Star, Navigation, Heart, Loader2,
@@ -137,10 +138,11 @@ export default function LocationDetailPage() {
     <div className="min-h-screen bg-white pb-32">
 
       <div className="relative h-72 sm:h-96 overflow-hidden bg-gray-200">
-        <img
+        <Image
           src={imgError ? fallback : (location.image_url ?? fallback)}
           alt={location.title}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           onError={() => setImgError(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />

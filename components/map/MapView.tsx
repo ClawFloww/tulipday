@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/lib/supabase";
 import { Location, Category } from "@/lib/types";
@@ -129,11 +130,12 @@ function PreviewCard({
 
       <div className="flex gap-3 px-4 pb-4">
         {/* Image */}
-        <div className="flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
-          <img
+        <div className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
+          <Image
             src={location.image_url ?? fallback}
             alt={location.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
 
@@ -236,7 +238,7 @@ export default function MapView() {
     const g = googleRef.current;
 
     // Remove all existing markers
-    Object.values(markersRef.current).forEach((m: any) => m.setMap(null));
+    Object.values(markersRef.current).forEach((m: google.maps.Marker) => m.setMap(null));
     markersRef.current = {};
 
     locations.forEach((loc) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft, Clock, Bike, Car, Footprints, Camera, Users,
   MapPin, Heart, Navigation, Loader2, ChevronRight,
@@ -59,8 +60,8 @@ function StopCard({ location, index, isLast, onClick }: {
         onClick={onClick}
         className="flex-1 flex gap-3 mb-4 p-3 bg-white rounded-2xl shadow-card hover:shadow-card-hover active:scale-[0.98] transition-all text-left"
       >
-        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-          <img src={location.image_url ?? fallback} alt={location.title} className="w-full h-full object-cover" />
+        <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+          <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-extrabold text-[#1A1A1A] leading-tight mb-1 line-clamp-1">{location.title}</h4>
@@ -172,10 +173,11 @@ export default function RouteDetailPage() {
     <div className="min-h-screen bg-warm pb-32">
 
       <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-200">
-        <img
+        <Image
           src={imgError ? fallback : (route.cover_image_url ?? fallback)}
           alt={route.title ?? "Route"}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           onError={() => setImgError(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-black/20" />

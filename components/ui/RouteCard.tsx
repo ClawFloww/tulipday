@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Route } from "@/lib/types";
 import { Clock, Bike, Car, Footprints, Camera, Users } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
@@ -36,7 +37,7 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
       className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-white shadow-card border border-gray-100 text-left hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
     >
       <div className="relative h-[200px] overflow-hidden">
-        <img src={route.cover_image_url ?? fallback} alt={route.title ?? "Route"} className="w-full h-full object-cover" />
+        <Image src={route.cover_image_url ?? fallback} alt={route.title ?? "Route"} fill className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         {type && (
           <div className="absolute bottom-2 left-2">

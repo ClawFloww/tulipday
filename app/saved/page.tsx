@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Heart, Trash2, MapPin, Clock, ChevronRight,
   Bike, Car, Footprints, Camera, Users, Loader2,
@@ -53,9 +54,8 @@ function LocationRow({ location, savedId, onDelete, onNavigate }: {
   return (
     <div className={`flex items-center gap-3 bg-white rounded-2xl shadow-card p-3 transition-all duration-280
                      ${leaving ? "opacity-0 scale-95 -translate-x-4" : "opacity-100"}`}>
-      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 cursor-pointer" onClick={onNavigate}>
-        <img src={location.image_url ?? fallback} alt={location.title} className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = fallback; }} />
+      <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 cursor-pointer" onClick={onNavigate}>
+        <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
       </div>
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
         <h3 className="text-sm font-extrabold text-[#1A1A1A] leading-tight line-clamp-1">{location.title}</h3>
@@ -99,9 +99,8 @@ function RouteRow({ route, savedId, onDelete, onNavigate }: {
   return (
     <div className={`flex items-center gap-3 bg-white rounded-2xl shadow-card p-3 transition-all duration-280
                      ${leaving ? "opacity-0 scale-95 -translate-x-4" : "opacity-100"}`}>
-      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 cursor-pointer" onClick={onNavigate}>
-        <img src={route.cover_image_url ?? fallback} alt={route.title ?? "Route"} className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = fallback; }} />
+      <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 cursor-pointer" onClick={onNavigate}>
+        <Image src={route.cover_image_url ?? fallback} alt={route.title ?? "Route"} fill className="object-cover" />
       </div>
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
         <h3 className="text-sm font-extrabold text-[#1A1A1A] leading-tight line-clamp-1">{route.title}</h3>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Car, Bike, Footprints, Camera, Users, Clock, ArrowLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
@@ -70,10 +71,11 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
       className="w-full rounded-2xl overflow-hidden bg-white shadow-card hover:shadow-card-hover active:scale-[0.99] transition-all duration-200 text-left"
     >
       <div className="relative h-52 overflow-hidden">
-        <img
+        <Image
           src={imgError ? fallback : (route.cover_image_url ?? fallback)}
           alt={route.title ?? "Route"}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           onError={() => setImgError(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />

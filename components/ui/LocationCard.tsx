@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Location } from "@/lib/types";
 import { BloomBadge } from "./BloomBadge";
 import { MapPin, Star } from "lucide-react";
@@ -15,7 +16,7 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
       className="flex-shrink-0 w-48 rounded-2xl overflow-hidden bg-white shadow-card border border-gray-100 text-left hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
     >
       <div className="relative h-[200px] overflow-hidden">
-        <img src={location.image_url ?? fallback} alt={location.title} className="w-full h-full object-cover" />
+        <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
         {location.bloom_status && (
           <div className="absolute bottom-2 left-2">
