@@ -1,0 +1,256 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Search, MapPin, Loader2, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { Location, Route, OnboardingPrefs, Category } from "@/lib/types";
+import { LocationCard } from "@/components/ui/LocationCard";
+import { RouteCard } from "@/components/ui/RouteCard";
+import { BottomNav } from "@/components/ui/BottomNav";
+import { useT } from "@/lib/i18n-context";
+
+const INTENT_TO_CATEGORY: Record<string, Category> = {
+  blooming_fields: "flower_field",
+  photo_spots:     "photo_spot",
+  quiet_route:     "flower_field",
+  family_trip:     "attraction",
+  flowers_lunch:   "food",
+  flowers_beach:   "flower_field",
+};
+
+function getRecommended(all: Location[], prefs: OnboardingPrefs | null): Location[] {
+  if (!prefs) return all.slice(0, 6);
+  const targetCategory = INTENT_TO_CATEGORY[prefs.intent];
+  const matches = targetCategory ? all.filter((l) => l.category === targetCategory) : all;
+  if (prefs.transport === "walking" || prefs.transport === "bike") {
+    const accessible = matches.filter((l) => l.access_type === "public_access");
+    if (accessible.length > 0) return accessible.slice(0, 6);
+  }
+  return matches.slice(0, 6);
+}
+
+function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function Section({ title, children, onSeeAll }: { title: string; children: React.ReactNode; onSeeAll?: () => void }) {
+  const { t } = useT();
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between px-5 mb-3">
+        <h2 className="text-base font-extrabold text-[#1A1A1A]">{title}</h2>
+        {onSeeAll && (
+          <button onClick={onSeeAll} className="flex items-center gap-0.5 text-xs font-semibold text-tulip-500 hover:text-tulip-600 transition-colors">
+            {t("common.see_all")} <ChevronRight size={13} />
+          </button>
+        )}
+      </div>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2">{children}</div>
+    </div>
+  );
+}
+
+function SkeletonCard({ wide = false }: { wide?: boolean }) {
+  return (
+    <div className={`flex-shrink-0 ${wide ? "w-56" : "w-48"} rounded-2xl overflow-hidden bg-white shadow-card animate-pulse`}>
+      <div className="h-[200px] bg-gray-200" />
+      <div className="p-3 space-y-2">
+        <div className="h-2.5 bg-gray-200 rounded w-1/2" />
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-2.5 bg-gray-200 rounded w-2/3" />
+      </div>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  const router = useRouter();
+  const { t }  = useT();
+
+  const [prefs, setPrefs]               = useState<OnboardingPrefs | null>(null);
+  const [search, setSearch]             = useState("");
+  const [nearMeLoading, setNearMeLoading] = useState(false);
+  const [userCoords, setUserCoords]     = useState<{ lat: number; lon: number } | null>(null);
+  const [bestBlooms, setBestBlooms]     = useState<Location[]>([]);
+  const [recommended, setRecommended]   = useState<Location[]>([]);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [featuredRoutes, setFeaturedRoutes] = useState<Route[]>([]);
+  const [photoSpots, setPhotoSpots]     = useState<Location[]>([]);
+  const [loading, setLoading]           = useState(true);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("tulipday_onboarding");
+    if (raw) { try { setPrefs(JSON.parse(raw)); } catch {} }
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [{ data: blooms }, { data: allLocs }, { data: routes }, { data: photos }] =
+        await Promise.all([
+          supabase.from("locations").select("*").eq("bloom_status", "peak").eq("is_featured", true).eq("is_active", true),
+          supabase.from("locations").select("*").eq("is_active", true),
+          supabase.from("routes").select("*").eq("is_featured", true).eq("is_active", true),
+          supabase.from("locations").select("*").eq("category", "photo_spot").eq("is_active", true),
+        ]);
+      setBestBlooms(blooms ?? []);
+      setAllLocations(allLocs ?? []);
+      setFeaturedRoutes(routes ?? []);
+      setPhotoSpots(photos ?? []);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (allLocations.length > 0) setRecommended(getRecommended(allLocations, prefs));
+  }, [allLocations, prefs]);
+
+  const handleNearMe = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setNearMeLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        setUserCoords(coords);
+        setNearMeLoading(false);
+        setRecommended(
+          [...allLocations]
+            .filter((l) => l.latitude != null && l.longitude != null)
+            .sort((a, b) =>
+              distanceKm(coords.lat, coords.lon, a.latitude!, a.longitude!) -
+              distanceKm(coords.lat, coords.lon, b.latitude!, b.longitude!)
+            )
+            .slice(0, 6)
+        );
+      },
+      () => setNearMeLoading(false)
+    );
+  }, [allLocations]);
+
+  const searchResults = search.trim()
+    ? allLocations.filter(
+        (l) =>
+          l.title.toLowerCase().includes(search.toLowerCase()) ||
+          l.address?.toLowerCase().includes(search.toLowerCase())
+      )
+    : null;
+
+  const hour = new Date().getHours();
+  const greetingKey = hour < 12 ? "greeting_morning" : hour < 18 ? "greeting_afternoon" : "greeting_evening";
+
+  return (
+    <div className="min-h-screen bg-warm pb-24">
+
+      {/* Header */}
+      <div className="bg-white px-5 pt-12 pb-5 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <p className="text-xs text-gray-400 font-medium">{t(`home.${greetingKey}`)} 👋</p>
+            <h1 className="text-xl font-extrabold text-[#1A1A1A] leading-tight">🌷 TulipDay</h1>
+          </div>
+          {userCoords && (
+            <span className="text-[10px] text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full font-bold">
+              {t("home.near_me_active")}
+            </span>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("home.search_placeholder")}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 text-sm text-[#1A1A1A] placeholder-gray-400 outline-none focus:ring-2 focus:ring-tulip-300 transition"
+            />
+          </div>
+          <button
+            onClick={handleNearMe}
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-tulip-500 text-white text-sm font-bold shadow-sm hover:bg-tulip-600 active:scale-95 transition-all"
+          >
+            {nearMeLoading ? <Loader2 size={15} className="animate-spin" /> : <MapPin size={15} />}
+            <span className="hidden sm:inline">{t("home.near_me")}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Search results */}
+      {searchResults && (
+        <div className="px-5 pt-6">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+            {t(searchResults.length === 1 ? "home.search_count" : "home.search_count_plural", {
+              count: searchResults.length,
+              query: search,
+            })}
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            {searchResults.length === 0 ? (
+              <p className="text-sm text-gray-400">{t("home.no_locations_found")}</p>
+            ) : (
+              searchResults.map((loc) => (
+                <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sections */}
+      {!searchResults && (
+        <div className="pt-7">
+          <Section title={t("home.best_blooms")} onSeeAll={() => {}}>
+            {loading
+              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              : bestBlooms.length === 0
+              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_peak_blooms")}</p>
+              : bestBlooms.map((loc) => (
+                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                ))}
+          </Section>
+
+          <Section title={t(prefs ? "home.recommended" : "home.explore")} onSeeAll={() => {}}>
+            {loading
+              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              : recommended.length === 0
+              ? <p className="text-sm text-gray-400 pl-1">{t("home.nothing_found")}</p>
+              : recommended.map((loc) => (
+                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                ))}
+          </Section>
+
+          <Section title={t("home.popular_routes")} onSeeAll={() => router.push("/routes")}>
+            {loading
+              ? Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} wide />)
+              : featuredRoutes.length === 0
+              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_routes")}</p>
+              : featuredRoutes.map((route) => (
+                  <RouteCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
+                ))}
+          </Section>
+
+          <Section title={t("home.photo_spots_section")} onSeeAll={() => {}}>
+            {loading
+              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              : photoSpots.length === 0
+              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_photo_spots")}</p>
+              : photoSpots.map((loc) => (
+                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                ))}
+          </Section>
+        </div>
+      )}
+
+      <BottomNav active="home" />
+    </div>
+  );
+}

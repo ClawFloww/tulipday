@@ -1,0 +1,54 @@
+"use client";
+
+import { Location } from "@/lib/types";
+import { BloomBadge } from "./BloomBadge";
+import { MapPin, Star } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
+
+export function LocationCard({ location, onClick }: { location: Location; onClick?: () => void }) {
+  const { t } = useT();
+  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=600";
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex-shrink-0 w-48 rounded-2xl overflow-hidden bg-white shadow-card border border-gray-100 text-left hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+    >
+      <div className="relative h-[200px] overflow-hidden">
+        <img src={location.image_url ?? fallback} alt={location.title} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        {location.bloom_status && (
+          <div className="absolute bottom-2 left-2">
+            <BloomBadge status={location.bloom_status} />
+          </div>
+        )}
+      </div>
+
+      <div className="px-3 pt-2.5 pb-3 space-y-1">
+        <p className="text-[11px] font-semibold text-tulip-500 uppercase tracking-wide">
+          {t(`category.${location.category}`)}
+        </p>
+        <h3 className="text-sm font-bold text-[#1A1A1A] leading-tight line-clamp-2">{location.title}</h3>
+
+        {location.address && (
+          <p className="flex items-center gap-1 text-[11px] text-gray-400">
+            <MapPin size={10} className="flex-shrink-0" />
+            <span className="truncate">{location.address}</span>
+          </p>
+        )}
+
+        {location.photo_score != null && (
+          <div className="flex items-center gap-0.5 pt-0.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                size={10}
+                className={i < location.photo_score! ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
