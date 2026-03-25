@@ -186,7 +186,8 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
       category:     data.category   || null,
       access_type:  data.access_type || null,
     };
-    const { id, created_at: _ca, updated_at: _ua, ...fields } = clean;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, created_at, updated_at, ...fields } = clean;
     const res = id
       ? await adminUpdateLocation(id, fields)
       : await adminCreateLocation(fields);
@@ -489,7 +490,8 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
       distance_km:      data.distance_km      !== "" ? parseFloat(data.distance_km)    : null,
       route_type: data.route_type || null,
     };
-    const { id, created_at: _ca2, ...fields } = clean;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, created_at, ...fields } = clean;
     let res;
     if (id) {
       res = await adminUpdateRoute(id, fields);
