@@ -3,11 +3,17 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import en from "@/messages/en.json";
 import nl from "@/messages/nl.json";
+import de from "@/messages/de.json";
+import fr from "@/messages/fr.json";
+import zh from "@/messages/zh.json";
+import es from "@/messages/es.json";
 
-export type Locale = "en" | "nl";
+export type Locale = "en" | "nl" | "de" | "fr" | "zh" | "es";
+
+const VALID_LOCALES: Locale[] = ["en", "nl", "de", "fr", "zh", "es"];
 
 type Messages = typeof en;
-const MESSAGES: Record<Locale, Messages> = { en, nl };
+const MESSAGES: Record<Locale, Messages> = { en, nl, de: de as Messages, fr: fr as Messages, zh: zh as Messages, es: es as Messages };
 
 function resolve(obj: unknown, path: string): string {
   const parts = path.split(".");
@@ -47,11 +53,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("tulipday_locale") as Locale | null;
-    if (stored === "en" || stored === "nl") setLocaleState(stored);
+    if (stored && VALID_LOCALES.includes(stored)) setLocaleState(stored);
 
-    // Keep locale in sync when other tabs / components change it
     function onStorage(e: StorageEvent) {
-      if (e.key === "tulipday_locale" && (e.newValue === "en" || e.newValue === "nl")) {
+      if (e.key === "tulipday_locale" && e.newValue && VALID_LOCALES.includes(e.newValue as Locale)) {
         setLocaleState(e.newValue as Locale);
       }
     }

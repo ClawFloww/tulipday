@@ -2,25 +2,15 @@ import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 
 const handleI18nRouting = createMiddleware({
-  locales: ["en", "nl"],
+  locales: ["en", "nl", "de", "fr", "zh", "es"],
   defaultLocale: "nl",
 });
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip locale routing for splash and onboarding
-  if (
-    pathname === "/" ||
-    pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/home") ||
-    pathname.startsWith("/map") ||
-    pathname.startsWith("/location") ||
-    pathname.startsWith("/routes") ||
-    pathname.startsWith("/saved") ||
-    pathname.startsWith("/settings") ||
-    pathname.startsWith("/admin")
-  ) {
+  // Skip locale routing for splash screen and admin
+  if (pathname === "/" || pathname.startsWith("/admin")) {
     return NextResponse.next();
   }
 

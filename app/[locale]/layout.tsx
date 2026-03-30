@@ -1,17 +1,12 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+export function generateStaticParams() {
+  return ["en", "nl", "de", "fr", "zh", "es"].map((locale) => ({ locale }));
+}
 
-export default async function LocaleLayout({
+export default function LocaleLayout({
   children,
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  const messages = await getMessages();
-
-  return (
-    <NextIntlClientProvider messages={messages}>
-      {children}
-    </NextIntlClientProvider>
-  );
+  return <>{children}</>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   Flower2, Camera, Navigation, Users, UtensilsCrossed, Waves,
   Car, Bike, Footprints, Clock, CloudSun, Sun, ChevronLeft,
@@ -36,6 +36,8 @@ const STEP_KEYS: { key: StepKey; options: OptionId[] }[] = [
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const { t }  = useT();
 
   const [step, setStep]         = useState(0);
@@ -57,7 +59,7 @@ export default function OnboardingPage() {
         setAnimating(false);
       } else {
         localStorage.setItem("tulipday_onboarding", JSON.stringify(updated));
-        router.push("/home");
+        router.push(`/${locale}/home`);
       }
     }, 320);
   }
@@ -107,7 +109,9 @@ export default function OnboardingPage() {
         <div className={isGrid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
           {current.options.map((optionId) => {
             const isActive = selected[current.key] === optionId;
-            const hasSub   = !!t(`onboarding.${current.key}.${optionId}_sub`).startsWith("onboarding") === false;
+            const subKey = `onboarding.${current.key}.${optionId}_sub`;
+            const subVal = t(subKey);
+            const hasSub = subVal !== subKey;
 
             return (
               <button
@@ -133,9 +137,7 @@ export default function OnboardingPage() {
                     {t(`onboarding.${current.key}.${optionId}`)}
                   </p>
                   {hasSub && !isGrid && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">
-                      {t(`onboarding.${current.key}.${optionId}_sub`)}
-                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{subVal}</p>
                   )}
                 </div>
 

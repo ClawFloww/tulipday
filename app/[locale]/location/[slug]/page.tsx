@@ -117,7 +117,6 @@ export default function LocationDetailPage() {
   const catStyle = CATEGORY_STYLE[location.category];
   const crowdIdx = Math.min((location.crowd_score ?? 1) - 1, 4);
 
-  // Access type labels
   const accessMap: Record<AccessType, { label: string; desc: string }> = {
     roadside_only:     { label: t("access.roadside"), desc: t("access.roadside_desc") },
     public_access:     { label: t("access.public"),   desc: t("access.public_desc")   },
