@@ -9,6 +9,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
+import { isPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
 
 const INTENT_TO_CATEGORY: Record<string, Category> = {
   blooming_fields: "flower_field",
@@ -84,6 +85,9 @@ export default function HomePage() {
   const [featuredRoutes, setFeaturedRoutes] = useState<Route[]>([]);
   const [photoSpots, setPhotoSpots]     = useState<Location[]>([]);
   const [loading, setLoading]           = useState(true);
+  const [premium, setPremium]           = useState(true);
+
+  useEffect(() => { setPremium(isPremium()); }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem("tulipday_onboarding");
@@ -213,7 +217,7 @@ export default function HomePage() {
               ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
               : bestBlooms.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_peak_blooms")}</p>
-              : bestBlooms.map((loc) => (
+              : (premium ? bestBlooms : bestBlooms.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
@@ -223,7 +227,7 @@ export default function HomePage() {
               ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
               : recommended.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.nothing_found")}</p>
-              : recommended.map((loc) => (
+              : (premium ? recommended : recommended.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
@@ -243,10 +247,22 @@ export default function HomePage() {
               ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
               : photoSpots.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_photo_spots")}</p>
-              : photoSpots.map((loc) => (
+              : (premium ? photoSpots : photoSpots.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
+
+          {!premium && !loading && (
+            <div className="mx-4 mb-6 px-5 py-4 rounded-2xl bg-tulip-50 flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-tulip-700 flex-1">🌷 Unlock all locations, routes &amp; bloom alerts</p>
+              <a
+                href="/premium"
+                className="flex-shrink-0 px-4 py-2 rounded-xl bg-tulip-500 text-white text-xs font-bold hover:bg-tulip-600 active:scale-95 transition-all"
+              >
+                Go Premium
+              </a>
+            </div>
+          )}
         </div>
       )}
 

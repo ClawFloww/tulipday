@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
+import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
+import { PremiumGate } from "@/components/ui/PremiumGate";
 
 type FilterId = RouteType | "all";
 
@@ -144,6 +146,9 @@ export default function RoutesPage() {
   const [routes, setRoutes]       = useState<Route[]>([]);
   const [loading, setLoading]     = useState(true);
   const [activeFilter, setFilter] = useState<FilterId>("all");
+  const [premium, setPremium]     = useState(true);
+
+  useEffect(() => { setPremium(isPremium()); }, []);
 
   useEffect(() => {
     supabase.from("routes").select("*").eq("is_active", true)
@@ -211,9 +216,20 @@ export default function RoutesPage() {
             </button>
           </div>
         ) : (
-          filtered.map((route) => (
-            <RouteListCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
-          ))
+          <>
+            {filtered.slice(0, FREE_ROUTE_LIMIT).map((route) => (
+              <RouteListCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
+            ))}
+            {filtered.length > FREE_ROUTE_LIMIT && (
+              <PremiumGate>
+                <div className="space-y-4">
+                  {filtered.slice(FREE_ROUTE_LIMIT).map((route) => (
+                    <RouteListCard key={route.id} route={route} onClick={premium ? () => router.push(`/routes/${route.slug}`) : () => {}} />
+                  ))}
+                </div>
+              </PremiumGate>
+            )}
+          </>
         )}
       </div>
 

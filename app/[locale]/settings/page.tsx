@@ -3,8 +3,9 @@
 import { useState } from "react";
 import {
   Globe, Info, Mail, ShieldCheck, Flower2,
-  ChevronDown, ChevronUp, ExternalLink, Check,
+  ChevronDown, ChevronUp, ExternalLink, Check, Crown,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { useT, type Locale } from "@/lib/i18n-context";
 
@@ -82,6 +83,7 @@ function SectionLabel({ label }: { label: string }) {
 
 export default function SettingsPage() {
   const { t } = useT();
+  const router = useRouter();
 
   const etiquetteRows = [
     { emoji: "🌷", key: "etiquette_r1" },
@@ -112,6 +114,15 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pt-5 space-y-2">
+
+        <SectionLabel label="Premium" />
+        <SettingsRow
+          icon={<Crown size={18} />}
+          label="TulipDay Premium"
+          accent="text-tulip-500"
+          right={<span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">Upgrade →</span>}
+          onClick={() => router.push("/premium")}
+        />
 
         <SectionLabel label={t("settings.section_preferences")} />
         <LanguageSetting />

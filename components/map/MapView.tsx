@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import { Location, Category } from "@/lib/types";
 import { BloomBadge } from "@/components/ui/BloomBadge";
@@ -13,7 +14,8 @@ import { useT } from "@/lib/i18n-context";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const NL_CENTER = { lat: 52.3, lng: 4.9 };
+const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
+const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 const CATEGORY_COLOR: Record<Category, string> = {
   flower_field: "#f43f5e",
@@ -35,6 +37,16 @@ const FILTER_IDS: { id: FilterId; emoji: string }[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function createMarkerEl(color: string): HTMLElement {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    width: 30px; height: 40px; cursor: pointer;
+    background-image: url("${createPinSvg(color)}");
+    background-size: contain; background-repeat: no-repeat;
+  `;
+  return el;
+}
 
 function createPinSvg(color: string, size = 36): string {
   const s = size;
@@ -76,18 +88,6 @@ function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: numbe
   }
 }
 
-// ─── Map styles (clean minimal) ───────────────────────────────────────────────
-
-const MAP_STYLES = [
-  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e0e0e0" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8f5" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f8f8f3" }] },
-  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#d9d9d9" }] },
-];
-
 // ─── Preview card ─────────────────────────────────────────────────────────────
 
 function PreviewCard({
@@ -109,7 +109,7 @@ function PreviewCard({
   function onPointerUp(e: React.PointerEvent) {
     if (startY.current !== null) {
       const dy = e.clientY - startY.current;
-      if (dy < -50) onNavigate(); // swipe up
+      if (dy < -50) onNavigate();
       startY.current = null;
     }
   }
@@ -123,13 +123,11 @@ function PreviewCard({
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
     >
-      {/* Drag handle */}
       <div className="flex justify-center pt-2.5 pb-1">
         <div className="w-10 h-1 bg-gray-200 rounded-full" />
       </div>
 
       <div className="flex gap-3 px-4 pb-4">
-        {/* Image */}
         <div className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
           <Image
             src={location.image_url ?? fallback}
@@ -139,7 +137,6 @@ function PreviewCard({
           />
         </div>
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3 className="font-extrabold text-gray-900 text-base leading-tight line-clamp-2 flex-1">
@@ -186,17 +183,14 @@ export default function MapView() {
   const router = useRouter();
   const { t }  = useT();
   const mapDivRef  = useRef<HTMLDivElement>(null);
-  const mapRef     = useRef<google.maps.Map | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const googleRef  = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markersRef = useRef<Record<string, any>>({});
+  const mapRef     = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<Record<string, maplibregl.Marker>>({});
 
-  const [locations, setLocations]           = useState<Location[]>([]);
-  const [activeFilter, setActiveFilter]     = useState<FilterId | null>(null);
-  const [selected, setSelected]             = useState<Location | null>(null);
-  const [userCoords, setUserCoords]         = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating]             = useState(false);
+  const [locations, setLocations]       = useState<Location[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
+  const [selected, setSelected]         = useState<Location | null>(null);
+  const [userCoords, setUserCoords]     = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating]         = useState(false);
 
   // ── Fetch locations ──
   useEffect(() => {
@@ -211,57 +205,43 @@ export default function MapView() {
   useEffect(() => {
     if (!mapDivRef.current) return;
 
-    setOptions({
-      key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!,
-      v: "weekly",
+    const map = new maplibregl.Map({
+      container: mapDivRef.current,
+      style: MAP_STYLE,
+      center: BOLLENSTREEK_CENTER,
+      zoom: 11,
     });
 
-    importLibrary("maps").then(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const g = (window as any).google;
-      googleRef.current = g;
-      const map = new g.maps.Map(mapDivRef.current!, {
-        center: NL_CENTER,
-        zoom: 9,
-        disableDefaultUI: true,
-        zoomControl: false,
-        gestureHandling: "greedy",
-        styles: MAP_STYLES,
-      });
-      mapRef.current = map;
-    });
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, []);
 
   // ── Update markers when locations / filter / userCoords change ──
   useEffect(() => {
-    if (!mapRef.current || !googleRef.current || locations.length === 0) return;
-    const g = googleRef.current;
+    if (!mapRef.current || locations.length === 0) return;
 
     // Remove all existing markers
-    Object.values(markersRef.current).forEach((m: google.maps.Marker) => m.setMap(null));
+    Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
 
     locations.forEach((loc) => {
       if (loc.latitude == null || loc.longitude == null) return;
 
-      // Filter visibility
       const visible = !activeFilter || matchesFilter(loc, activeFilter, userCoords);
       if (!visible) return;
 
       const color = CATEGORY_COLOR[loc.category] ?? "#94a3b8";
-      const marker = new g.maps.Marker({
-        position: { lat: loc.latitude, lng: loc.longitude },
-        map: mapRef.current,
-        title: loc.title,
-        icon: {
-          url: createPinSvg(color),
-          scaledSize: new g.maps.Size(30, 40),
-          anchor: new g.maps.Point(15, 40),
-        },
-        optimized: false,
-      });
+      const el = createMarkerEl(color);
 
-      marker.addListener("click", () => setSelected(loc));
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([loc.longitude, loc.latitude])
+        .addTo(mapRef.current!);
+
+      el.addEventListener("click", () => setSelected(loc));
       markersRef.current[loc.id] = marker;
     });
   }, [locations, activeFilter, userCoords]);
@@ -279,19 +259,13 @@ export default function MapView() {
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserCoords(coords);
-          mapRef.current?.panTo(coords);
-          mapRef.current?.setZoom(12);
+          mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 12 });
           setLocating(false);
         },
         () => setLocating(false)
       );
     }
   }, [activeFilter]);
-
-  // ── Navigate to detail ──
-  function navigateToDetail(loc: Location) {
-    router.push(`/location/${loc.slug}`);
-  }
 
   const filters = FILTER_IDS.map((f) => ({ ...f, label: t(`map.filter_${f.id}`) }));
 
@@ -332,8 +306,7 @@ export default function MapView() {
       <button
         onClick={() => {
           if (!userCoords) return handleFilter("nearby");
-          mapRef.current?.panTo(userCoords);
-          mapRef.current?.setZoom(12);
+          mapRef.current?.flyTo({ center: [userCoords.lng, userCoords.lat], zoom: 12 });
         }}
         className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
                    shadow-lg flex items-center justify-center text-rose-600
@@ -349,7 +322,7 @@ export default function MapView() {
             key={sign}
             onClick={() => {
               if (!mapRef.current) return;
-              const z = mapRef.current.getZoom() ?? 9;
+              const z = mapRef.current.getZoom() ?? 11;
               mapRef.current.setZoom(sign === "+" ? z + 1 : z - 1);
             }}
             className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
@@ -366,7 +339,7 @@ export default function MapView() {
         <PreviewCard
           location={selected}
           onClose={() => setSelected(null)}
-          onNavigate={() => navigateToDetail(selected)}
+          onNavigate={() => router.push(`/location/${selected.slug}`)}
           t={t}
         />
       )}

@@ -106,8 +106,8 @@
     "nothing_found": "暂无发现。",
     "no_routes": "暂无路线。",
     "no_photo_spots": "暂无拍照地点。",
-    "search_count": ""{query}"有{count}个结果",
-    "search_count_plural": ""{query}"有{count}个结果",
+    "search_count": "\"{query}\"有{count}个结果",
+    "search_count_plural": "\"{query}\"有{count}个结果",
     "no_locations_found": "未找到地点。"
   },
   "map": {
