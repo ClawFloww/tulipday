@@ -3,19 +3,19 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import { Location, Category } from "@/lib/types";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, MapPin, Locate } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
-import { NL_CENTER as NL_CENTER_DEFAULT, NEARBY_DISTANCE_KM, EARTH_RADIUS_KM } from "@/lib/constants";
-import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const NL_CENTER = NL_CENTER_DEFAULT;
+const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
+const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 const CATEGORY_COLOR: Record<Category, string> = {
   flower_field: "#f43f5e",
@@ -38,6 +38,16 @@ const FILTER_IDS: { id: FilterId; emoji: string }[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function createMarkerEl(color: string): HTMLElement {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    width: 30px; height: 40px; cursor: pointer;
+    background-image: url("${createPinSvg(color)}");
+    background-size: contain; background-repeat: no-repeat;
+  `;
+  return el;
+}
+
 function createPinSvg(color: string, size = 36): string {
   const s = size;
   const cx = s / 2;
@@ -58,10 +68,10 @@ function createPinSvg(color: string, size = 36): string {
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371, toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: number; lng: number } | null): boolean {
@@ -73,116 +83,12 @@ function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: numbe
     case "free":   return loc.access_type === "roadside_only";
     case "nearby":
       if (!userCoords || loc.latitude == null || loc.longitude == null) return false;
-      return haversineKm(userCoords.lat, userCoords.lng, loc.latitude, loc.longitude) <= NEARBY_DISTANCE_KM;
+      return haversineKm(userCoords.lat, userCoords.lng, loc.latitude, loc.longitude) <= 20;
     default: return true;
   }
 }
 
-// ─── Map styles (clean minimal) ───────────────────────────────────────────────
-
-const MAP_STYLES = [
-  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e0e0e0" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8f5" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f8f8f3" }] },
-  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#d9d9d9" }] },
-];
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function FilterChips({
-  filters,
-  activeFilter,
-  locating,
-  onFilter,
-}: {
-  filters: { id: FilterId; emoji: string; label: string }[];
-  activeFilter: FilterId | null;
-  locating: boolean;
-  onFilter: (id: FilterId) => void;
-}) {
-  return (
-    <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4
-                    bg-gradient-to-b from-white/95 via-white/80 to-transparent">
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {filters.map((f) => {
-          const isActive = activeFilter === f.id;
-          return (
-            <button
-              key={f.id}
-              onClick={() => onFilter(f.id)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
-                border transition-all duration-200 active:scale-95
-                ${isActive
-                  ? "bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200"
-                  : "bg-white border-gray-200 text-gray-700 hover:border-rose-300"
-                }
-                ${f.id === "nearby" && locating ? "opacity-60" : ""}
-              `}
-            >
-              <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MapControls({
-  mapRef,
-  userCoords,
-  onLocate,
-}: {
-  mapRef: React.RefObject<google.maps.Map | null>;
-  userCoords: { lat: number; lng: number } | null;
-  onLocate: () => void;
-}) {
-  function handleLocate() {
-    if (userCoords) {
-      mapRef.current?.panTo(userCoords);
-      mapRef.current?.setZoom(12);
-    } else {
-      onLocate();
-    }
-  }
-
-  function handleZoom(delta: 1 | -1) {
-    if (!mapRef.current) return;
-    const z = mapRef.current.getZoom() ?? 9;
-    mapRef.current.setZoom(z + delta);
-  }
-
-  return (
-    <>
-      <button
-        onClick={handleLocate}
-        className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
-                   shadow-lg flex items-center justify-center text-rose-600
-                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100"
-      >
-        <Locate size={20} />
-      </button>
-
-      <div className="absolute right-4 bottom-60 z-20 flex flex-col gap-1">
-        {([1, -1] as const).map((delta) => (
-          <button
-            key={delta}
-            onClick={() => handleZoom(delta)}
-            className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
-                       text-gray-700 font-bold text-lg hover:bg-gray-50 active:scale-95
-                       transition-all border border-gray-100"
-          >
-            {delta === 1 ? "+" : "−"}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
+// ─── Preview card ─────────────────────────────────────────────────────────────
 
 function PreviewCard({
   location,
@@ -203,7 +109,7 @@ function PreviewCard({
   function onPointerUp(e: React.PointerEvent) {
     if (startY.current !== null) {
       const dy = e.clientY - startY.current;
-      if (dy < -50) onNavigate(); // swipe up
+      if (dy < -50) onNavigate();
       startY.current = null;
     }
   }
@@ -223,7 +129,12 @@ function PreviewCard({
 
       <div className="flex gap-3 px-4 pb-4">
         <div className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
-          <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
+          <Image
+            src={location.image_url ?? fallback}
+            alt={location.title}
+            fill
+            className="object-cover"
+          />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -272,9 +183,8 @@ export default function MapView() {
   const router = useRouter();
   const { t }  = useT();
   const mapDivRef  = useRef<HTMLDivElement>(null);
-  const mapRef     = useRef<google.maps.Map | null>(null);
-  const googleRef  = useRef<typeof google | null>(null);
-  const markersRef = useRef<Record<string, google.maps.Marker>>({});
+  const mapRef     = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<Record<string, maplibregl.Marker>>({});
 
   const [locations, setLocations]       = useState<Location[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
@@ -295,29 +205,27 @@ export default function MapView() {
   useEffect(() => {
     if (!mapDivRef.current) return;
 
-    setOptions({ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!, v: "weekly" });
-
-    importLibrary("maps").then(() => {
-      const g = (window as Window & typeof globalThis).google;
-      googleRef.current = g;
-      const map = new g.maps.Map(mapDivRef.current!, {
-        center: NL_CENTER,
-        zoom: 9,
-        disableDefaultUI: true,
-        zoomControl: false,
-        gestureHandling: "greedy",
-        styles: MAP_STYLES,
-      });
-      mapRef.current = map;
+    const map = new maplibregl.Map({
+      container: mapDivRef.current,
+      style: MAP_STYLE,
+      center: BOLLENSTREEK_CENTER,
+      zoom: 11,
     });
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, []);
 
   // ── Update markers when locations / filter / userCoords change ──
   useEffect(() => {
-    if (!mapRef.current || !googleRef.current || locations.length === 0) return;
-    const g: typeof google = googleRef.current;
+    if (!mapRef.current || locations.length === 0) return;
 
-    Object.values(markersRef.current).forEach((m: google.maps.Marker) => m.setMap(null));
+    // Remove all existing markers
+    Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
 
     locations.forEach((loc) => {
@@ -327,19 +235,13 @@ export default function MapView() {
       if (!visible) return;
 
       const color = CATEGORY_COLOR[loc.category] ?? "#94a3b8";
-      const marker = new g.maps.Marker({
-        position: { lat: loc.latitude, lng: loc.longitude },
-        map: mapRef.current,
-        title: loc.title,
-        icon: {
-          url: createPinSvg(color),
-          scaledSize: new g.maps.Size(30, 40),
-          anchor: new g.maps.Point(15, 40),
-        },
-        optimized: false,
-      });
+      const el = createMarkerEl(color);
 
-      marker.addListener("click", () => setSelected(loc));
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([loc.longitude, loc.latitude])
+        .addTo(mapRef.current!);
+
+      el.addEventListener("click", () => setSelected(loc));
       markersRef.current[loc.id] = marker;
     });
   }, [locations, activeFilter, userCoords]);
@@ -351,22 +253,13 @@ export default function MapView() {
     setSelected(null);
 
     if (next === "nearby") {
-      const cached = getCachedCoords();
-      if (cached) {
-        setUserCoords(cached);
-        mapRef.current?.panTo(cached);
-        mapRef.current?.setZoom(12);
-        return;
-      }
       if (!navigator.geolocation) return;
       setLocating(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setCachedCoords(coords.lat, coords.lng);
           setUserCoords(coords);
-          mapRef.current?.panTo(coords);
-          mapRef.current?.setZoom(12);
+          mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 12 });
           setLocating(false);
         },
         () => setLocating(false)
@@ -379,21 +272,69 @@ export default function MapView() {
   return (
     <div className="fixed inset-0 flex flex-col">
 
-      <FilterChips
-        filters={filters}
-        activeFilter={activeFilter}
-        locating={locating}
-        onFilter={handleFilter}
-      />
+      {/* ── Filter chips (floating) ── */}
+      <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4
+                      bg-gradient-to-b from-white/95 via-white/80 to-transparent">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {filters.map((f) => {
+            const isActive = activeFilter === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => handleFilter(f.id)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
+                  border transition-all duration-200 active:scale-95
+                  ${isActive
+                    ? "bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-rose-300"
+                  }
+                  ${f.id === "nearby" && locating ? "opacity-60" : ""}
+                `}
+              >
+                <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
+      {/* ── Map ── */}
       <div ref={mapDivRef} className="flex-1 w-full" />
 
-      <MapControls
-        mapRef={mapRef}
-        userCoords={userCoords}
-        onLocate={() => handleFilter("nearby")}
-      />
+      {/* ── My location button ── */}
+      <button
+        onClick={() => {
+          if (!userCoords) return handleFilter("nearby");
+          mapRef.current?.flyTo({ center: [userCoords.lng, userCoords.lat], zoom: 12 });
+        }}
+        className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
+                   shadow-lg flex items-center justify-center text-rose-600
+                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100"
+      >
+        <Locate size={20} />
+      </button>
 
+      {/* ── Zoom buttons ── */}
+      <div className="absolute right-4 bottom-60 z-20 flex flex-col gap-1">
+        {["+", "−"].map((sign) => (
+          <button
+            key={sign}
+            onClick={() => {
+              if (!mapRef.current) return;
+              const z = mapRef.current.getZoom() ?? 11;
+              mapRef.current.setZoom(sign === "+" ? z + 1 : z - 1);
+            }}
+            className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
+                       text-gray-700 font-bold text-lg hover:bg-gray-50 active:scale-95
+                       transition-all border border-gray-100"
+          >
+            {sign}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Preview card ── */}
       {selected && (
         <PreviewCard
           location={selected}
@@ -403,8 +344,10 @@ export default function MapView() {
         />
       )}
 
+      {/* ── Bottom nav ── */}
       <BottomNav active="map" />
 
+      {/* ── Slide-up animation ── */}
       <style jsx global>{`
         @keyframes slide-up {
           from { transform: translateY(120%); opacity: 0; }

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Car, Bike, Footprints, Camera, Users, Clock, ArrowLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
+import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
+import { PremiumGate } from "@/components/ui/PremiumGate";
 
 type FilterId = RouteType | "all";
 
@@ -39,6 +42,23 @@ function formatDuration(min: number): string {
   const h = Math.floor(min / 60), m = min % 60;
   if (h === 0) return `${m} min`;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+function SkeletonRouteCard() {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-white shadow-card animate-pulse">
+      <div className="h-52 bg-gray-200" />
+      <div className="p-4 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-2/3" />
+        <div className="h-4 bg-gray-200 rounded w-full" />
+        <div className="h-4 bg-gray-200 rounded w-4/5" />
+        <div className="flex gap-3 pt-1">
+          <div className="h-4 bg-gray-200 rounded w-16" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }) {
@@ -119,11 +139,22 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
   );
 }
 
-export function RoutesClient({ routes }: { routes: Route[] }) {
+export default function RoutesPage() {
   const router = useRouter();
   const { t }  = useT();
 
+  const [routes, setRoutes]       = useState<Route[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [activeFilter, setFilter] = useState<FilterId>("all");
+  const [premium, setPremium]     = useState(true);
+
+  useEffect(() => { setPremium(isPremium()); }, []);
+
+  useEffect(() => {
+    supabase.from("routes").select("*").eq("is_active", true)
+      .order("is_featured", { ascending: false })
+      .then(({ data }) => { setRoutes(data ?? []); setLoading(false); });
+  }, []);
 
   const filtered = activeFilter === "all" ? routes : routes.filter((r) => r.route_type === activeFilter);
 
@@ -141,7 +172,7 @@ export function RoutesClient({ routes }: { routes: Route[] }) {
           <div>
             <h1 className="text-xl font-extrabold text-[#1A1A1A] leading-tight">{t("routes.title")}</h1>
             <p className="text-xs text-gray-400">
-              {t(routes.length === 1 ? "routes.count_one" : "routes.count", { count: routes.length })}
+              {loading ? t("common.loading") : t(routes.length === 1 ? "routes.count_one" : "routes.count", { count: routes.length })}
             </p>
           </div>
         </div>
@@ -160,7 +191,7 @@ export function RoutesClient({ routes }: { routes: Route[] }) {
               >
                 <span>{f.emoji}</span>
                 {t(f.labelKey)}
-                {count > 0 && (
+                {!loading && count > 0 && (
                   <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none
                                    ${isActive ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"}`}>
                     {count}
@@ -173,7 +204,9 @@ export function RoutesClient({ routes }: { routes: Route[] }) {
       </div>
 
       <div className="px-4 pt-5 space-y-4">
-        {filtered.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => <SkeletonRouteCard key={i} />)
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-5xl mb-4">🌷</span>
             <p className="text-gray-500 font-bold">{t("routes.no_routes_title")}</p>
@@ -183,9 +216,20 @@ export function RoutesClient({ routes }: { routes: Route[] }) {
             </button>
           </div>
         ) : (
-          filtered.map((route) => (
-            <RouteListCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
-          ))
+          <>
+            {filtered.slice(0, FREE_ROUTE_LIMIT).map((route) => (
+              <RouteListCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
+            ))}
+            {filtered.length > FREE_ROUTE_LIMIT && (
+              <PremiumGate>
+                <div className="space-y-4">
+                  {filtered.slice(FREE_ROUTE_LIMIT).map((route) => (
+                    <RouteListCard key={route.id} route={route} onClick={premium ? () => router.push(`/routes/${route.slug}`) : () => {}} />
+                  ))}
+                </div>
+              </PremiumGate>
+            )}
+          </>
         )}
       </div>
 

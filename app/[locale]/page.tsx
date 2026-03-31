@@ -1,12 +1,16 @@
-import { useTranslations } from "next-intl";
+"use client";
 
-export default function HomePage() {
-  const t = useTranslations("home");
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold text-center">{t("title")}</h1>
-      <p className="mt-4 text-lg text-center text-gray-600">{t("description")}</p>
-    </main>
-  );
+export default function LocalePage() {
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
+
+  useEffect(() => {
+    router.replace(`/${locale}/home`);
+  }, [locale, router]);
+
+  return null;
 }

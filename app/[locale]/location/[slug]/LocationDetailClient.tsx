@@ -1,27 +1,18 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import {
-  ArrowLeft, MapPin, Clock, ParkingCircle, Footprints,
-  Users, Camera, Star, Navigation, Heart, Loader2,
-  Flower2, ShieldCheck, ChevronRight,
-} from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { getOrCreateSessionId } from "@/lib/session";
-import { BloomBadge } from "@/components/ui/BloomBadge";
-import { Location, AccessType, Category } from "@/lib/types";
-import { useT } from "@/lib/i18n-context";
+import { Location } from "@/lib/types";
+import { LocationDetailClient } from "./LocationDetailClient";
 
-const CATEGORY_STYLE: Record<Category, { color: string; bg: string }> = {
-  flower_field: { color: "text-tulip-700",  bg: "bg-tulip-100"  },
-  photo_spot:   { color: "text-blue-700",   bg: "bg-blue-100"   },
-  attraction:   { color: "text-forest-700", bg: "bg-forest-100" },
-  food:         { color: "text-orange-700", bg: "bg-orange-100" },
-  parking:      { color: "text-gray-600",   bg: "bg-gray-100"   },
-};
+export default async function LocationDetailPage({ params }: { params: { slug: string } }) {
+  const { data } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("slug", params.slug)
+    .eq("is_active", true)
+    .single();
 
+<<<<<<<< HEAD:app/location/[slug]/page.tsx
+  return <LocationDetailClient location={(data ?? null) as Location | null} />;
+========
 const CROWD_KEYS = ["crowd_very_quiet", "crowd_quiet", "crowd_moderate", "crowd_busy", "crowd_very_busy"];
 const CROWD_COLORS = ["bg-forest-500", "bg-forest-400", "bg-yellow-400", "bg-orange-400", "bg-tulip-500"];
 
@@ -38,38 +29,37 @@ function InfoCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
   );
 }
 
-export function LocationDetailClient({ location }: { location: Location | null }) {
-  const router = useRouter();
-  const { t }  = useT();
+export default function LocationDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const router   = useRouter();
+  const { t }    = useT();
 
+  const [location, setLocation] = useState<Location | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [saved,    setSaved]    = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [saveChecked, setSaveChecked] = useState(false);
 
-  // Check saved status once on mount
+  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
+
+  useEffect(() => {
+    if (!slug) return;
+    supabase.from("locations").select("*").eq("slug", slug).eq("is_active", true).single()
+      .then(({ data, error }) => {
+        if (error || !data) setNotFound(true);
+        else setLocation(data);
+        setLoading(false);
+      });
+  }, [slug]);
+
   useEffect(() => {
     if (!location) return;
     const sessionId = getOrCreateSessionId();
     supabase.from("saved_items").select("id")
       .eq("session_id", sessionId).eq("item_type", "location").eq("item_id", location.id)
-      .maybeSingle().then(({ data }) => { setSaved(!!data); setSaveChecked(true); });
-  }, [location?.id]);
-
-  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
-
-  if (!location) {
-    return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4 px-8 text-center">
-        <span className="text-5xl">🌷</span>
-        <h2 className="text-xl font-bold text-[#1A1A1A]">{t("location.not_found_title")}</h2>
-        <p className="text-sm text-gray-400">{t("location.not_found_desc")}</p>
-        <button onClick={() => router.back()} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
-          {t("common.go_back")}
-        </button>
-      </div>
-    );
-  }
+      .maybeSingle().then(({ data }) => setSaved(!!data));
+  }, [location]);
 
   async function handleSave() {
     if (!location || saving) return;
@@ -87,8 +77,32 @@ export function LocationDetailClient({ location }: { location: Location | null }
   }
 
   function handleNavigate() {
-    if (!location || !location.latitude || !location.longitude) return;
+    if (!location?.latitude || !location?.longitude) return;
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`, "_blank");
+  }
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 size={32} className="text-tulip-400 animate-spin" />
+          <p className="text-sm text-gray-400">{t("location.loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !location) {
+    return (
+      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4 px-8 text-center">
+        <span className="text-5xl">🌷</span>
+        <h2 className="text-xl font-bold text-[#1A1A1A]">{t("location.not_found_title")}</h2>
+        <p className="text-sm text-gray-400">{t("location.not_found_desc")}</p>
+        <button onClick={() => router.back()} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
+          {t("common.go_back")}
+        </button>
+      </div>
+    );
   }
 
   const catStyle = CATEGORY_STYLE[location.category];
@@ -257,7 +271,7 @@ export function LocationDetailClient({ location }: { location: Location | null }
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || !saveChecked}
+            disabled={saving}
             className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
                         ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "bg-white border-tulip-200 text-tulip-500 hover:border-tulip-400"}`}
           >
@@ -268,4 +282,5 @@ export function LocationDetailClient({ location }: { location: Location | null }
       </div>
     </div>
   );
+>>>>>>>> origin/main:app/[locale]/location/[slug]/LocationDetailClient.tsx
 }
