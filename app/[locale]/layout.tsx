@@ -1,3 +1,5 @@
+import { BottomNavigation } from "@/components/BottomNavigation";
+
 export function generateStaticParams() {
   return ["en", "nl", "de", "fr", "zh", "es"].map((locale) => ({ locale }));
 }
@@ -8,5 +10,10 @@ export default function LocaleLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <BottomNavigation />
+    </>
+  );
 }
