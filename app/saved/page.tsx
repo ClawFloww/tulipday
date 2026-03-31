@@ -193,8 +193,20 @@ export default function SavedPage() {
       setLocEntries([]); setRouteEntries([]); setLoading(false); return;
     }
 
-    const locIds   = saved.filter((s) => s.item_type === "location").map((s) => s.item_id);
-    const routeIds = saved.filter((s) => s.item_type === "route").map((s) => s.item_id);
+    const locIds: string[]     = [];
+    const routeIds: string[]   = [];
+    const newLocEntries: SavedEntry[]   = [];
+    const newRouteEntries: SavedEntry[] = [];
+
+    for (const s of saved) {
+      if (s.item_type === "location") {
+        locIds.push(s.item_id);
+        newLocEntries.push({ savedId: s.id, itemId: s.item_id });
+      } else if (s.item_type === "route") {
+        routeIds.push(s.item_id);
+        newRouteEntries.push({ savedId: s.id, itemId: s.item_id });
+      }
+    }
 
     const [{ data: locData }, { data: routeData }] = await Promise.all([
       locIds.length   > 0 ? supabase.from("locations").select("*").in("id", locIds)  : { data: [] },
@@ -209,8 +221,8 @@ export default function SavedPage() {
     (routeData ?? []).forEach((r: Route) => { routeMap[r.id] = r; });
     setRoutes(routeMap);
 
-    setLocEntries(saved.filter((s) => s.item_type === "location").map((s) => ({ savedId: s.id, itemId: s.item_id })));
-    setRouteEntries(saved.filter((s) => s.item_type === "route").map((s) => ({ savedId: s.id, itemId: s.item_id })));
+    setLocEntries(newLocEntries);
+    setRouteEntries(newRouteEntries);
     setLoading(false);
   }, []);
 

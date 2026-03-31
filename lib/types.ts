@@ -41,6 +41,12 @@ export interface Route {
   created_at: string;
 }
 
+export interface RouteStop {
+  id: string;
+  sort_order: number;
+  locations: Location;
+}
+
 export interface OnboardingPrefs {
   intent: string;
   transport: string;

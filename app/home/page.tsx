@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Loader2, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +9,8 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
+import { MAX_RECOMMENDED, SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT, EARTH_RADIUS_KM } from "@/lib/constants";
+import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
 
 const INTENT_TO_CATEGORY: Record<string, Category> = {
   blooming_fields: "flower_field",
@@ -20,24 +22,23 @@ const INTENT_TO_CATEGORY: Record<string, Category> = {
 };
 
 function getRecommended(all: Location[], prefs: OnboardingPrefs | null): Location[] {
-  if (!prefs) return all.slice(0, 6);
+  if (!prefs) return all.slice(0, MAX_RECOMMENDED);
   const targetCategory = INTENT_TO_CATEGORY[prefs.intent];
   const matches = targetCategory ? all.filter((l) => l.category === targetCategory) : all;
   if (prefs.transport === "walking" || prefs.transport === "bike") {
     const accessible = matches.filter((l) => l.access_type === "public_access");
-    if (accessible.length > 0) return accessible.slice(0, 6);
+    if (accessible.length > 0) return accessible.slice(0, MAX_RECOMMENDED);
   }
-  return matches.slice(0, 6);
+  return matches.slice(0, MAX_RECOMMENDED);
 }
 
 function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function Section({ title, children, onSeeAll }: { title: string; children: React.ReactNode; onSeeAll?: () => void }) {
@@ -84,6 +85,13 @@ export default function HomePage() {
   const [featuredRoutes, setFeaturedRoutes] = useState<Route[]>([]);
   const [photoSpots, setPhotoSpots]     = useState<Location[]>([]);
   const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 200);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     const raw = localStorage.getItem("tulipday_onboarding");
@@ -93,17 +101,24 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [{ data: blooms }, { data: allLocs }, { data: routes }, { data: photos }] =
+      const [{ data: allLocs, error: locsError }, { data: routes, error: routesError }] =
         await Promise.all([
-          supabase.from("locations").select("*").eq("bloom_status", "peak").eq("is_featured", true).eq("is_active", true),
           supabase.from("locations").select("*").eq("is_active", true),
           supabase.from("routes").select("*").eq("is_featured", true).eq("is_active", true),
-          supabase.from("locations").select("*").eq("category", "photo_spot").eq("is_active", true),
         ]);
-      setBestBlooms(blooms ?? []);
-      setAllLocations(allLocs ?? []);
+
+      if (locsError || routesError) {
+        console.error("Fout bij ophalen data:", locsError ?? routesError);
+        setError(true);
+        setLoading(false);
+        return;
+      }
+
+      const locs = allLocs ?? [];
+      setBestBlooms(locs.filter((l) => l.bloom_status === "peak" && l.is_featured));
+      setAllLocations(locs);
       setFeaturedRoutes(routes ?? []);
-      setPhotoSpots(photos ?? []);
+      setPhotoSpots(locs.filter((l) => l.category === "photo_spot"));
       setLoading(false);
     }
     fetchData();
@@ -113,35 +128,45 @@ export default function HomePage() {
     if (allLocations.length > 0) setRecommended(getRecommended(allLocations, prefs));
   }, [allLocations, prefs]);
 
+  const applyNearMe = useCallback((coords: { lat: number; lon: number }) => {
+    setUserCoords(coords);
+    setNearMeLoading(false);
+    setRecommended(
+      [...allLocations]
+        .filter((l) => l.latitude != null && l.longitude != null)
+        .sort((a, b) =>
+          distanceKm(coords.lat, coords.lon, a.latitude!, a.longitude!) -
+          distanceKm(coords.lat, coords.lon, b.latitude!, b.longitude!)
+        )
+        .slice(0, MAX_RECOMMENDED)
+    );
+  }, [allLocations]);
+
   const handleNearMe = useCallback(() => {
+    const cached = getCachedCoords();
+    if (cached) {
+      applyNearMe({ lat: cached.lat, lon: cached.lng });
+      return;
+    }
     if (!navigator.geolocation) return;
     setNearMeLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setUserCoords(coords);
-        setNearMeLoading(false);
-        setRecommended(
-          [...allLocations]
-            .filter((l) => l.latitude != null && l.longitude != null)
-            .sort((a, b) =>
-              distanceKm(coords.lat, coords.lon, a.latitude!, a.longitude!) -
-              distanceKm(coords.lat, coords.lon, b.latitude!, b.longitude!)
-            )
-            .slice(0, 6)
-        );
+        setCachedCoords(coords.lat, coords.lon);
+        applyNearMe(coords);
       },
       () => setNearMeLoading(false)
     );
-  }, [allLocations]);
+  }, [applyNearMe]);
 
-  const searchResults = search.trim()
-    ? allLocations.filter(
-        (l) =>
-          l.title.toLowerCase().includes(search.toLowerCase()) ||
-          l.address?.toLowerCase().includes(search.toLowerCase())
-      )
-    : null;
+  const searchResults = useMemo(() => {
+    if (!debouncedSearch) return null;
+    const q = debouncedSearch.toLowerCase();
+    return allLocations.filter(
+      (l) => l.title.toLowerCase().includes(q) || l.address?.toLowerCase().includes(q)
+    );
+  }, [debouncedSearch, allLocations]);
 
   const hour = new Date().getHours();
   const greetingKey = hour < 12 ? "greeting_morning" : hour < 18 ? "greeting_afternoon" : "greeting_evening";
@@ -184,13 +209,20 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="mx-5 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 font-medium">
+          {t("common.load_error")}
+        </div>
+      )}
+
       {/* Search results */}
       {searchResults && (
         <div className="px-5 pt-6">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
             {t(searchResults.length === 1 ? "home.search_count" : "home.search_count_plural", {
               count: searchResults.length,
-              query: search,
+              query: debouncedSearch,
             })}
           </p>
           <div className="flex gap-3 flex-wrap">
@@ -210,7 +242,7 @@ export default function HomePage() {
         <div className="pt-7">
           <Section title={t("home.best_blooms")} onSeeAll={() => {}}>
             {loading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : bestBlooms.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_peak_blooms")}</p>
               : bestBlooms.map((loc) => (
@@ -220,7 +252,7 @@ export default function HomePage() {
 
           <Section title={t(prefs ? "home.recommended" : "home.explore")} onSeeAll={() => {}}>
             {loading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : recommended.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.nothing_found")}</p>
               : recommended.map((loc) => (
@@ -230,7 +262,7 @@ export default function HomePage() {
 
           <Section title={t("home.popular_routes")} onSeeAll={() => router.push("/routes")}>
             {loading
-              ? Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} wide />)
+              ? Array.from({ length: SKELETON_ROUTE_COUNT }).map((_, i) => <SkeletonCard key={i} wide />)
               : featuredRoutes.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_routes")}</p>
               : featuredRoutes.map((route) => (
@@ -240,7 +272,7 @@ export default function HomePage() {
 
           <Section title={t("home.photo_spots_section")} onSeeAll={() => {}}>
             {loading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : photoSpots.length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_photo_spots")}</p>
               : photoSpots.map((loc) => (

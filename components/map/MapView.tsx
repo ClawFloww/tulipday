@@ -10,10 +10,12 @@ import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, MapPin, Locate } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { NL_CENTER as NL_CENTER_DEFAULT, NEARBY_DISTANCE_KM, EARTH_RADIUS_KM } from "@/lib/constants";
+import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const NL_CENTER = { lat: 52.3, lng: 4.9 };
+const NL_CENTER = NL_CENTER_DEFAULT;
 
 const CATEGORY_COLOR: Record<Category, string> = {
   flower_field: "#f43f5e",
@@ -56,10 +58,10 @@ function createPinSvg(color: string, size = 36): string {
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371, toRad = (d: number) => (d * Math.PI) / 180;
+  const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: number; lng: number } | null): boolean {
@@ -71,7 +73,7 @@ function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: numbe
     case "free":   return loc.access_type === "roadside_only";
     case "nearby":
       if (!userCoords || loc.latitude == null || loc.longitude == null) return false;
-      return haversineKm(userCoords.lat, userCoords.lng, loc.latitude, loc.longitude) <= 20;
+      return haversineKm(userCoords.lat, userCoords.lng, loc.latitude, loc.longitude) <= NEARBY_DISTANCE_KM;
     default: return true;
   }
 }
@@ -88,7 +90,99 @@ const MAP_STYLES = [
   { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#d9d9d9" }] },
 ];
 
-// ─── Preview card ─────────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FilterChips({
+  filters,
+  activeFilter,
+  locating,
+  onFilter,
+}: {
+  filters: { id: FilterId; emoji: string; label: string }[];
+  activeFilter: FilterId | null;
+  locating: boolean;
+  onFilter: (id: FilterId) => void;
+}) {
+  return (
+    <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4
+                    bg-gradient-to-b from-white/95 via-white/80 to-transparent">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {filters.map((f) => {
+          const isActive = activeFilter === f.id;
+          return (
+            <button
+              key={f.id}
+              onClick={() => onFilter(f.id)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
+                border transition-all duration-200 active:scale-95
+                ${isActive
+                  ? "bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200"
+                  : "bg-white border-gray-200 text-gray-700 hover:border-rose-300"
+                }
+                ${f.id === "nearby" && locating ? "opacity-60" : ""}
+              `}
+            >
+              <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MapControls({
+  mapRef,
+  userCoords,
+  onLocate,
+}: {
+  mapRef: React.RefObject<google.maps.Map | null>;
+  userCoords: { lat: number; lng: number } | null;
+  onLocate: () => void;
+}) {
+  function handleLocate() {
+    if (userCoords) {
+      mapRef.current?.panTo(userCoords);
+      mapRef.current?.setZoom(12);
+    } else {
+      onLocate();
+    }
+  }
+
+  function handleZoom(delta: 1 | -1) {
+    if (!mapRef.current) return;
+    const z = mapRef.current.getZoom() ?? 9;
+    mapRef.current.setZoom(z + delta);
+  }
+
+  return (
+    <>
+      <button
+        onClick={handleLocate}
+        className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
+                   shadow-lg flex items-center justify-center text-rose-600
+                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100"
+      >
+        <Locate size={20} />
+      </button>
+
+      <div className="absolute right-4 bottom-60 z-20 flex flex-col gap-1">
+        {([1, -1] as const).map((delta) => (
+          <button
+            key={delta}
+            onClick={() => handleZoom(delta)}
+            className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
+                       text-gray-700 font-bold text-lg hover:bg-gray-50 active:scale-95
+                       transition-all border border-gray-100"
+          >
+            {delta === 1 ? "+" : "−"}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
 
 function PreviewCard({
   location,
@@ -123,23 +217,15 @@ function PreviewCard({
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
     >
-      {/* Drag handle */}
       <div className="flex justify-center pt-2.5 pb-1">
         <div className="w-10 h-1 bg-gray-200 rounded-full" />
       </div>
 
       <div className="flex gap-3 px-4 pb-4">
-        {/* Image */}
         <div className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
-          <Image
-            src={location.image_url ?? fallback}
-            alt={location.title}
-            fill
-            className="object-cover"
-          />
+          <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
         </div>
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3 className="font-extrabold text-gray-900 text-base leading-tight line-clamp-2 flex-1">
@@ -187,16 +273,14 @@ export default function MapView() {
   const { t }  = useT();
   const mapDivRef  = useRef<HTMLDivElement>(null);
   const mapRef     = useRef<google.maps.Map | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const googleRef  = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markersRef = useRef<Record<string, any>>({});
+  const googleRef  = useRef<typeof google | null>(null);
+  const markersRef = useRef<Record<string, google.maps.Marker>>({});
 
-  const [locations, setLocations]           = useState<Location[]>([]);
-  const [activeFilter, setActiveFilter]     = useState<FilterId | null>(null);
-  const [selected, setSelected]             = useState<Location | null>(null);
-  const [userCoords, setUserCoords]         = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating]             = useState(false);
+  const [locations, setLocations]       = useState<Location[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
+  const [selected, setSelected]         = useState<Location | null>(null);
+  const [userCoords, setUserCoords]     = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating]         = useState(false);
 
   // ── Fetch locations ──
   useEffect(() => {
@@ -211,14 +295,10 @@ export default function MapView() {
   useEffect(() => {
     if (!mapDivRef.current) return;
 
-    setOptions({
-      key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!,
-      v: "weekly",
-    });
+    setOptions({ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!, v: "weekly" });
 
     importLibrary("maps").then(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const g = (window as any).google;
+      const g = (window as Window & typeof globalThis).google;
       googleRef.current = g;
       const map = new g.maps.Map(mapDivRef.current!, {
         center: NL_CENTER,
@@ -235,16 +315,14 @@ export default function MapView() {
   // ── Update markers when locations / filter / userCoords change ──
   useEffect(() => {
     if (!mapRef.current || !googleRef.current || locations.length === 0) return;
-    const g = googleRef.current;
+    const g: typeof google = googleRef.current;
 
-    // Remove all existing markers
     Object.values(markersRef.current).forEach((m: google.maps.Marker) => m.setMap(null));
     markersRef.current = {};
 
     locations.forEach((loc) => {
       if (loc.latitude == null || loc.longitude == null) return;
 
-      // Filter visibility
       const visible = !activeFilter || matchesFilter(loc, activeFilter, userCoords);
       if (!visible) return;
 
@@ -273,11 +351,19 @@ export default function MapView() {
     setSelected(null);
 
     if (next === "nearby") {
+      const cached = getCachedCoords();
+      if (cached) {
+        setUserCoords(cached);
+        mapRef.current?.panTo(cached);
+        mapRef.current?.setZoom(12);
+        return;
+      }
       if (!navigator.geolocation) return;
       setLocating(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setCachedCoords(coords.lat, coords.lng);
           setUserCoords(coords);
           mapRef.current?.panTo(coords);
           mapRef.current?.setZoom(12);
@@ -288,93 +374,37 @@ export default function MapView() {
     }
   }, [activeFilter]);
 
-  // ── Navigate to detail ──
-  function navigateToDetail(loc: Location) {
-    router.push(`/location/${loc.slug}`);
-  }
-
   const filters = FILTER_IDS.map((f) => ({ ...f, label: t(`map.filter_${f.id}`) }));
 
   return (
     <div className="fixed inset-0 flex flex-col">
 
-      {/* ── Filter chips (floating) ── */}
-      <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4
-                      bg-gradient-to-b from-white/95 via-white/80 to-transparent">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {filters.map((f) => {
-            const isActive = activeFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                onClick={() => handleFilter(f.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
-                  border transition-all duration-200 active:scale-95
-                  ${isActive
-                    ? "bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200"
-                    : "bg-white border-gray-200 text-gray-700 hover:border-rose-300"
-                  }
-                  ${f.id === "nearby" && locating ? "opacity-60" : ""}
-                `}
-              >
-                <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
-                {f.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <FilterChips
+        filters={filters}
+        activeFilter={activeFilter}
+        locating={locating}
+        onFilter={handleFilter}
+      />
 
-      {/* ── Map ── */}
       <div ref={mapDivRef} className="flex-1 w-full" />
 
-      {/* ── My location button ── */}
-      <button
-        onClick={() => {
-          if (!userCoords) return handleFilter("nearby");
-          mapRef.current?.panTo(userCoords);
-          mapRef.current?.setZoom(12);
-        }}
-        className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
-                   shadow-lg flex items-center justify-center text-rose-600
-                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100"
-      >
-        <Locate size={20} />
-      </button>
+      <MapControls
+        mapRef={mapRef}
+        userCoords={userCoords}
+        onLocate={() => handleFilter("nearby")}
+      />
 
-      {/* ── Zoom buttons ── */}
-      <div className="absolute right-4 bottom-60 z-20 flex flex-col gap-1">
-        {["+", "−"].map((sign) => (
-          <button
-            key={sign}
-            onClick={() => {
-              if (!mapRef.current) return;
-              const z = mapRef.current.getZoom() ?? 9;
-              mapRef.current.setZoom(sign === "+" ? z + 1 : z - 1);
-            }}
-            className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
-                       text-gray-700 font-bold text-lg hover:bg-gray-50 active:scale-95
-                       transition-all border border-gray-100"
-          >
-            {sign}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Preview card ── */}
       {selected && (
         <PreviewCard
           location={selected}
           onClose={() => setSelected(null)}
-          onNavigate={() => navigateToDetail(selected)}
+          onNavigate={() => router.push(`/location/${selected.slug}`)}
           t={t}
         />
       )}
 
-      {/* ── Bottom nav ── */}
       <BottomNav active="map" />
 
-      {/* ── Slide-up animation ── */}
       <style jsx global>{`
         @keyframes slide-up {
           from { transform: translateY(120%); opacity: 0; }
