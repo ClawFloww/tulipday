@@ -1,18 +1,27 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  ArrowLeft, MapPin, Star, Heart, Navigation, Loader2,
+  ChevronRight, Camera, Clock, Footprints, ParkingCircle,
+  ShieldCheck, Flower2, Users,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Location } from "@/lib/types";
-import { LocationDetailClient } from "./LocationDetailClient";
+import { Location, AccessType, Category } from "@/lib/types";
+import { useT } from "@/lib/i18n-context";
+import { getOrCreateSessionId } from "@/lib/session";
+import { BloomBadge } from "@/components/ui/BloomBadge";
 
-export default async function LocationDetailPage({ params }: { params: { slug: string } }) {
-  const { data } = await supabase
-    .from("locations")
-    .select("*")
-    .eq("slug", params.slug)
-    .eq("is_active", true)
-    .single();
+const CATEGORY_STYLE: Record<Category, { bg: string; color: string }> = {
+  flower_field: { bg: "bg-tulip-50",   color: "text-tulip-600"  },
+  photo_spot:   { bg: "bg-blue-50",    color: "text-blue-600"   },
+  attraction:   { bg: "bg-amber-50",   color: "text-amber-700"  },
+  food:         { bg: "bg-orange-50",  color: "text-orange-700" },
+  parking:      { bg: "bg-gray-100",   color: "text-gray-600"   },
+};
 
-<<<<<<<< HEAD:app/location/[slug]/page.tsx
-  return <LocationDetailClient location={(data ?? null) as Location | null} />;
-========
 const CROWD_KEYS = ["crowd_very_quiet", "crowd_quiet", "crowd_moderate", "crowd_busy", "crowd_very_busy"];
 const CROWD_COLORS = ["bg-forest-500", "bg-forest-400", "bg-yellow-400", "bg-orange-400", "bg-tulip-500"];
 
@@ -282,5 +291,4 @@ export default function LocationDetailPage() {
       </div>
     </div>
   );
->>>>>>>> origin/main:app/[locale]/location/[slug]/LocationDetailClient.tsx
 }
