@@ -9,7 +9,7 @@ export default function SplashPage() {
 
   function handleLanguage(locale: "en" | "nl") {
     setLocale(locale);
-    router.push("/onboarding");
+    router.push(`/${locale}/onboarding`);
   }
 
   return (
