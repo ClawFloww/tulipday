@@ -10,7 +10,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import { getOrCreateSessionId } from "@/lib/session";
 import { BloomBadge } from "@/components/ui/BloomBadge";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { Location, Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 
@@ -302,7 +301,6 @@ export default function SavedPage() {
         )}
       </div>
 
-      <BottomNav active="saved" />
     </div>
   );
 }

@@ -6,7 +6,6 @@ import {
   ChevronDown, ChevronUp, ExternalLink, Check, Crown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { useT, type Locale } from "@/lib/i18n-context";
 
 function Accordion({ icon, title, accent = "text-gray-600", children }: {
@@ -188,7 +187,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <BottomNav active="settings" />
     </div>
   );
 }

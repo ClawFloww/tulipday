@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase";
 import { Location, Route, OnboardingPrefs, Category } from "@/lib/types";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
 import { MAX_RECOMMENDED, SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT, EARTH_RADIUS_KM } from "@/lib/constants";
 import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
@@ -298,7 +297,6 @@ export default function HomePage() {
         </div>
       )}
 
-      <BottomNav active="home" />
     </div>
   );
 }

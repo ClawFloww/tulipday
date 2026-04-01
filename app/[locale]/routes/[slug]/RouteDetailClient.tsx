@@ -6,7 +6,6 @@ import Image from "next/image";
 import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
 
@@ -203,7 +202,6 @@ export default function RouteDetailClient() {
         </div>
       </div>
 
-      <BottomNav active="routes" />
     </div>
   );
 }

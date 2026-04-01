@@ -77,10 +77,10 @@ function IconPerson(active: boolean) {
 }
 
 const TABS: Tab[] = [
-  { id: "discover", label: "Ontdekken", segment: "discover", icon: IconGrid     },
+  { id: "discover", label: "Ontdekken", segment: "home",     icon: IconGrid     },
   { id: "saved",    label: "Mijn lijst", segment: "saved",   icon: IconBookmark },
   { id: "map",      label: "Kaart",     segment: "map",     icon: IconMapPin   },
-  { id: "profile",  label: "Profiel",   segment: "profile", icon: IconPerson   },
+  { id: "profile",  label: "Profiel",   segment: "settings", icon: IconPerson  },
 ];
 
 export function BottomNavigation() {

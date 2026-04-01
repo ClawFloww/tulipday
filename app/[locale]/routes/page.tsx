@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Car, Bike, Footprints, Camera, Users, Clock, ArrowLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { useT } from "@/lib/i18n-context";
 import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
 import { PremiumGate } from "@/components/ui/PremiumGate";
@@ -233,7 +232,6 @@ export default function RoutesPage() {
         )}
       </div>
 
-      <BottomNav active="routes" />
     </div>
   );
 }
