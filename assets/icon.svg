@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="230" fill="#E8334A"/>
+
+  <!-- Stem -->
+  <rect x="492" y="580" width="40" height="230" rx="20" fill="#2D6A4F"/>
+
+  <!-- Left leaf -->
+  <path d="M492 720 Q420 680 400 600 Q460 620 492 680 Z" fill="#2D6A4F"/>
+
+  <!-- Right leaf -->
+  <path d="M532 700 Q610 660 630 575 Q568 598 532 660 Z" fill="#2D6A4F"/>
+
+  <!-- Tulip body -->
+  <path d="M390 540
+     C390 430 440 340 512 310
+     C584 340 634 430 634 540
+     C634 600 580 650 512 650
+     C444 650 390 600 390 540 Z"
+     fill="#FFF0F2"/>
+
+  <!-- Left petal shading -->
+  <path d="M390 540
+     C390 430 440 340 512 310
+     L512 650
+     C444 650 390 600 390 540 Z"
+     fill="#FDCFD4"/>
+
+  <!-- Center stripe -->
+  <path d="M500 315 Q490 480 495 648 Q512 652 512 650 L512 310 Q506 310 500 315 Z"
+     fill="#F8B4BC" opacity="0.6"/>
+
+  <!-- Petal tips (left) -->
+  <path d="M430 355 C400 300 360 290 350 330 C360 370 400 380 430 355 Z"
+     fill="#E8334A"/>
+
+  <!-- Petal tips (center) -->
+  <path d="M512 295 C512 240 490 210 512 200 C534 210 512 240 512 295 Z"
+     fill="#CC2A3E"/>
+
+  <!-- Petal tips (right) -->
+  <path d="M594 355 C624 300 664 290 674 330 C664 370 624 380 594 355 Z"
+     fill="#E8334A"/>
+</svg>

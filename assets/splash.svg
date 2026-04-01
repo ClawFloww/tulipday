@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732 2732" width="2732" height="2732">
+  <!-- Background -->
+  <rect width="2732" height="2732" fill="#FFF5F7"/>
+
+  <!-- Subtle background circles -->
+  <circle cx="2500" cy="400"  r="600" fill="#FDCFD4" opacity="0.3"/>
+  <circle cx="200"  cy="2400" r="700" fill="#F8B4BC" opacity="0.2"/>
+  <circle cx="400"  cy="900"  r="350" fill="#D4E6C3" opacity="0.25"/>
+
+  <!-- Stem -->
+  <rect x="1346" y="1520" width="40" height="460" rx="20" fill="#2D6A4F"/>
+
+  <!-- Left leaf -->
+  <path d="M1346 1820 Q1220 1760 1190 1620 Q1310 1660 1346 1760 Z" fill="#2D6A4F"/>
+
+  <!-- Right leaf -->
+  <path d="M1386 1790 Q1520 1720 1550 1580 Q1424 1622 1386 1730 Z" fill="#2D6A4F"/>
+
+  <!-- Tulip body -->
+  <path d="M1140 1460
+     C1140 1240 1240 1060 1366 1010
+     C1492 1060 1592 1240 1592 1460
+     C1592 1580 1500 1650 1366 1650
+     C1232 1650 1140 1580 1140 1460 Z"
+     fill="#FFF0F2"/>
+
+  <!-- Left petal shading -->
+  <path d="M1140 1460
+     C1140 1240 1240 1060 1366 1010
+     L1366 1650
+     C1232 1650 1140 1580 1140 1460 Z"
+     fill="#FDCFD4"/>
+
+  <!-- Petal tips -->
+  <path d="M1200 1100 C1150 1010 1090 990 1075 1040 C1090 1090 1150 1105 1200 1100 Z" fill="#E8334A"/>
+  <path d="M1366 980  C1366 900 1340 860 1366 848 C1392 860 1366 900 1366 980 Z" fill="#CC2A3E"/>
+  <path d="M1532 1100 C1582 1010 1642 990 1657 1040 C1642 1090 1582 1105 1532 1100 Z" fill="#E8334A"/>
+
+  <!-- App name -->
+  <text x="1366" y="2020"
+        font-family="Georgia, serif"
+        font-size="160"
+        font-weight="bold"
+        fill="#E8334A"
+        text-anchor="middle"
+        letter-spacing="4">TulipDay</text>
+
+  <!-- Tagline -->
+  <text x="1366" y="2110"
+        font-family="Arial, sans-serif"
+        font-size="72"
+        fill="#F47F8C"
+        text-anchor="middle"
+        letter-spacing="8">BLOEISEIZOEN · NEDERLAND</text>
+</svg>
