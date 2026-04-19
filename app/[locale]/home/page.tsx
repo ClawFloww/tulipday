@@ -183,7 +183,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-1">
           <div>
             <p className="text-xs text-gray-400 font-medium">{t(`home.${greetingKey}`)} 👋</p>
-            <Image src="/logo.png" alt="TulipDay" width={180} height={120} className="object-contain" priority />
+            <Image src="/logo.png" alt="TulipDay" width={240} height={160} className="object-contain" priority />
           </div>
           {userCoords && (
             <span className="text-[10px] text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full font-bold">
