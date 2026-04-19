@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
 
-webpush.setVapidDetails(
-  "mailto:hello@tulipday.online",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 function getSb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,6 +11,13 @@ function getSb() {
 }
 
 export async function POST(req: NextRequest) {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) {
+    return NextResponse.json({ error: "VAPID keys not configured" }, { status: 503 });
+  }
+  webpush.setVapidDetails("mailto:hello@tulipday.online", publicKey, privateKey);
+
   // Simple admin auth
   const auth = req.headers.get("x-admin-password");
   if (auth !== process.env.ADMIN_PASSWORD) {
