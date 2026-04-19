@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ImageIcon, Map, Camera } from "lucide-react";
-import { CorsoPhotoFeed } from "@/components/corso/CorsoPhotoFeed";
+import { ArrowLeft, Map, ImageIcon, Camera } from "lucide-react";
+import { CorsoRouteMap } from "@/components/corso/CorsoRouteMap";
+import { CorsoPhotoFeed }  from "@/components/corso/CorsoPhotoFeed";
 import { CorsoPhotoUpload } from "@/components/corso/CorsoPhotoUpload";
-import { CorsoMap } from "@/components/corso/CorsoMap";
 
-type Tab = "feed" | "map" | "upload";
+type Tab = "route" | "feed" | "upload";
 
 export default function CorsoPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("feed");
+  const [tab, setTab] = useState<Tab>("route");
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
@@ -23,16 +23,16 @@ export default function CorsoPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-lg font-extrabold text-gray-900 leading-tight">🌸 Bloemencorso Live</h1>
-            <p className="text-xs text-gray-400 font-medium">Bollenstreek 2026 · Deel jouw foto&apos;s</p>
+            <h1 className="text-lg font-extrabold text-gray-900 leading-tight">🌸 Bloemencorso</h1>
+            <p className="text-xs text-gray-400 font-medium">Bollenstreek · Noordwijk → Haarlem</p>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-gray-100">
           {([
+            { id: "route",  icon: <Map       size={15} />, label: "Route"  },
             { id: "feed",   icon: <ImageIcon size={15} />, label: "Feed"   },
-            { id: "map",    icon: <Map       size={15} />, label: "Kaart"  },
             { id: "upload", icon: <Camera    size={15} />, label: "Upload" },
           ] as { id: Tab; icon: React.ReactNode; label: string }[]).map((t) => (
             <button
@@ -50,23 +50,25 @@ export default function CorsoPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="pt-4">
-        {tab === "feed" && (
+      {/* Content — route map gets no extra padding, others do */}
+      {tab === "route" && <CorsoRouteMap />}
+
+      {tab === "feed" && (
+        <div className="pt-4">
           <CorsoPhotoFeed key={refreshKey} />
-        )}
-        {tab === "map" && (
-          <CorsoMap />
-        )}
-        {tab === "upload" && (
+        </div>
+      )}
+
+      {tab === "upload" && (
+        <div className="pt-4">
           <CorsoPhotoUpload
             onUploaded={() => {
               setRefreshKey((k) => k + 1);
               setTab("feed");
             }}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
