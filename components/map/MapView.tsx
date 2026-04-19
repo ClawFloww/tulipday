@@ -6,7 +6,7 @@ import Image from "next/image";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
-import { Location, Category } from "@/lib/types";
+import type { Location, Category } from "@/lib/types";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, MapPin, Locate } from "lucide-react";
@@ -16,6 +16,7 @@ import { useT } from "@/lib/i18n-context";
 
 const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
 const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
+const SOURCE_ID = "locations";
 
 const CATEGORY_COLOR: Record<Category, string> = {
   flower_field: "#f43f5e",
@@ -25,7 +26,16 @@ const CATEGORY_COLOR: Record<Category, string> = {
   parking:      "#94a3b8",
 };
 
-type FilterId = "peak" | "nearby" | "quiet" | "photo" | "family" | "free";
+// Only fetch columns needed for map markers + preview card
+const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score";
+
+type MapLocation = Pick<Location,
+  "id" | "title" | "slug" | "latitude" | "longitude" |
+  "category" | "bloom_status" | "address" | "image_url" |
+  "access_type" | "crowd_score"
+>;
+
+type FilterId = "peak" | "nearby" | "quiet" | "photo" | "family" | "free" | "horeca";
 
 const FILTER_IDS: { id: FilterId; emoji: string }[] = [
   { id: "peak",   emoji: "🌸" },
@@ -34,38 +44,10 @@ const FILTER_IDS: { id: FilterId; emoji: string }[] = [
   { id: "photo",  emoji: "📷" },
   { id: "family", emoji: "👨‍👩‍👧" },
   { id: "free",   emoji: "✅" },
+  { id: "horeca", emoji: "🍴" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function createMarkerEl(color: string): HTMLElement {
-  const el = document.createElement("div");
-  el.style.cssText = `
-    width: 30px; height: 40px; cursor: pointer;
-    background-image: url("${createPinSvg(color)}");
-    background-size: contain; background-repeat: no-repeat;
-  `;
-  return el;
-}
-
-function createPinSvg(color: string, size = 36): string {
-  const s = size;
-  const cx = s / 2;
-  const cy = s * 0.42;
-  const r = s * 0.28;
-  const tail = s * 0.72;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s + s * 0.3}" viewBox="0 0 ${s} ${s + s * 0.3}">
-    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000033"/>
-    </filter>
-    <g filter="url(#shadow)">
-      <circle cx="${cx}" cy="${cy}" r="${r + 2}" fill="${color}"/>
-      <polygon points="${cx - 6},${tail} ${cx + 6},${tail} ${cx},${s + s * 0.25}" fill="${color}"/>
-    </g>
-    <circle cx="${cx}" cy="${cy}" r="${r * 0.45}" fill="white"/>
-  </svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371, toRad = (d: number) => (d * Math.PI) / 180;
@@ -74,18 +56,46 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function matchesFilter(loc: Location, filter: FilterId, userCoords: { lat: number; lng: number } | null): boolean {
+function matchesFilter(loc: MapLocation, filter: FilterId, userCoords: { lat: number; lng: number } | null): boolean {
   switch (filter) {
     case "peak":   return loc.bloom_status === "peak";
     case "quiet":  return (loc.crowd_score ?? 99) <= 2;
     case "photo":  return loc.category === "photo_spot";
     case "family": return loc.category === "attraction";
     case "free":   return loc.access_type === "roadside_only";
+    case "horeca": return loc.category === "food";
     case "nearby":
       if (!userCoords || loc.latitude == null || loc.longitude == null) return false;
       return haversineKm(userCoords.lat, userCoords.lng, loc.latitude, loc.longitude) <= 20;
     default: return true;
   }
+}
+
+function locationsToGeoJSON(
+  locations: MapLocation[],
+  activeFilter: FilterId | null,
+  userCoords: { lat: number; lng: number } | null,
+): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = [];
+  for (const loc of locations) {
+    if (loc.latitude == null || loc.longitude == null) continue;
+    if (activeFilter && !matchesFilter(loc, activeFilter, userCoords)) continue;
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
+      properties: {
+        id:           loc.id,
+        title:        loc.title,
+        slug:         loc.slug,
+        category:     loc.category,
+        bloom_status: loc.bloom_status,
+        address:      loc.address,
+        image_url:    loc.image_url,
+        color:        CATEGORY_COLOR[loc.category] ?? "#94a3b8",
+      },
+    });
+  }
+  return { type: "FeatureCollection", features };
 }
 
 // ─── Preview card ─────────────────────────────────────────────────────────────
@@ -96,20 +106,17 @@ function PreviewCard({
   onNavigate,
   t,
 }: {
-  location: Location;
+  location: MapLocation;
   onClose: () => void;
   onNavigate: () => void;
   t: (key: string) => string;
 }) {
   const startY = useRef<number | null>(null);
 
-  function onPointerDown(e: React.PointerEvent) {
-    startY.current = e.clientY;
-  }
+  function onPointerDown(e: React.PointerEvent) { startY.current = e.clientY; }
   function onPointerUp(e: React.PointerEvent) {
     if (startY.current !== null) {
-      const dy = e.clientY - startY.current;
-      if (dy < -50) onNavigate();
+      if (e.clientY - startY.current < -50) onNavigate();
       startY.current = null;
     }
   }
@@ -182,24 +189,44 @@ function PreviewCard({
 export default function MapView() {
   const router = useRouter();
   const { t }  = useT();
-  const mapDivRef  = useRef<HTMLDivElement>(null);
-  const mapRef     = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Record<string, maplibregl.Marker>>({});
+  const mapDivRef    = useRef<HTMLDivElement>(null);
+  const mapRef       = useRef<maplibregl.Map | null>(null);
+  const mapReadyRef  = useRef(false);
 
-  const [locations, setLocations]       = useState<Location[]>([]);
+  const [locations,    setLocations]    = useState<MapLocation[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
-  const [selected, setSelected]         = useState<Location | null>(null);
-  const [userCoords, setUserCoords]     = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating]         = useState(false);
+  const [selected,     setSelected]     = useState<MapLocation | null>(null);
+  const [userCoords,   setUserCoords]   = useState<{ lat: number; lng: number } | null>(null);
+  const [locating,     setLocating]     = useState(false);
 
-  // ── Fetch locations ──
+  // Keep refs so event handlers always see current values
+  const locationsRef    = useRef<MapLocation[]>([]);
+  const activeFilterRef = useRef<FilterId | null>(null);
+  const userCoordsRef   = useRef<{ lat: number; lng: number } | null>(null);
+
+  locationsRef.current    = locations;
+  activeFilterRef.current = activeFilter;
+  userCoordsRef.current   = userCoords;
+
+  // ── Fetch only needed columns ──
   useEffect(() => {
     supabase
       .from("locations")
-      .select("*")
+      .select(MAP_SELECT)
       .eq("is_active", true)
-      .then(({ data }) => { if (data) setLocations(data); });
+      .then(({ data }) => { if (data) setLocations(data as MapLocation[]); });
   }, []);
+
+  // ── Update GeoJSON source ──
+  const updateSource = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+    const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+    source.setData(locationsToGeoJSON(locationsRef.current, activeFilterRef.current, userCoordsRef.current));
+  }, []);
+
+  useEffect(() => { updateSource(); }, [locations, activeFilter, userCoords, updateSource]);
 
   // ── Init map ──
   useEffect(() => {
@@ -214,37 +241,108 @@ export default function MapView() {
 
     mapRef.current = map;
 
+    map.on("load", () => {
+      mapReadyRef.current = true;
+
+      // GeoJSON source with clustering
+      map.addSource(SOURCE_ID, {
+        type: "geojson",
+        data: locationsToGeoJSON(locationsRef.current, activeFilterRef.current, userCoordsRef.current),
+        cluster: true,
+        clusterMaxZoom: 13,
+        clusterRadius: 50,
+      });
+
+      // Cluster circles
+      map.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step", ["get", "point_count"],
+            "#f43f5e", 10,
+            "#e11d48", 30,
+            "#9f1239",
+          ],
+          "circle-radius": ["step", ["get", "point_count"], 20, 10, 26, 30, 32],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
+          "circle-opacity": 0.9,
+        },
+      });
+
+      // Cluster count labels
+      map.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: SOURCE_ID,
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-size": 13,
+        },
+        paint: { "text-color": "#ffffff" },
+      });
+
+      // Individual points
+      map.addLayer({
+        id: "unclustered-point",
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": ["get", "color"],
+          "circle-radius": 9,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+        },
+      });
+
+      // Zoom into cluster on click
+      map.on("click", "clusters", (e) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+        if (!features[0]) return;
+        const clusterId = features[0].properties?.cluster_id;
+        const src = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
+        src.getClusterExpansionZoom(clusterId).then((zoom) => {
+          const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number];
+          map.easeTo({ center: coords, zoom: zoom ?? 12 });
+        });
+      });
+
+      // Show preview on point click
+      map.on("click", "unclustered-point", (e) => {
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+        const loc = locationsRef.current.find((l) => l.id === props.id);
+        if (loc) setSelected(loc);
+      });
+
+      // Pointer cursor on hover
+      map.on("mouseenter", "clusters", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "clusters", () => { map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", "unclustered-point", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "unclustered-point", () => { map.getCanvas().style.cursor = ""; });
+
+      // Dismiss preview when clicking empty map
+      map.on("click", (e) => {
+        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point"] });
+        if (hit.length === 0) setSelected(null);
+      });
+
+      // Apply any locations that arrived before map was ready
+      updateSource();
+    });
+
     return () => {
+      mapReadyRef.current = false;
       map.remove();
       mapRef.current = null;
     };
-  }, []);
-
-  // ── Update markers when locations / filter / userCoords change ──
-  useEffect(() => {
-    if (!mapRef.current || locations.length === 0) return;
-
-    // Remove all existing markers
-    Object.values(markersRef.current).forEach((m) => m.remove());
-    markersRef.current = {};
-
-    locations.forEach((loc) => {
-      if (loc.latitude == null || loc.longitude == null) return;
-
-      const visible = !activeFilter || matchesFilter(loc, activeFilter, userCoords);
-      if (!visible) return;
-
-      const color = CATEGORY_COLOR[loc.category] ?? "#94a3b8";
-      const el = createMarkerEl(color);
-
-      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat([loc.longitude, loc.latitude])
-        .addTo(mapRef.current!);
-
-      el.addEventListener("click", () => setSelected(loc));
-      markersRef.current[loc.id] = marker;
-    });
-  }, [locations, activeFilter, userCoords]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handle filter click ──
   const handleFilter = useCallback((id: FilterId) => {
@@ -252,8 +350,7 @@ export default function MapView() {
     setActiveFilter(next);
     setSelected(null);
 
-    if (next === "nearby") {
-      if (!navigator.geolocation) return;
+    if (next === "nearby" && navigator.geolocation) {
       setLocating(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -262,7 +359,7 @@ export default function MapView() {
           mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 12 });
           setLocating(false);
         },
-        () => setLocating(false)
+        () => setLocating(false),
       );
     }
   }, [activeFilter]);

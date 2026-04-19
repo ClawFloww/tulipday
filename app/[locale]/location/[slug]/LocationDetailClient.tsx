@@ -6,13 +6,17 @@ import Image from "next/image";
 import {
   ArrowLeft, MapPin, Star, Heart, Navigation, Loader2,
   ChevronRight, Camera, Clock, Footprints, ParkingCircle,
-  ShieldCheck, Flower2, Users,
+  ShieldCheck, Flower2, Users, Plus, Share2, Check,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Location, AccessType, Category } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
 import { BloomBadge } from "@/components/ui/BloomBadge";
+import { track } from "@/lib/analytics";
+import PhotoUploadSheet from "@/components/ui/PhotoUploadSheet";
+import LocationPhotoGallery, { PendingPhoto } from "@/components/ui/LocationPhotoGallery";
+import UnsplashPhotoFeed from "@/components/UnsplashPhotoFeed";
 
 const CATEGORY_STYLE: Record<Category, { bg: string; color: string }> = {
   flower_field: { bg: "bg-tulip-50",   color: "text-tulip-600"  },
@@ -49,15 +53,20 @@ export default function LocationDetailPage() {
   const [saved,    setSaved]    = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [imgError, setImgError] = useState(false);
-
-  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
+  const [showUpload, setShowUpload] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [showStreetView, setShowStreetView] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     supabase.from("locations").select("*").eq("slug", slug).eq("is_active", true).single()
       .then(({ data, error }) => {
         if (error || !data) setNotFound(true);
-        else setLocation(data);
+        else {
+          setLocation(data);
+          track("location_detail", { location_id: data.id, slug, bloom_status: data.bloom_status ?? null, category: data.category });
+        }
         setLoading(false);
       });
   }, [slug]);
@@ -78,16 +87,39 @@ export default function LocationDetailPage() {
       await supabase.from("saved_items").delete()
         .eq("session_id", sessionId).eq("item_type", "location").eq("item_id", location.id);
       setSaved(false);
+      track("save", { location_id: location.id, action: "unsave" });
     } else {
       await supabase.from("saved_items").insert({ session_id: sessionId, item_type: "location", item_id: location.id });
       setSaved(true);
+      track("save", { location_id: location.id, action: "save" });
     }
     setSaving(false);
   }
 
   function handleNavigate() {
     if (!location?.latitude || !location?.longitude) return;
+    track("navigate", { location_id: location.id });
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`, "_blank");
+  }
+
+  async function handleShare() {
+    if (!location) return;
+    const url = window.location.href;
+    const shareData = {
+      title: location.title,
+      text: location.short_description ?? `Bekijk ${location.title} op TulipDay`,
+      url,
+    };
+    track("share", { location_id: location.id });
+    if (typeof navigator.share === "function") {
+      try { await navigator.share(shareData); return; } catch { /* cancelled */ }
+    }
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* no clipboard access */ }
   }
 
   if (loading) {
@@ -114,6 +146,17 @@ export default function LocationDetailPage() {
     );
   }
 
+  const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+  const streetViewUrl = location.latitude && location.longitude && mapsKey
+    ? `https://maps.googleapis.com/maps/api/streetview?size=800x500&location=${location.latitude},${location.longitude}&fov=90&pitch=10&key=${mapsKey}&return_error_code=true`
+    : null;
+  const fallback = location.latitude && location.longitude && mapsKey
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${location.latitude},${location.longitude}&zoom=17&size=800x500&maptype=hybrid&key=${mapsKey}`
+    : "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
+
+  const mainPhoto = location.image_url ?? fallback;
+  const displayImage = showStreetView ? (streetViewUrl ?? fallback) : (imgError ? fallback : mainPhoto);
+
   const catStyle = CATEGORY_STYLE[location.category];
   const crowdIdx = Math.min((location.crowd_score ?? 1) - 1, 4);
 
@@ -138,17 +181,35 @@ export default function LocationDetailPage() {
 
       <div className="relative h-72 sm:h-96 overflow-hidden bg-gray-200">
         <Image
-          src={imgError ? fallback : (location.image_url ?? fallback)}
+          src={displayImage}
           alt={location.title}
           fill
-          className="object-cover"
-          onError={() => setImgError(true)}
+          className="object-cover transition-opacity duration-300"
+          onError={() => { if (!showStreetView) setImgError(true); }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />
+
+        {/* Terug knop */}
         <button onClick={() => router.back()}
           className="absolute top-12 left-4 z-10 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors">
           <ArrowLeft size={20} />
         </button>
+
+        {/* Street View toggle — alleen zichtbaar als coördinaten bekend zijn */}
+        {streetViewUrl && (
+          <button
+            onClick={() => setShowStreetView((v) => !v)}
+            className="absolute top-12 right-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full backdrop-blur-sm text-xs font-bold transition-all active:scale-95"
+            style={{
+              backgroundColor: showStreetView ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.35)",
+              color: showStreetView ? "#1A1A1A" : "#ffffff",
+            }}
+          >
+            <MapPin size={12} />
+            {showStreetView ? "Foto" : "Street View"}
+          </button>
+        )}
+
         {location.bloom_status && (
           <div className="absolute bottom-4 left-4"><BloomBadge status={location.bloom_status} /></div>
         )}
@@ -244,12 +305,28 @@ export default function LocationDetailPage() {
           </div>
         )}
 
+        <UnsplashPhotoFeed locationName={`${location.title} bloemen`} />
+
         {location.full_description && (
           <div>
             <h2 className="text-base font-extrabold text-[#1A1A1A] mb-2">{t("location.about")}</h2>
             <p className="text-[15px] text-gray-600 leading-relaxed whitespace-pre-line">{location.full_description}</p>
           </div>
         )}
+
+        {/* ── Foto galerij ── */}
+        <div>
+          <LocationPhotoGallery locationId={location.id} pendingPhotos={pendingPhotos} />
+          <button
+            onClick={() => setShowUpload(true)}
+            aria-label={t("photos.upload_button")}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl
+                       border-2 border-dashed border-tulip-200 text-tulip-500 font-bold text-sm
+                       hover:border-tulip-400 hover:bg-tulip-50 transition-all"
+          >
+            <Plus size={16} /> {t("photos.upload_button")}
+          </button>
+        </div>
 
         <div className="bg-tulip-50 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -267,8 +344,19 @@ export default function LocationDetailPage() {
         </div>
       </div>
 
+      {showUpload && (
+        <PhotoUploadSheet
+          locationId={location.id}
+          onClose={() => setShowUpload(false)}
+          onUploaded={(id, url) => {
+            setPendingPhotos((prev) => [{ id, previewUrl: url }, ...prev]);
+            setShowUpload(false);
+          }}
+        />
+      )}
+
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-4 py-3 pb-safe">
-        <div className="flex gap-3 max-w-lg mx-auto">
+        <div className="flex gap-2 max-w-lg mx-auto">
           <button
             onClick={handleNavigate}
             disabled={!location.latitude}
@@ -281,11 +369,19 @@ export default function LocationDetailPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
+            className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
                         ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "bg-white border-tulip-200 text-tulip-500 hover:border-tulip-400"}`}
+            aria-label={saved ? t("common.saved") : t("common.save")}
           >
             {saving ? <Loader2 size={17} className="animate-spin" /> : <Heart size={17} className={saved ? "fill-white" : ""} />}
-            {saved ? t("common.saved") : t("common.save")}
+          </button>
+          <button
+            onClick={handleShare}
+            className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
+                        ${copied ? "bg-forest-500 border-forest-500 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"}`}
+            aria-label={t("common.share")}
+          >
+            {copied ? <Check size={17} /> : <Share2 size={17} />}
           </button>
         </div>
       </div>

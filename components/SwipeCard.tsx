@@ -111,13 +111,23 @@ export function SwipeCard({ field, onSwipeRight, onSwipeLeft, onSave, isTop }: S
           className="relative flex items-center justify-center overflow-hidden"
           style={{ height: 220, backgroundColor: field.imageBgColor }}
         >
-          <span
-            role="img"
-            aria-label={field.name}
-            style={{ fontSize: 72, lineHeight: 1, userSelect: "none" }}
-          >
-            {field.imageEmoji}
-          </span>
+          {field.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={field.imageUrl}
+              alt={field.name}
+              className="w-full h-full object-cover"
+              style={{ userSelect: "none", pointerEvents: "none" }}
+            />
+          ) : (
+            <span
+              role="img"
+              aria-label={field.name}
+              style={{ fontSize: 72, lineHeight: 1, userSelect: "none" }}
+            >
+              {field.imageEmoji}
+            </span>
+          )}
 
           {/* BEZOEKEN overlay */}
           <div

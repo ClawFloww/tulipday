@@ -7,6 +7,8 @@
     "save": "保存",
     "saved": "已保存",
     "navigate": "导航",
+    "share": "分享",
+    "copied": "链接已复制！",
     "see_all": "查看全部",
     "featured": "精选"
   },
@@ -117,6 +119,7 @@
     "filter_photo": "摄影",
     "filter_family": "家庭",
     "filter_free": "免费",
+    "filter_horeca": "餐饮",
     "view_details": "查看详情"
   },
   "location": {
@@ -226,5 +229,38 @@
     "etiquette_r10": "支持当地农民：购买他们的球茎、鲜花和农产品。",
     "footer_version": "TulipDay · v1.0.0",
     "footer_copyright": "© {year} TulipDay. 保留所有权利。"
+  },
+  "photos": {
+    "upload_button": "添加照片",
+    "sheet_title": "分享照片",
+    "step_pick": "Choose a photo",
+    "step_crop": "Crop",
+    "step_details": "Details",
+    "pick_camera": "Camera",
+    "pick_gallery": "图库",
+    "caption_label": "Caption (optional)",
+    "caption_placeholder": "What do you see in this photo?",
+    "caption_hint": "{n}/80 characters",
+    "bloom_confirm_label": "Confirm bloom",
+    "bloom_confirm_hint": "Check if you saw blooming bulbs",
+    "consent_label": "I give TulipDay permission to show this photo in the app",
+    "upload_btn": "Upload photo",
+    "uploading": "Uploading…",
+    "success_title": "Photo uploaded!",
+    "success_body": "Your photo is being reviewed and will appear soon.",
+    "done_btn": "Done",
+    "add_another": "Add another",
+    "error_size": "Photo is too large (max 8 MB)",
+    "error_resolution": "Photo is too small (min. 800×600 pixels)",
+    "error_format": "Only JPG, WebP and HEIC are allowed",
+    "error_upload": "Upload failed. Please try again.",
+    "error_consent": "Please check the consent box to upload",
+    "gallery_title": "Visitor photos",
+    "empty_title": "Be the first!",
+    "empty_body": "Share a photo of this field and help other visitors.",
+    "badge_today": "Today",
+    "badge_bloom": "Bloom confirmed",
+    "pending_label": "Awaiting approval",
+    "compress_progress": "Processing photo…"
   }
 }

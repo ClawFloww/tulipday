@@ -7,6 +7,8 @@
     "save": "Speichern",
     "saved": "Gespeichert",
     "navigate": "Navigation",
+    "share": "Teilen",
+    "copied": "Link kopiert!",
     "see_all": "Alle anzeigen",
     "featured": "Empfohlen"
   },
@@ -117,6 +119,7 @@
     "filter_photo": "Foto",
     "filter_family": "Familie",
     "filter_free": "Kostenlos",
+    "filter_horeca": "Gastronomie",
     "view_details": "Details ansehen"
   },
   "location": {
@@ -226,5 +229,38 @@
     "etiquette_r10": "Unterstützen Sie lokale Bauern: kaufen Sie ihre Zwiebeln, Blumen und Produkte.",
     "footer_version": "TulipDay · v1.0.0",
     "footer_copyright": "© {year} TulipDay. Alle Rechte vorbehalten."
+  },
+  "photos": {
+    "upload_button": "Foto hinzufügen",
+    "sheet_title": "Foto teilen",
+    "step_pick": "Choose a photo",
+    "step_crop": "Crop",
+    "step_details": "Details",
+    "pick_camera": "Camera",
+    "pick_gallery": "Galerie",
+    "caption_label": "Caption (optional)",
+    "caption_placeholder": "What do you see in this photo?",
+    "caption_hint": "{n}/80 characters",
+    "bloom_confirm_label": "Confirm bloom",
+    "bloom_confirm_hint": "Check if you saw blooming bulbs",
+    "consent_label": "I give TulipDay permission to show this photo in the app",
+    "upload_btn": "Upload photo",
+    "uploading": "Uploading…",
+    "success_title": "Photo uploaded!",
+    "success_body": "Your photo is being reviewed and will appear soon.",
+    "done_btn": "Done",
+    "add_another": "Add another",
+    "error_size": "Photo is too large (max 8 MB)",
+    "error_resolution": "Photo is too small (min. 800×600 pixels)",
+    "error_format": "Only JPG, WebP and HEIC are allowed",
+    "error_upload": "Upload failed. Please try again.",
+    "error_consent": "Please check the consent box to upload",
+    "gallery_title": "Visitor photos",
+    "empty_title": "Be the first!",
+    "empty_body": "Share a photo of this field and help other visitors.",
+    "badge_today": "Today",
+    "badge_bloom": "Bloom confirmed",
+    "pending_label": "Awaiting approval",
+    "compress_progress": "Processing photo…"
   }
 }

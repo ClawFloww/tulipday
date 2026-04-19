@@ -7,6 +7,8 @@
     "save": "Opslaan",
     "saved": "Opgeslagen",
     "navigate": "Navigeren",
+    "share": "Delen",
+    "copied": "Link gekopieerd!",
     "see_all": "Alles zien",
     "featured": "Uitgelicht",
     "load_error": "Er is iets misgegaan bij het laden van de data. Probeer het later opnieuw."
@@ -118,6 +120,7 @@
     "filter_photo": "Foto",
     "filter_family": "Familie",
     "filter_free": "Gratis",
+    "filter_horeca": "Horeca",
     "view_details": "Bekijk details"
   },
   "location": {
@@ -227,5 +230,38 @@
     "etiquette_r10": "Steun lokale boeren: koop hun bollen, bloemen en producten als je kunt.",
     "footer_version": "TulipDay · v1.0.0",
     "footer_copyright": "© {year} TulipDay. Alle rechten voorbehouden."
+  },
+  "photos": {
+    "upload_button": "Foto toevoegen",
+    "sheet_title": "Deel een foto",
+    "step_pick": "Kies een foto",
+    "step_crop": "Bijsnijden",
+    "step_details": "Details",
+    "pick_camera": "Camera",
+    "pick_gallery": "Galerij",
+    "caption_label": "Bijschrift (optioneel)",
+    "caption_placeholder": "Wat zie je op deze foto?",
+    "caption_hint": "{n}/80 tekens",
+    "bloom_confirm_label": "Bloei bevestigen",
+    "bloom_confirm_hint": "Vink aan als je bloeiende bollen hebt gezien",
+    "consent_label": "Ik geef TulipDay toestemming deze foto te tonen in de app",
+    "upload_btn": "Foto uploaden",
+    "uploading": "Uploaden…",
+    "success_title": "Foto geüpload!",
+    "success_body": "Je foto wordt beoordeeld en verschijnt binnenkort.",
+    "done_btn": "Klaar",
+    "add_another": "Nog een foto",
+    "error_size": "Foto is te groot (max 8 MB)",
+    "error_resolution": "Foto is te klein (min. 800×600 pixels)",
+    "error_format": "Alleen JPG, WebP en HEIC zijn toegestaan",
+    "error_upload": "Upload mislukt. Probeer het opnieuw.",
+    "error_consent": "Vink de toestemmingsbox aan om te uploaden",
+    "gallery_title": "Foto's van bezoekers",
+    "empty_title": "Wees de eerste!",
+    "empty_body": "Deel een foto van dit veld en help andere bezoekers.",
+    "badge_today": "Vandaag",
+    "badge_bloom": "Bloei bevestigd",
+    "pending_label": "Wacht op goedkeuring",
+    "compress_progress": "Foto verwerken…"
   }
 }

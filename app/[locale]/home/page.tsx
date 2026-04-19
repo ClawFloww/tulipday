@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Search, MapPin, Loader2, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Location, Route, OnboardingPrefs, Category } from "@/lib/types";
@@ -182,7 +183,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-1">
           <div>
             <p className="text-xs text-gray-400 font-medium">{t(`home.${greetingKey}`)} 👋</p>
-            <h1 className="text-xl font-extrabold text-[#1A1A1A] leading-tight">🌷 TulipDay</h1>
+            <Image src="/logo.png" alt="TulipDay" width={180} height={120} className="object-contain" priority />
           </div>
           {userCoords && (
             <span className="text-[10px] text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full font-bold">
@@ -243,6 +244,22 @@ export default function HomePage() {
       {/* Sections */}
       {!searchResults && (
         <div className="pt-7">
+
+          {/* Bloemencorso live banner */}
+          <div className="mx-4 mb-6">
+            <button
+              onClick={() => router.push("/corso")}
+              className="w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white flex items-center justify-between gap-3 shadow-md active:scale-95 transition-all"
+            >
+              <div className="text-left">
+                <p className="text-xs font-semibold opacity-80 uppercase tracking-widest">Live · 19 april 2026</p>
+                <p className="text-base font-extrabold leading-tight">🌸 Bloemencorso Live</p>
+                <p className="text-xs opacity-80 mt-0.5">Deel je foto&apos;s van de stoet</p>
+              </div>
+              <ChevronRight size={20} className="flex-shrink-0 opacity-80" />
+            </button>
+          </div>
+
           <Section title={t("home.best_blooms")} onSeeAll={() => {}}>
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback } from "react";
+import { useState, useEffect, useTransition, useCallback, useMemo } from "react";
 import {
   LogOut, Plus, Pencil, Trash2, Save, X, ChevronUp, ChevronDown,
   Loader2, MapPin, RefreshCw, Check, AlertCircle,
@@ -10,12 +10,15 @@ import {
   adminGetLocations, adminCreateLocation, adminUpdateLocation, adminDeleteLocation,
   adminGetRoutes, adminCreateRoute, adminUpdateRoute, adminDeleteRoute,
   adminGetRouteStops, adminAddRouteStop, adminRemoveRouteStop, adminReorderStops,
-  adminSetFeatured,
+  adminSetFeatured, adminUpdateBloomStatus, adminBulkUpdateBloomStatus,
 } from "./actions";
+import { adminGetPhotos, adminGetPendingCount, adminApprovePhoto, adminRejectPhoto, adminEnsurePhotoBucket } from "./photo-actions";
+import { LocationPhoto, PhotoStatus } from "@/lib/types";
+import { getAdminClient } from "@/lib/supabase-admin-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "locations" | "routes" | "home";
+type Tab = "locations" | "routes" | "home" | "photos" | "bloom" | "analytics";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Rec = Record<string, any>;
 
@@ -728,12 +731,533 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+// ─── Bloom section ────────────────────────────────────────────────────────────
+
+const BLOOM_OPTS_NL: { value: string; label: string; color: string }[] = [
+  { value: "peak",     label: "Piek",     color: "bg-green-100 text-green-800 border-green-300"  },
+  { value: "blooming", label: "In bloei", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  { value: "early",    label: "Vroeg",    color: "bg-amber-100 text-amber-800 border-amber-300"  },
+  { value: "ending",   label: "Voorbij",  color: "bg-red-100 text-red-700 border-red-300"        },
+];
+
+function BloomBadge({ status }: { status: string }) {
+  const opt = BLOOM_OPTS_NL.find(o => o.value === status);
+  if (!opt) return <span className="text-xs text-gray-400">–</span>;
+  return (
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${opt.color}`}>
+      {opt.label}
+    </span>
+  );
+}
+
+function BloomSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => void }) {
+  const [locations, setLocations] = useState<Rec[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState("");
+  const [selected, setSelected]   = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState("blooming");
+  const [isPending, startT]       = useTransition();
+
+  const load = useCallback(() => {
+    startT(async () => {
+      setLoading(true);
+      const data = await adminGetLocations();
+      setLocations(data.filter((l: Rec) => l.category === "flower_field" || l.bloom_status));
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() => {
+    if (!search) return locations;
+    const q = search.toLowerCase();
+    return locations.filter((l: Rec) => l.title?.toLowerCase().includes(q) || l.address?.toLowerCase().includes(q));
+  }, [locations, search]);
+
+  // Groepeer op huidige status
+  const grouped = useMemo(() => {
+    const map: Record<string, Rec[]> = { peak: [], blooming: [], early: [], ending: [], "": [] };
+    for (const loc of filtered) {
+      const s = loc.bloom_status ?? "";
+      (map[s] ?? map[""]).push(loc);
+    }
+    return map;
+  }, [filtered]);
+
+  async function handleSingleUpdate(id: string, status: string) {
+    try {
+      await adminUpdateBloomStatus(id, status);
+      setLocations(prev => prev.map(l => l.id === id ? { ...l, bloom_status: status } : l));
+    } catch {
+      toast("Fout bij opslaan", "err");
+    }
+  }
+
+  async function handleBulkUpdate() {
+    if (selected.size === 0) { toast("Geen locaties geselecteerd", "err"); return; }
+    try {
+      await adminBulkUpdateBloomStatus(Array.from(selected), bulkStatus);
+      setLocations(prev => prev.map(l => selected.has(l.id) ? { ...l, bloom_status: bulkStatus } : l));
+      setSelected(new Set());
+      toast(`${selected.size} locaties bijgewerkt`);
+    } catch {
+      toast("Fout bij bulk update", "err");
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id); else s.add(id);
+      return s;
+    });
+  }
+
+  function selectAll() {
+    setSelected(new Set(filtered.map((l: Rec) => l.id)));
+  }
+
+  const bloomOrder = ["peak", "blooming", "early", "ending", ""];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-extrabold text-gray-900">Bloei-status beheer</h2>
+        <button onClick={load} disabled={isPending} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 font-semibold transition-colors">
+          <RefreshCw size={13} className={isPending ? "animate-spin" : ""} /> Vernieuwen
+        </button>
+      </div>
+
+      {/* Zoek + bulk */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Zoek op naam of adres…"
+          className={`${inputCls} flex-1`}
+        />
+        <div className="flex gap-2 items-center">
+          <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className={`${inputCls} w-36`}>
+            {BLOOM_OPTS_NL.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <button onClick={handleBulkUpdate} disabled={selected.size === 0}
+            className="px-3 py-2 bg-rose-600 text-white text-sm font-bold rounded-xl hover:bg-rose-700 disabled:opacity-40 whitespace-nowrap transition-colors">
+            Zet {selected.size > 0 ? `(${selected.size})` : "selectie"}
+          </button>
+          <button onClick={selectAll} className="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+            Alles
+          </button>
+        </div>
+      </div>
+
+      {/* Statusoverzicht */}
+      <div className="grid grid-cols-4 gap-2">
+        {BLOOM_OPTS_NL.map(opt => {
+          const count = (grouped[opt.value] ?? []).length;
+          return (
+            <div key={opt.value} className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+              <p className="text-2xl font-extrabold text-gray-900">{count}</p>
+              <BloomBadge status={opt.value} />
+            </div>
+          );
+        })}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 size={28} className="text-rose-400 animate-spin" /></div>
+      ) : (
+        <div className="space-y-6">
+          {bloomOrder.filter(s => (grouped[s] ?? []).length > 0).map(statusKey => (
+            <div key={statusKey}>
+              <div className="flex items-center gap-2 mb-2">
+                <BloomBadge status={statusKey || "–"} />
+                <span className="text-xs text-gray-400">{(grouped[statusKey] ?? []).length} locaties</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50 overflow-hidden">
+                {(grouped[statusKey] ?? []).map((loc: Rec) => (
+                  <div
+                    key={loc.id}
+                    onClick={() => toggleSelect(loc.id)}
+                    className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors
+                      ${selected.has(loc.id) ? "bg-rose-50" : "hover:bg-gray-50"}`}
+                  >
+                    {/* Checkbox */}
+                    <div className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors
+                      ${selected.has(loc.id) ? "bg-rose-600 border-rose-600" : "border-gray-300"}`}>
+                      {selected.has(loc.id) && <Check size={10} className="text-white" />}
+                    </div>
+
+                    {/* Naam */}
+                    <p className="text-sm font-semibold text-gray-800 flex-1 truncate">{loc.title}</p>
+
+                    {/* Status dropdown */}
+                    <select
+                      value={loc.bloom_status ?? ""}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => handleSingleUpdate(loc.id, e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
+                    >
+                      {BLOOM_OPTS_NL.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Photos section ───────────────────────────────────────────────────────────
+
+const REJECTION_REASONS = [
+  "Geen bollenveld zichtbaar",
+  "Slechte kwaliteit",
+  "Verkeerde locatie",
+  "Ongepaste inhoud",
+];
+
+function PhotosSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => void }) {
+  const [activeStatus, setActiveStatus] = useState<PhotoStatus>("pending");
+  const [photos, setPhotos] = useState<(LocationPhoto & { locations?: { title: string } })[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [rejectReason, setRejectReason] = useState(REJECTION_REASONS[0]);
+  const [showRejectDropdown, setShowRejectDropdown] = useState<string | null>(null);
+  const [isPending, startT] = useTransition();
+
+  const load = useCallback(() => {
+    startT(async () => {
+      setLoading(true);
+      try {
+        await adminEnsurePhotoBucket();
+        const [data, count] = await Promise.all([
+          adminGetPhotos(activeStatus),
+          adminGetPendingCount(),
+        ]);
+        setPhotos(data as typeof photos);
+        setPendingCount(count);
+        setActivePhotoIdx(0);
+      } finally {
+        setLoading(false);
+      }
+    });
+  }, [activeStatus]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") setActivePhotoIdx((i) => Math.min(i + 1, photos.length - 1));
+      if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   setActivePhotoIdx((i) => Math.max(i - 1, 0));
+      if (e.key === "a" || e.key === "A") {
+        const photo = photos[activePhotoIdx];
+        if (photo && activeStatus === "pending") handleApprove(photo.id);
+      }
+      if (e.key === "r" || e.key === "R") {
+        const photo = photos[activePhotoIdx];
+        if (photo && activeStatus === "pending") setShowRejectDropdown(photo.id);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos, activePhotoIdx, activeStatus]);
+
+  async function handleApprove(id: string) {
+    try {
+      await adminApprovePhoto(id);
+      setPhotos((p) => p.filter((ph) => ph.id !== id));
+      setPendingCount((c) => Math.max(0, c - 1));
+      toast("Foto goedgekeurd");
+    } catch {
+      toast("Fout bij goedkeuren", "err");
+    }
+  }
+
+  async function handleReject(id: string) {
+    try {
+      await adminRejectPhoto(id, rejectReason);
+      setPhotos((p) => p.filter((ph) => ph.id !== id));
+      setPendingCount((c) => Math.max(0, c - 1));
+      setShowRejectDropdown(null);
+      toast("Foto afgewezen");
+    } catch {
+      toast("Fout bij afwijzen", "err");
+    }
+  }
+
+  const statusTabs: { id: PhotoStatus; label: string }[] = [
+    { id: "pending",  label: "Wachtend"    },
+    { id: "approved", label: "Goedgekeurd" },
+    { id: "rejected", label: "Afgewezen"   },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-extrabold text-gray-900">Foto moderatie</h2>
+        <button onClick={load} disabled={isPending} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 font-semibold transition-colors">
+          <RefreshCw size={13} className={isPending ? "animate-spin" : ""} /> Vernieuwen
+        </button>
+      </div>
+
+      {/* Keyboard hint */}
+      <p className="text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-xl">
+        Sneltoetsen: <kbd className="bg-white border border-gray-200 px-1 rounded text-xs">A</kbd> Goedkeuren ·{" "}
+        <kbd className="bg-white border border-gray-200 px-1 rounded text-xs">R</kbd> Afwijzen ·{" "}
+        <kbd className="bg-white border border-gray-200 px-1 rounded text-xs">←→</kbd> Navigeren
+      </p>
+
+      {/* Status tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1">
+        {statusTabs.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setActiveStatus(s.id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold rounded-xl transition-colors
+              ${activeStatus === s.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            {s.label}
+            {s.id === "pending" && pendingCount > 0 && (
+              <span className="bg-rose-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 size={28} className="text-rose-400 animate-spin" /></div>
+      ) : photos.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <p className="text-4xl mb-3">📭</p>
+          <p className="text-sm font-medium">Geen foto&apos;s met status &ldquo;{activeStatus}&rdquo;</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {photos.map((photo, idx) => {
+            const isActive = idx === activePhotoIdx;
+            const locTitle = (photo as { locations?: { title: string } }).locations?.title ?? "–";
+            return (
+              <div
+                key={photo.id}
+                onClick={() => setActivePhotoIdx(idx)}
+                className={`relative rounded-2xl overflow-hidden border-2 cursor-pointer transition-all
+                  ${isActive ? "border-rose-500 shadow-lg scale-[1.02]" : "border-transparent hover:border-gray-200"}`}
+              >
+                {/* Thumbnail */}
+                {photo.public_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.public_url}
+                    alt={photo.caption ?? "Bezoekersfoto"}
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-300 text-sm">
+                    Geen afbeelding
+                  </div>
+                )}
+
+                {/* Info overlay */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2.5">
+                  <p className="text-white text-xs font-bold truncate">{locTitle}</p>
+                  <p className="text-white/70 text-[10px]">
+                    {new Date(photo.uploaded_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                  {photo.caption && (
+                    <p className="text-white/80 text-[10px] italic truncate mt-0.5">&ldquo;{photo.caption}&rdquo;</p>
+                  )}
+                  {photo.bloom_confirmed && (
+                    <span className="inline-block bg-tulip-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1">
+                      🌷 Bloei bevestigd
+                    </span>
+                  )}
+                </div>
+
+                {/* Action buttons (only on pending + active) */}
+                {activeStatus === "pending" && isActive && (
+                  <div className="absolute top-2 right-2 flex gap-1.5">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleApprove(photo.id); }}
+                      aria-label="Goedkeuren"
+                      title="Goedkeuren (A)"
+                      className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center shadow hover:bg-green-600 transition-colors"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowRejectDropdown(photo.id); }}
+                      aria-label="Afwijzen"
+                      title="Afwijzen (R)"
+                      className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Reject modal */}
+      {showRejectDropdown && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl p-5 w-80 shadow-xl space-y-4">
+            <h3 className="font-extrabold text-gray-900">Reden voor afwijzing</h3>
+            <select
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className={inputCls}
+            >
+              {REJECTION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleReject(showRejectDropdown)}
+                className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 text-sm transition-colors"
+              >
+                Afwijzen
+              </button>
+              <button
+                onClick={() => setShowRejectDropdown(null)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 text-sm transition-colors"
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Analytics section ────────────────────────────────────────────────────────
+
+function AnalyticsSection() {
+  const sb = getAdminClient();
+  const [stats, setStats] = useState<{
+    total_events: number;
+    location_views: number;
+    swipe_rights: number;
+    shares: number;
+    photo_uploads: number;
+    top_locations: { location_id: string; count: number }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [total, views, rights, shares, uploads, top] = await Promise.all([
+        sb.from("page_events").select("*", { count: "exact", head: true }).gte("created_at", cutoff),
+        sb.from("page_events").select("*", { count: "exact", head: true }).eq("event_name", "location_detail").gte("created_at", cutoff),
+        sb.from("page_events").select("*", { count: "exact", head: true }).eq("event_name", "swipe_right").gte("created_at", cutoff),
+        sb.from("page_events").select("*", { count: "exact", head: true }).eq("event_name", "share").gte("created_at", cutoff),
+        sb.from("page_events").select("*", { count: "exact", head: true }).eq("event_name", "photo_upload").gte("created_at", cutoff),
+        sb.from("page_events").select("properties").eq("event_name", "location_detail").gte("created_at", cutoff).limit(1000),
+      ]);
+
+      // Aggregate top locations client-side
+      const countMap: Record<string, number> = {};
+      for (const row of top.data ?? []) {
+        const id = (row.properties as Record<string, string>)?.location_id;
+        if (id) countMap[id] = (countMap[id] ?? 0) + 1;
+      }
+      const topLocations = Object.entries(countMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([location_id, count]) => ({ location_id, count }));
+
+      setStats({
+        total_events:   total.count   ?? 0,
+        location_views: views.count   ?? 0,
+        swipe_rights:   rights.count  ?? 0,
+        shares:         shares.count  ?? 0,
+        photo_uploads:  uploads.count ?? 0,
+        top_locations:  topLocations,
+      });
+      setLoading(false);
+    }
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-gray-300" /></div>;
+  if (!stats)  return <p className="text-center text-gray-400 py-16">Geen data beschikbaar. Voer eerst de page_events migratie uit.</p>;
+
+  const statCards = [
+    { label: "Totaal events (30d)", value: stats.total_events,   color: "text-gray-800" },
+    { label: "Locatie views",       value: stats.location_views, color: "text-blue-600" },
+    { label: "Swipe right",         value: stats.swipe_rights,   color: "text-green-600" },
+    { label: "Gedeeld",             value: stats.shares,         color: "text-purple-600" },
+    { label: "Foto uploads",        value: stats.photo_uploads,  color: "text-rose-600" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-extrabold text-gray-900 mb-1">Statistieken</h2>
+        <p className="text-xs text-gray-400">Laatste 30 dagen · anoniem · geen PII</p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {statCards.map((c) => (
+          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 p-4">
+            <p className={`text-2xl font-extrabold ${c.color}`}>{c.value.toLocaleString("nl")}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{c.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {stats.top_locations.length > 0 && (
+        <div>
+          <h3 className="text-sm font-extrabold text-gray-700 mb-3">Meest bekeken locaties (30d)</h3>
+          <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+            {stats.top_locations.map((loc, i) => (
+              <div key={loc.location_id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-300 w-5">{i + 1}</span>
+                  <span className="text-xs font-mono text-gray-500 truncate max-w-[200px]">{loc.location_id}</span>
+                </div>
+                <span className="text-sm font-bold text-gray-800">{loc.count}×</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+        <p className="text-xs font-bold text-amber-800 mb-1">SQL migratie vereist</p>
+        <p className="text-xs text-amber-700">
+          Voer <code className="font-mono bg-amber-100 px-1 rounded">supabase/migrations/20260412000002_page_events.sql</code> uit
+          in de Supabase SQL editor als de tabel nog niet bestaat.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: "locations", label: "Locations", emoji: "📍" },
   { id: "routes",    label: "Routes",    emoji: "🗺"  },
   { id: "home",      label: "Home",      emoji: "⭐"  },
+  { id: "bloom",     label: "Bloei",     emoji: "🌷"  },
+  { id: "photos",    label: "Foto's",    emoji: "📸"  },
+  { id: "analytics", label: "Stats",     emoji: "📊"  },
 ];
 
 export default function AdminPage() {
@@ -795,6 +1319,9 @@ export default function AdminPage() {
         {tab === "locations" && <LocationsSection toast={showToast} />}
         {tab === "routes"    && <RoutesSection    toast={showToast} />}
         {tab === "home"      && <HomeSection      toast={showToast} />}
+        {tab === "bloom"     && <BloomSection     toast={showToast} />}
+        {tab === "photos"    && <PhotosSection    toast={showToast} />}
+        {tab === "analytics" && <AnalyticsSection />}
       </div>
     </div>
   );

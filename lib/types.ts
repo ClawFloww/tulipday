@@ -52,3 +52,20 @@ export interface OnboardingPrefs {
   transport: string;
   time: string;
 }
+
+export type PhotoStatus = "pending" | "approved" | "rejected";
+
+export interface LocationPhoto {
+  id: string;
+  location_id: string;
+  session_id: string;
+  storage_path: string;
+  public_url: string | null;
+  caption: string | null;
+  status: PhotoStatus;
+  bloom_confirmed: boolean;
+  rejection_reason: string | null;
+  uploaded_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
+}

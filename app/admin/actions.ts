@@ -17,6 +17,18 @@ export async function adminGetLocations() {
   return data ?? [];
 }
 
+export async function adminUpdateBloomStatus(id: string, status: string): Promise<void> {
+  const sb = getAdminClient();
+  const { error } = await sb.from("locations").update({ bloom_status: status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function adminBulkUpdateBloomStatus(ids: string[], status: string): Promise<void> {
+  const sb = getAdminClient();
+  const { error } = await sb.from("locations").update({ bloom_status: status }).in("id", ids);
+  if (error) throw error;
+}
+
 export async function adminCreateLocation(fields: Record<string, unknown>): Promise<Res> {
   const { error } = await getAdminClient().from("locations").insert(fields);
   return { error: error?.message };

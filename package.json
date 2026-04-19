@@ -7,21 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:mobile": "next build && npx cap sync",
+    "build:mobile": "BUILD_TARGET=mobile next build && npx cap sync",
+    "cap:sync": "npx cap sync",
     "cap:ios": "npx cap open ios",
-    "cap:android": "npx cap open android"
+    "cap:android": "npx cap open android",
+    "release:ios": "BUILD_TARGET=mobile next build && npx cap sync ios && npx cap open ios",
+    "release:android": "BUILD_TARGET=mobile next build && npx cap sync android && npx cap open android",
+    "assets": "npx capacitor-assets generate"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
     "@supabase/supabase-js": "^2.100.0",
+    "browser-image-compression": "^2.0.2",
     "lucide-react": "^1.6.0",
     "maplibre-gl": "^5.21.1",
     "next": "14.2.35",
     "next-intl": "^4.8.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-image-crop": "^11.0.10"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
