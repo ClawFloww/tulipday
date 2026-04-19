@@ -19,6 +19,7 @@
     "@capacitor/android": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
+    "@stripe/stripe-js": "^9.2.0",
     "@supabase/supabase-js": "^2.100.0",
     "browser-image-compression": "^2.0.2",
     "lucide-react": "^1.6.0",
@@ -27,7 +28,9 @@
     "next-intl": "^4.8.3",
     "react": "^18",
     "react-dom": "^18",
-    "react-image-crop": "^11.0.10"
+    "react-image-crop": "^11.0.10",
+    "stripe": "^22.0.2",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
@@ -35,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/web-push": "^3.6.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "postcss": "^8",

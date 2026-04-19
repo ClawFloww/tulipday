@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Globe, Info, Mail, ShieldCheck, Flower2,
-  ChevronDown, ChevronUp, ExternalLink, Check, Crown,
+  ChevronDown, ChevronUp, ExternalLink, Check, Crown, Bell, BellOff, Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useT, type Locale } from "@/lib/i18n-context";
+import { registerPushSubscription, unregisterPushSubscription, isPushSubscribed } from "@/lib/pushClient";
 
 function Accordion({ icon, title, accent = "text-gray-600", children }: {
   icon: React.ReactNode; title: string; accent?: string; children: React.ReactNode;
@@ -80,6 +81,52 @@ function SectionLabel({ label }: { label: string }) {
   return <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest px-1 pt-2 pb-1">{label}</p>;
 }
 
+function PushToggle() {
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [supported, setSupported]   = useState(false);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      setSupported(true);
+      isPushSubscribed().then(setSubscribed);
+    }
+  }, []);
+
+  if (!supported) return null;
+
+  async function toggle() {
+    setLoading(true);
+    if (subscribed) {
+      await unregisterPushSubscription();
+      setSubscribed(false);
+    } else {
+      const ok = await registerPushSubscription();
+      setSubscribed(ok);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <button onClick={toggle} disabled={loading}
+      className="w-full bg-white rounded-2xl shadow-card flex items-center gap-3 px-4 py-4 hover:bg-gray-50 active:scale-[0.99] transition-all">
+      <span className={subscribed ? "text-tulip-500" : "text-gray-400"}>
+        {subscribed ? <Bell size={18} /> : <BellOff size={18} />}
+      </span>
+      <div className="flex-1 text-left">
+        <p className="text-sm font-bold text-[#1A1A1A]">Bloei-meldingen</p>
+        <p className="text-xs text-gray-400 mt-0.5">{subscribed ? "Actief — tik om uit te zetten" : "Ontvang alerts als tulpen in volle bloei zijn"}</p>
+      </div>
+      {loading
+        ? <Loader2 size={16} className="animate-spin text-gray-400" />
+        : <div className={`w-11 h-6 rounded-full transition-colors ${subscribed ? "bg-tulip-500" : "bg-gray-200"} flex items-center px-1`}>
+            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${subscribed ? "translate-x-5" : "translate-x-0"}`} />
+          </div>
+      }
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const { t } = useT();
   const router = useRouter();
@@ -124,6 +171,7 @@ export default function SettingsPage() {
         />
 
         <SectionLabel label={t("settings.section_preferences")} />
+        <PushToggle />
         <LanguageSetting />
 
         <SectionLabel label={t("settings.section_about")} />
