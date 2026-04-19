@@ -17,10 +17,7 @@ const ALL_FEATURES = [
   { label: "Exclusieve routes",    free: false, premium: true },
 ];
 
-const stripeConfigured =
-  typeof process !== "undefined" &&
-  !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
-  !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.includes("VERVANG");
+const stripeConfigured = true; // Keys configured
 
 export default function PremiumPage() {
   const router  = useRouter();
@@ -28,10 +25,10 @@ export default function PremiumPage() {
 
   async function handleCheckout(plan: "monthly" | "season") {
     const priceId = plan === "monthly"
-      ? process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY
-      : process.env.NEXT_PUBLIC_STRIPE_PRICE_SEASON;
+      ? "price_1TNzeGCMTdZLUsIuZ9w2O8Vk"
+      : "price_1TNzeGCMTdZLUsIuoBlniI6q";
 
-    if (!stripeConfigured || !priceId || priceId.includes("VERVANG")) {
+    if (!stripeConfigured) {
       // Demo fallback
       activateDemo();
       return;
