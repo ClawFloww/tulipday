@@ -190,6 +190,24 @@ export default function RouteDetailClient() {
 
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-4 py-3 pb-safe">
         <div className="flex gap-3 max-w-lg mx-auto">
+          {/* Start route → Google Maps with all stops as waypoints */}
+          <button
+            onClick={() => {
+              const valid = stops.filter((s) => s.locations.latitude && s.locations.longitude);
+              if (valid.length === 0) return;
+              const origin      = `${valid[0].locations.latitude},${valid[0].locations.longitude}`;
+              const destination = `${valid[valid.length - 1].locations.latitude},${valid[valid.length - 1].locations.longitude}`;
+              const waypoints   = valid.slice(1, -1).map((s) => `${s.locations.latitude},${s.locations.longitude}`).join("|");
+              const travelMode  = route.route_type === "bike" || route.route_type === "walk" ? (route.route_type === "bike" ? "bicycling" : "walking") : "driving";
+              const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""}&travelmode=${travelMode}`;
+              window.open(url, "_blank");
+            }}
+            disabled={stops.filter((s) => s.locations.latitude).length === 0}
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-tulip-500 text-white shadow-md shadow-tulip-200 hover:bg-tulip-600 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <MapPin size={17} /> {t("common.navigate")}
+          </button>
+
           <button
             onClick={handleSave}
             disabled={saving}
