@@ -19,7 +19,13 @@ const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
 const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 const SOURCE_ID      = "locations";
 const DRAW_SOURCE_ID = "draw-route";
-const OSRM_BASE      = "https://router.project-osrm.org/route/v1";
+
+// Aparte OSRM-instanties per modus (routing.openstreetmap.de)
+const OSRM_BACKENDS: Record<string, string> = {
+  foot:    "https://routing.openstreetmap.de/routed-foot",
+  cycling: "https://routing.openstreetmap.de/routed-bike",
+  driving: "https://routing.openstreetmap.de/routed-car",
+};
 
 const CATEGORY_COLOR: Record<Category, string> = {
   flower_field: "#f43f5e",
@@ -85,12 +91,14 @@ function fmtDistance(m: number): string {
 }
 
 async function fetchOSRM(
-  profile: string,
+  profile: "foot" | "cycling" | "driving",
   coords: [number, number][],
 ): Promise<OsrmRoute | null> {
   try {
-    const c   = coords.map(([lng, lat]) => `${lng},${lat}`).join(";");
-    const res = await fetch(`${OSRM_BASE}/${profile}/${c}?overview=full&geometries=geojson`);
+    const base = OSRM_BACKENDS[profile];
+    const c    = coords.map(([lng, lat]) => `${lng},${lat}`).join(";");
+    // Alle routing.openstreetmap.de-instanties gebruiken /route/v1/driving/ in het pad
+    const res  = await fetch(`${base}/route/v1/driving/${c}?overview=full&geometries=geojson`);
     if (!res.ok) return null;
     const data = await res.json();
     if (data.code !== "Ok" || !data.routes?.[0]) return null;
