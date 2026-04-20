@@ -40,7 +40,7 @@ export default function BloomDemoPage() {
   });
 
   // Hook met gesimuleerde locatie
-  const { nearbyField, dismissField, markSubmitted } = useBloomPromptTrigger(SIM_LAT, SIM_LNG);
+  const { dismissField, markSubmitted } = useBloomPromptTrigger(SIM_LAT, SIM_LNG);
 
   // Altijd field_001 tonen in demo (zodat prompt direct zichtbaar is)
   const demoField = TULIP_FIELDS.find((f) => f.id === "field_001")!;
