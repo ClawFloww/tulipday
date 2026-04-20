@@ -9,8 +9,9 @@ import { supabase } from "@/lib/supabase";
 import type { Location, Category } from "@/lib/types";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { X, ChevronUp, MapPin, Locate, PenLine, Trash2 } from "lucide-react";
+import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { saveCustomRoute } from "@/lib/customRoutes";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -152,11 +153,13 @@ function RoutesPanel({
   loading,
   waypointCount,
   onClear,
+  onSave,
 }: {
   result: RouteResult | null;
   loading: boolean;
   waypointCount: number;
   onClear: () => void;
+  onSave: () => void;
 }) {
   const rows: { emoji: string; label: string; key: keyof RouteResult }[] = [
     { emoji: "🚶", label: "Wandelen", key: "walking" },
@@ -175,12 +178,23 @@ function RoutesPanel({
             <p className="text-sm font-extrabold text-gray-900">Reistijden</p>
             <p className="text-[11px] text-gray-400 mt-0.5">{waypointCount} punt{waypointCount !== 1 ? "en" : ""} · fietsroute op kaart</p>
           </div>
-          <button
-            onClick={onClear}
-            className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-xl hover:bg-rose-50"
-          >
-            <Trash2 size={13} /> Wis
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onSave}
+              disabled={loading || !result}
+              className="flex items-center gap-1.5 text-xs font-semibold text-tulip-600 hover:text-white
+                         transition-colors px-2.5 py-1.5 rounded-xl hover:bg-tulip-500 bg-tulip-50
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <BookmarkPlus size={13} /> Opslaan
+            </button>
+            <button
+              onClick={onClear}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-xl hover:bg-rose-50"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -322,6 +336,11 @@ export default function MapView() {
   const [routeResult,  setRouteResult]  = useState<RouteResult | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
+  // Save sheet state
+  const [showSaveSheet, setShowSaveSheet] = useState(false);
+  const [saveName,      setSaveName]      = useState("");
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
+
   // Refs so MapLibre event handlers always see current values
   const locationsRef          = useRef<MapLocation[]>([]);
   const activeFilterRef       = useRef<FilterId | null>(null);
@@ -419,6 +438,28 @@ export default function MapView() {
       setDrawMode(true);
     }
   }, [clearDrawing]);
+
+  // ── Save drawn route ──
+  const openSaveSheet = useCallback(() => {
+    const d = new Date();
+    const label = d.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+    setSaveName(`Mijn route · ${label}`);
+    setSaveConfirmed(false);
+    setShowSaveSheet(true);
+  }, []);
+
+  const confirmSave = useCallback(() => {
+    if (!routeResult || !saveName.trim()) return;
+    saveCustomRoute({
+      name:      saveName.trim(),
+      waypoints,
+      cycling:   routeResult.cycling  ? { duration: routeResult.cycling.duration,  distance: routeResult.cycling.distance  } : null,
+      walking:   routeResult.walking  ? { duration: routeResult.walking.duration,  distance: routeResult.walking.distance  } : null,
+      driving:   routeResult.driving  ? { duration: routeResult.driving.duration,  distance: routeResult.driving.distance  } : null,
+    });
+    setSaveConfirmed(true);
+    setTimeout(() => setShowSaveSheet(false), 1200);
+  }, [routeResult, saveName, waypoints]);
 
   // ── Init map ──
   useEffect(() => {
@@ -697,13 +738,67 @@ export default function MapView() {
       </div>
 
       {/* ── Route times panel ── */}
-      {showRoutePanel && (
+      {showRoutePanel && !showSaveSheet && (
         <RoutesPanel
           result={routeResult}
           loading={routeLoading}
           waypointCount={waypoints.length}
-          onClear={() => { clearDrawing(); }}
+          onClear={clearDrawing}
+          onSave={openSaveSheet}
         />
+      )}
+
+      {/* ── Save route sheet ── */}
+      {showSaveSheet && (
+        <div className="absolute bottom-20 left-3 right-3 z-40 bg-white rounded-3xl shadow-2xl shadow-black/20 overflow-hidden animate-slide-up">
+          <div className="flex justify-center pt-2.5 pb-1">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="px-4 pb-5">
+            {saveConfirmed ? (
+              <div className="flex flex-col items-center py-4 gap-2">
+                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+                  <Check size={24} className="text-green-600" />
+                </div>
+                <p className="text-sm font-extrabold text-gray-900">Opgeslagen!</p>
+                <p className="text-xs text-gray-400">Terug te vinden onder Opgeslagen → Eigen</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm font-extrabold text-gray-900 mb-1">Route opslaan</p>
+                <p className="text-xs text-gray-400 mb-3">Kies een naam voor deze route</p>
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  maxLength={60}
+                  className="w-full px-3.5 py-3 rounded-xl border border-gray-200 text-sm font-semibold
+                             text-gray-800 bg-gray-50 focus:outline-none focus:border-tulip-400
+                             focus:bg-white transition-colors mb-3"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowSaveSheet(false)}
+                    className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-500
+                               hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                    Annuleren
+                  </button>
+                  <button
+                    onClick={confirmSave}
+                    disabled={!saveName.trim()}
+                    className="flex-1 py-3 rounded-xl bg-tulip-500 text-white text-sm font-bold
+                               hover:bg-tulip-600 active:scale-95 transition-all
+                               disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Opslaan
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       {/* ── Location preview card (hidden in draw mode) ── */}
