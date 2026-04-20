@@ -9,6 +9,11 @@ import { Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
 import { PremiumGate } from "@/components/ui/PremiumGate";
+import { useWeather } from "@/hooks/useWeather";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import WeatherCompact from "@/components/weather/WeatherCompact";
+import WeatherForecast from "@/components/weather/WeatherForecast";
+import WeatherBanner from "@/components/weather/WeatherBanner";
 
 type FilterId = RouteType | "all";
 
@@ -45,15 +50,16 @@ function formatDuration(min: number): string {
 
 function SkeletonRouteCard() {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white shadow-card animate-pulse">
-      <div className="h-52 bg-gray-200" />
+    <div className="rounded-2xl overflow-hidden bg-white shadow-card">
+      {/* Afbeelding-placeholder met shimmer */}
+      <div className="h-52 skeleton-shimmer" />
       <div className="p-4 space-y-3">
-        <div className="h-5 bg-gray-200 rounded w-2/3" />
-        <div className="h-4 bg-gray-200 rounded w-full" />
-        <div className="h-4 bg-gray-200 rounded w-4/5" />
+        <div className="h-5 skeleton-shimmer rounded w-2/3" />
+        <div className="h-4 skeleton-shimmer rounded w-full" />
+        <div className="h-4 skeleton-shimmer rounded w-4/5" />
         <div className="flex gap-3 pt-1">
-          <div className="h-4 bg-gray-200 rounded w-16" />
-          <div className="h-4 bg-gray-200 rounded w-16" />
+          <div className="h-4 skeleton-shimmer rounded w-16" />
+          <div className="h-4 skeleton-shimmer rounded w-16" />
         </div>
       </div>
     </div>
@@ -147,6 +153,10 @@ export default function RoutesPage() {
   const [activeFilter, setFilter] = useState<FilterId>("all");
   const [premium, setPremium]     = useState(true);
 
+  // Locatie + locatie-bewust weer (geen toestemmingskaart hier — alleen homepage)
+  const location = useUserLocation();
+  const weather  = useWeather(location.coords);
+
   useEffect(() => { setPremium(isPremium()); }, []);
 
   useEffect(() => {
@@ -160,23 +170,29 @@ export default function RoutesPage() {
   return (
     <div className="min-h-screen bg-warm pb-28">
 
-      <div className="bg-white px-5 pt-12 pb-4 border-b border-gray-100">
+      <div className="bg-white px-5 pt-12 pb-4 border-b border-black/[0.06]">
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => router.push("/home")}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0 tap-scale"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-extrabold text-[#1A1A1A] leading-tight">{t("routes.title")}</h1>
-            <p className="text-xs text-gray-400">
+            <h1 className="font-display text-xl font-bold text-[var(--color-text)] leading-tight">{t("routes.title")}</h1>
+            <p className="text-xs text-[var(--color-text-3)]">
               {loading ? t("common.loading") : t(routes.length === 1 ? "routes.count_one" : "routes.count", { count: routes.length })}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
+        {/* Compact weerstrook boven de filters */}
+        <WeatherCompact
+          current={weather.current}
+          locationLabel={location.locationLabel}
+        />
+
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pt-3 pb-0.5 px-0">
           {FILTERS.map((f) => {
             const isActive = activeFilter === f.id;
             const count = f.id === "all" ? routes.length : routes.filter((r) => r.route_type === f.id).length;
@@ -202,15 +218,26 @@ export default function RoutesPage() {
         </div>
       </div>
 
+      {/* Weerbanner indien slecht fietsweer (score < 40) */}
+      <WeatherBanner current={weather.current} scoreThreshold={40} />
+
       <div className="px-4 pt-5 space-y-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonRouteCard key={i} />)
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-5xl mb-4">🌷</span>
-            <p className="text-gray-500 font-bold">{t("routes.no_routes_title")}</p>
-            <p className="text-sm text-gray-400 mt-1">{t("routes.no_routes_desc")}</p>
-            <button onClick={() => setFilter("all")} className="mt-4 text-sm text-tulip-500 font-bold hover:text-tulip-600">
+          <div className="flex flex-col items-center justify-center py-20 text-center px-8">
+            <div className="w-20 h-20 rounded-full bg-tulip-50 flex items-center justify-center mb-5">
+              <span className="text-4xl">🚴</span>
+            </div>
+            <h3 className="font-display font-bold text-[var(--color-text)] text-lg mb-1.5">
+              {t("routes.no_routes_title")}
+            </h3>
+            <p className="text-sm text-[var(--color-text-3)] mb-5">{t("routes.no_routes_desc")}</p>
+            <button
+              onClick={() => setFilter("all")}
+              className="px-5 py-2.5 bg-tulip-500 text-white text-sm font-bold rounded-full
+                         tap-scale hover:bg-tulip-600 transition-colors"
+            >
               {t("routes.show_all")}
             </button>
           </div>
@@ -231,6 +258,13 @@ export default function RoutesPage() {
           </>
         )}
       </div>
+
+      {/* 7-daagse voorspelling onderaan */}
+      {weather.daily.length > 0 && (
+        <div className="pt-6 pb-4">
+          <WeatherForecast daily={weather.daily} />
+        </div>
+      )}
 
     </div>
   );

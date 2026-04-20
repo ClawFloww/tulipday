@@ -1,14 +1,20 @@
 "use client";
 
-// Overzichtspagina met meerdere auto-gegenereerde fietsroutes
+// Overzichtspagina met meerdere auto-gegenereerde fietsroutes (bloom-aware)
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { RefreshCw, MapPin, Flower2 } from "lucide-react";
 import { useMultipleRoutes } from "@/hooks/useMultipleRoutes";
+import { useLiveBloomSync } from "@/hooks/useLiveBloomSync";
+import { toBloomAwareRoute, sortByBloomScore } from "@/lib/bloomRoute";
+import type { BloomAwareRoute } from "@/lib/bloomRoute";
 import RouteFilters from "./RouteFilters";
 import GeneratedRouteCard from "./GeneratedRouteCard";
 import RouteMapPreview from "./RouteMapPreview";
+import RouteRefreshBanner from "./RouteRefreshBanner";
+import BloomRouteComparison from "./BloomRouteComparison";
+import RouteAlternativeSuggestion from "./RouteAlternativeSuggestion";
 import type { RouteFiltersState, GeneratedRoute } from "@/lib/routeGenerator";
 import type { FieldBloomStatus } from "@/lib/tulipFields";
 
@@ -40,12 +46,13 @@ function SkeletonRouteCard() {
           <div className="h-4 w-20 bg-gray-200 rounded" />
         </div>
       </div>
+      <div className="h-2 bg-gray-100 mx-4 rounded-full mb-2" />
       <div className="h-12 bg-gray-100 mx-4 mb-4 rounded-xl" />
     </div>
   );
 }
 
-export default function RouteListScreen({ initialFilters, statuses = [] }: Props) {
+export default function RouteListScreen({ initialFilters, statuses: initialStatuses = [] }: Props) {
   const [filters, setFilters] = useState<RouteFiltersState>({
     ...DEFAULT_FILTERS,
     ...initialFilters,
@@ -54,10 +61,30 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
 
   const { routes, isLoading, error, regenerate } = useMultipleRoutes(filters);
 
+  // Live sync van bloeistatussen (30s polling)
+  const {
+    statuses,
+    lastSync,
+    isSyncing,
+    forceSync,
+  } = useLiveBloomSync(initialStatuses);
+
+  // Verrijkt elke route met bloomScore, staleness etc.
+  const bloomRoutes = useMemo<BloomAwareRoute[]>(() => {
+    const enriched = routes.map((r) => toBloomAwareRoute(r, statuses));
+    // Sorteer op bloom score als sort = "meeste_bloei", anders behoud volgorde
+    return filters.sort === "meeste_bloei" ? sortByBloomScore(enriched) : enriched;
+  }, [routes, statuses, filters.sort]);
+
+  // Staleness van de eerst geladen route (als proxy voor alle routes)
+  const overallStaleness = bloomRoutes[0]?.staleness ?? 0;
+
   function patchFilters(patch: Partial<RouteFiltersState>) {
     setFilters((prev) => ({ ...prev, ...patch }));
     setSelectedRoute(null);
   }
+
+  const selectedBloomRoute = bloomRoutes.find((r) => r.id === selectedRoute?.id) ?? null;
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: "#FAFAF7" }}>
@@ -69,6 +96,16 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
         onGenerate={() => { setSelectedRoute(null); regenerate(); }}
         isLoading={isLoading}
       />
+
+      {/* Verouderde-data banner */}
+      {!isLoading && bloomRoutes.length > 0 && (
+        <RouteRefreshBanner
+          staleness={overallStaleness}
+          isSyncing={isSyncing}
+          lastSync={lastSync}
+          onRefresh={forceSync}
+        />
+      )}
 
       <div className="px-4 pt-5 space-y-4">
 
@@ -99,7 +136,7 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
         )}
 
         {/* Geen velden gevonden */}
-        {!isLoading && !error && routes.length === 0 && (
+        {!isLoading && !error && bloomRoutes.length === 0 && (
           <div className="flex flex-col items-center py-12 text-center gap-3">
             <Flower2 size={40} className="text-gray-300" />
             <p className="font-bold text-gray-500">Geen velden gevonden in dit gebied</p>
@@ -108,7 +145,7 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
         )}
 
         {/* Route kaarten */}
-        {!isLoading && routes.map((route) => (
+        {!isLoading && bloomRoutes.map((route) => (
           <div key={route.id}>
             <GeneratedRouteCard
               route={route}
@@ -117,11 +154,15 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
                 selectedRoute?.id === route.id ? null : route,
               )}
               isSelected={selectedRoute?.id === route.id}
+              bloomData={{
+                bloomScore:    route.bloomScore,
+                fieldsInBloom: route.fieldsInBloom,
+              }}
             />
 
-            {/* Uitklapbare kaartpreview + veldenlijst */}
+            {/* Uitklapbare kaartpreview + veldenlijst + bloom info */}
             <AnimatePresence>
-              {selectedRoute?.id === route.id && (
+              {selectedRoute?.id === route.id && selectedBloomRoute && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -137,6 +178,18 @@ export default function RouteListScreen({ initialFilters, statuses = [] }: Props
                       statuses={statuses}
                       className="w-full"
                     />
+
+                    {/* Seizoenscurve */}
+                    <BloomRouteComparison currentScore={selectedBloomRoute.bloomScore} />
+
+                    {/* Alternatieve betere routes */}
+                    {selectedBloomRoute.bloomScore < 0.4 && (
+                      <RouteAlternativeSuggestion
+                        currentRoute={selectedBloomRoute}
+                        alternatives={bloomRoutes}
+                        onSelect={(alt) => setSelectedRoute(alt)}
+                      />
+                    )}
 
                     {/* Veldenlijst */}
                     <div>

@@ -7,12 +7,19 @@ import { Clock, Flower2, Bike, ChevronRight, Zap } from "lucide-react";
 import type { GeneratedRoute } from "@/lib/routeGenerator";
 import type { FieldBloomStatus } from "@/lib/tulipFields";
 import BloomStatusBadge from "@/components/bloom/BloomStatusBadge";
+import RouteBloomScore from "./RouteBloomScore";
+
+interface BloomData {
+  bloomScore: number;
+  fieldsInBloom: number;
+}
 
 interface Props {
   route: GeneratedRoute;
   statuses: FieldBloomStatus[];
   onClick: () => void;
   isSelected?: boolean;
+  bloomData?: BloomData;
 }
 
 export default function GeneratedRouteCard({
@@ -20,6 +27,7 @@ export default function GeneratedRouteCard({
   statuses,
   onClick,
   isSelected = false,
+  bloomData,
 }: Props) {
   // Tel hoeveel velden op de route in bloei zijn
   const bloomingOnRoute = route.fields.filter((f) =>
@@ -94,6 +102,17 @@ export default function GeneratedRouteCard({
           </span>
         )}
       </div>
+
+      {/* Bloeikwaliteitsbalk */}
+      {bloomData && (
+        <div className="px-4 pb-2">
+          <RouteBloomScore
+            score={bloomData.bloomScore}
+            fieldsInBloom={bloomData.fieldsInBloom}
+            totalFields={route.fields.length}
+          />
+        </div>
+      )}
 
       {/* Bloei-badges van de eerste 3 velden op de route */}
       {statuses.length > 0 && (

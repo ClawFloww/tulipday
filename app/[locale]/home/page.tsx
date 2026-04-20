@@ -12,6 +12,12 @@ import { useT } from "@/lib/i18n-context";
 import { MAX_RECOMMENDED, SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT, EARTH_RADIUS_KM } from "@/lib/constants";
 import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
 import { isPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
+import { useWeather } from "@/hooks/useWeather";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import WeatherCard from "@/components/weather/WeatherCard";
+import WeatherBanner from "@/components/weather/WeatherBanner";
+import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
+import { AnimatePresence } from "framer-motion";
 
 const INTENT_TO_CATEGORY: Record<string, Category> = {
   blooming_fields: "flower_field",
@@ -96,7 +102,7 @@ function Section({ title, children, onSeeAll }: { title: string; children: React
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between px-5 mb-3">
-        <h2 className="text-base font-extrabold text-[#1A1A1A]">{title}</h2>
+        <h2 className="font-display text-base font-bold text-[var(--color-text)]">{title}</h2>
         {onSeeAll && (
           <button onClick={onSeeAll} className="flex items-center gap-0.5 text-xs font-semibold text-tulip-500 hover:text-tulip-600 transition-colors">
             {t("common.see_all")} <ChevronRight size={13} />
@@ -110,12 +116,13 @@ function Section({ title, children, onSeeAll }: { title: string; children: React
 
 function SkeletonCard({ wide = false }: { wide?: boolean }) {
   return (
-    <div className={`flex-shrink-0 ${wide ? "w-56" : "w-48"} rounded-2xl overflow-hidden bg-white shadow-card animate-pulse`}>
-      <div className="h-[200px] bg-gray-200" />
+    <div className={`flex-shrink-0 ${wide ? "w-56" : "w-48"} rounded-2xl overflow-hidden bg-white shadow-card`}>
+      {/* Afbeelding-placeholder met shimmer */}
+      <div className="h-[200px] skeleton-shimmer" />
       <div className="p-3 space-y-2">
-        <div className="h-2.5 bg-gray-200 rounded w-1/2" />
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-2.5 bg-gray-200 rounded w-2/3" />
+        <div className="h-2.5 skeleton-shimmer rounded w-1/2" />
+        <div className="h-4 skeleton-shimmer rounded w-3/4" />
+        <div className="h-2.5 skeleton-shimmer rounded w-2/3" />
       </div>
     </div>
   );
@@ -138,6 +145,12 @@ export default function HomePage() {
   const [error, setError]               = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [premium, setPremium]           = useState(true);
+  const [showLocationCard, setShowLocationCard] = useState(false);
+
+  // Locatiebepaling met GPS-fallback naar Lisse
+  const location = useUserLocation();
+  // Weerdata op basis van gebruikerslocatie
+  const weather  = useWeather(location.coords);
 
   useEffect(() => { setPremium(isPremium()); }, []);
 
@@ -293,6 +306,31 @@ export default function HomePage() {
       {/* Sections */}
       {!searchResults && (
         <div className="pt-7">
+
+          {/* Locatietoestemming-kaart (eenmalig of bij herinstellen) */}
+          <AnimatePresence>
+            {(location.permissionStatus === "prompt" || showLocationCard) && (
+              <LocationPermissionCard
+                onGrant={() => { location.requestGPS(); setShowLocationCard(false); }}
+                onDecline={() => { location.useLisse(); setShowLocationCard(false); }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Weerkaart */}
+          <div className="mb-6">
+            <WeatherCard
+              current={weather.current}
+              isLoading={weather.isLoading}
+              error={weather.error}
+              lastUpdated={weather.lastUpdated}
+              onRefresh={weather.refresh}
+              locationLabel={location.locationLabel}
+              isUsingGPS={location.isUsingGPS}
+              onLocationClick={() => setShowLocationCard(true)}
+            />
+            <WeatherBanner current={weather.current} />
+          </div>
 
           {/* Bloemencorso live banner */}
           <div className="mx-4 mb-6">

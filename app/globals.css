@@ -1,30 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design tokens ──────────────────────────────────────────── */
 :root {
+  /* Achtergrond & pagina */
   --background: #FAFAF9;
-  --foreground: #1A1A1A;
+  --foreground: #1A1A18;
+
+  /* Oppervlakken — van licht naar donkerder */
+  --color-surface:   #FAFAF7;
+  --color-surface-2: #F3F2EC;
+  --color-surface-3: #ECEAE2;
+
+  /* Randen */
+  --color-border:        rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+
+  /* Tekst — drie niveaus */
+  --color-text:   #1A1A18;
+  --color-text-2: #5C5C58;
+  --color-text-3: #8C8C88;
+
+  /* Skeleton kleur — iets warmer dan puur grijs */
+  --color-skeleton:      #F0EFE8;
+  --color-skeleton-shine: #E5E4DC;
 }
 
+/* ─── Basis ──────────────────────────────────────────────────── */
 body {
-  color: var(--foreground);
+  color:      var(--foreground);
   background: var(--background);
-  font-family: "Inter", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Skeleton shimmer-animatie ──────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ─── Hulpklassen ────────────────────────────────────────────── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Verberg scrollbalk */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Shimmer voor skeleton loaders — bootst een lichtgolf na */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-skeleton)      0%,
+      var(--color-skeleton-shine) 50%,
+      var(--color-skeleton)      100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* Tap-feedback: lichte inkrimping bij indrukken */
+  .tap-scale {
+    @apply active:scale-[0.97] transition-transform duration-100;
+  }
+
+  /* Kaart hover-lift: extra schaduw bij hover/press */
+  .card-lift {
+    @apply shadow-card hover:shadow-card-hover transition-shadow duration-200;
+  }
+
+  /* Frosted glass — voor navigatiebalk en headers die over content hangen */
+  .nav-glass {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 }

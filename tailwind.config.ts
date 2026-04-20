@@ -36,7 +36,12 @@ const config: Config = {
         leaf:  "#D4E6C3",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        // Body font (standaard) — Inter
+        sans:    ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        // Display font — Playfair Display voor titels, headers, hero-tekst
+        display: ["var(--font-display)", "Playfair Display", "Georgia", "serif"],
+        // Mono/stats font — Inter Tight voor getallen en statistieken
+        mono:    ["var(--font-mono)", "Inter Tight", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "2xl": "16px",
@@ -44,8 +49,10 @@ const config: Config = {
         "xl":  "12px",
       },
       boxShadow: {
-        card: "0 2px 12px 0 rgba(0,0,0,0.07)",
+        card:       "0 2px 12px 0 rgba(0,0,0,0.07)",
         "card-hover": "0 6px 24px 0 rgba(0,0,0,0.12)",
+        // Subtiele schaduw voor de navigatiebalk (boven)
+        nav:        "0 -1px 0 0 rgba(0,0,0,0.06)",
       },
     },
   },

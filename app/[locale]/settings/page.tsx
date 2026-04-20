@@ -147,14 +147,14 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-warm pb-28">
 
-      <div className="bg-white px-5 pt-12 pb-5 border-b border-gray-100">
+      <div className="bg-white px-5 pt-12 pb-5 border-b border-black/[0.06]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-tulip-50 flex items-center justify-center">
             <span className="text-xl">🌷</span>
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-[#1A1A1A] leading-tight">{t("settings.title")}</h1>
-            <p className="text-xs text-gray-400">{t("settings.subtitle")}</p>
+            <h1 className="font-display text-xl font-bold text-[var(--color-text)] leading-tight">{t("settings.title")}</h1>
+            <p className="text-xs text-[var(--color-text-3)]">{t("settings.subtitle")}</p>
           </div>
         </div>
       </div>

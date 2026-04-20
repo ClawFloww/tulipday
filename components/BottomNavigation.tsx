@@ -1,114 +1,41 @@
 "use client";
 
-import { usePathname, useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getCorsoDate } from "@/lib/corsoData";
+// TulipDay Bottom Navigation
+// Vijf tabs: Kaart, Routes, Velden, Weer, Profiel
+// Frosted glass achtergrond, spring-animaties via Framer Motion
+// Actieve tab: tulip-roze capsule + label; inactieve tabs: grijs icoon
 
-type TabId = "discover" | "saved" | "map" | "profile" | "corso";
+import { usePathname, useParams, useRouter } from "next/navigation";
+import { Map, Bike, Flower2, Sun, User, type LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
+
+type TabId = "map" | "routes" | "fields" | "weather" | "profile";
 
 interface Tab {
   id:      TabId;
   label:   string;
   segment: string;
-  icon:    (active: boolean) => React.ReactNode;
+  Icon:    LucideIcon;
 }
 
-const ACTIVE_COLOR   = "#3B6D11";
-const INACTIVE_COLOR = "#9CA3AF";
-const CORSO_COLOR    = "#f43f5e";
-
-function IconGrid(active: boolean) {
-  const c = active ? ACTIVE_COLOR : INACTIVE_COLOR;
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-      <rect x="2"  y="2"  width="8" height="8" rx="1.5" fill={c} />
-      <rect x="12" y="2"  width="8" height="8" rx="1.5" fill={c} />
-      <rect x="2"  y="12" width="8" height="8" rx="1.5" fill={c} />
-      <rect x="12" y="12" width="8" height="8" rx="1.5" fill={c} />
-    </svg>
-  );
-}
-
-function IconBookmark(active: boolean) {
-  const c = active ? ACTIVE_COLOR : INACTIVE_COLOR;
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-      <path
-        d="M5 3h12a1 1 0 0 1 1 1v15l-7-4-7 4V4a1 1 0 0 1 1-1z"
-        stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? c : "none"} fillOpacity={active ? 0.15 : 0}
-      />
-    </svg>
-  );
-}
-
-function IconMapPin(active: boolean) {
-  const c = active ? ACTIVE_COLOR : INACTIVE_COLOR;
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-      <path
-        d="M11 2a6 6 0 0 1 6 6c0 5-6 12-6 12S5 13 5 8a6 6 0 0 1 6-6z"
-        stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? c : "none"} fillOpacity={active ? 0.15 : 0}
-      />
-      <circle cx="11" cy="8" r="2.5" fill={c} />
-    </svg>
-  );
-}
-
-function IconPerson(active: boolean) {
-  const c = active ? ACTIVE_COLOR : INACTIVE_COLOR;
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-      <circle cx="11" cy="7" r="3.5" stroke={c} strokeWidth="2" fill={active ? c : "none"} fillOpacity={active ? 0.15 : 0} />
-      <path d="M3.5 20c0-4.142 3.358-7 7.5-7s7.5 2.858 7.5 7" stroke={c} strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconFlower(active: boolean) {
-  const c = active ? CORSO_COLOR : INACTIVE_COLOR;
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-      {/* Petals */}
-      <ellipse cx="11" cy="5"  rx="2" ry="3.5" fill={c} fillOpacity={active ? 1 : 0.7} />
-      <ellipse cx="11" cy="17" rx="2" ry="3.5" fill={c} fillOpacity={active ? 1 : 0.7} />
-      <ellipse cx="5"  cy="11" rx="3.5" ry="2" fill={c} fillOpacity={active ? 1 : 0.7} />
-      <ellipse cx="17" cy="11" rx="3.5" ry="2" fill={c} fillOpacity={active ? 1 : 0.7} />
-      {/* Diagonal petals */}
-      <ellipse cx="6.5"  cy="6.5"  rx="2" ry="3.5" fill={c} fillOpacity={active ? 0.8 : 0.5} transform="rotate(45 6.5 6.5)"  />
-      <ellipse cx="15.5" cy="15.5" rx="2" ry="3.5" fill={c} fillOpacity={active ? 0.8 : 0.5} transform="rotate(45 15.5 15.5)" />
-      <ellipse cx="15.5" cy="6.5"  rx="2" ry="3.5" fill={c} fillOpacity={active ? 0.8 : 0.5} transform="rotate(-45 15.5 6.5)" />
-      <ellipse cx="6.5"  cy="15.5" rx="2" ry="3.5" fill={c} fillOpacity={active ? 0.8 : 0.5} transform="rotate(-45 6.5 15.5)" />
-      {/* Centre */}
-      <circle cx="11" cy="11" r="3" fill={active ? "#fde68a" : "#e5e7eb"} />
-    </svg>
-  );
-}
+// Kleuren
+const ACTIVE_COLOR   = "#E8334A"; // tulip-500
+const INACTIVE_COLOR = "#B0B0B0";
 
 const TABS: Tab[] = [
-  { id: "discover", label: "Ontdekken", segment: "home",   icon: IconGrid     },
-  { id: "saved",    label: "Mijn lijst", segment: "saved", icon: IconBookmark },
-  { id: "corso",    label: "Corso",     segment: "corso",  icon: IconFlower   },
-  { id: "map",      label: "Kaart",     segment: "map",    icon: IconMapPin   },
-  { id: "profile",  label: "Profiel",   segment: "settings", icon: IconPerson },
+  { id: "map",     label: "Kaart",   segment: "map",      Icon: Map     },
+  { id: "routes",  label: "Routes",  segment: "routes",   Icon: Bike    },
+  { id: "fields",  label: "Velden",  segment: "home",     Icon: Flower2 },
+  { id: "weather", label: "Weer",    segment: "weather",  Icon: Sun     },
+  { id: "profile", label: "Profiel", segment: "settings", Icon: User    },
 ];
 
-/** Returns null | "Vandaag!" | "Morgen!" */
-function useCorsobadge(): string | null {
-  const [badge, setBadge] = useState<string | null>(null);
-  useEffect(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const corsoDate = getCorsoDate(year);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const corso = new Date(corsoDate.getFullYear(), corsoDate.getMonth(), corsoDate.getDate());
-    const diff = Math.round((corso.getTime() - today.getTime()) / 86400000);
-    if (diff === 0) setBadge("Vandaag!");
-    else if (diff === 1) setBadge("Morgen!");
-    else setBadge(null);
-  }, []);
-  return badge;
+// Welke tab is actief op basis van URL
+function getActiveTab(pathname: string): TabId {
+  // Langst passende segment wint (voorkomt false matches)
+  const matches = TABS.filter((t) => pathname.includes(`/${t.segment}`));
+  if (matches.length === 0) return "fields";
+  return matches.sort((a, b) => b.segment.length - a.segment.length)[0].id;
 }
 
 export function BottomNavigation() {
@@ -116,65 +43,64 @@ export function BottomNavigation() {
   const params   = useParams();
   const router   = useRouter();
   const locale   = (params?.locale as string | undefined) ?? "nl";
-  const corsoBadge = useCorsobadge();
 
-  const activeId: TabId =
-    TABS.find((t) => pathname.includes(`/${t.segment}`))?.id ?? "discover";
+  const activeId = getActiveTab(pathname);
 
   return (
     <nav
-      style={{
-        position:        "fixed",
-        bottom:          0,
-        left:            0,
-        right:           0,
-        zIndex:          50,
-        backgroundColor: "var(--background, #fff)",
-        borderTop:       "0.5px solid #E5E7EB",
-      }}
+      className="fixed bottom-0 left-0 right-0 z-50 nav-glass border-t border-black/[0.06]"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div style={{ display: "flex", alignItems: "stretch", height: 60, maxWidth: 430, margin: "0 auto" }}>
+      <div className="flex items-stretch h-[60px] max-w-[430px] mx-auto">
         {TABS.map((tab) => {
-          const isActive   = tab.id === activeId;
-          const isCorso    = tab.id === "corso";
-          const labelColor = isActive
-            ? (isCorso ? CORSO_COLOR : ACTIVE_COLOR)
-            : INACTIVE_COLOR;
+          const isActive = tab.id === activeId;
 
           return (
             <button
               key={tab.id}
               onClick={() => router.push(`/${locale}/${tab.segment}`)}
-              style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: 2, background: "none", border: "none",
-                cursor: "pointer", padding: "0 2px", position: "relative",
-              }}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
+              className="relative flex-1 flex flex-col items-center justify-center tap-scale"
             >
-              {tab.icon(isActive)}
-
-              <span style={{
-                fontSize: 9, fontWeight: 600, letterSpacing: "0.02em",
-                color: labelColor, lineHeight: 1,
-              }}>
-                {tab.label}
-              </span>
-
-              {/* Badge */}
-              {isCorso && corsoBadge && (
-                <span style={{
-                  position: "absolute", top: 4, right: "10%",
-                  background: CORSO_COLOR, color: "white",
-                  fontSize: 8, fontWeight: 700, lineHeight: 1,
-                  padding: "2px 4px", borderRadius: 6,
-                  whiteSpace: "nowrap",
-                }}>
-                  {corsoBadge}
-                </span>
+              {/* Verschuivende achtergrond-capsule voor actieve tab */}
+              {isActive && (
+                <motion.div
+                  layoutId="nav-active-pill"
+                  className="absolute inset-x-1.5 top-2 bottom-2 rounded-full bg-tulip-50"
+                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                />
               )}
+
+              {/* Icoon — spring-schaal bij activeren */}
+              <motion.div
+                animate={{
+                  scale: isActive ? 1.1 : 1.0,
+                  y:     isActive ? -1  : 0,
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="relative z-10"
+              >
+                <tab.Icon
+                  size={22}
+                  style={{ color: isActive ? ACTIVE_COLOR : INACTIVE_COLOR }}
+                />
+              </motion.div>
+
+              {/* Label — alleen zichtbaar bij actieve tab, klapt in/uit */}
+              <motion.span
+                initial={false}
+                animate={{
+                  opacity:    isActive ? 1  : 0,
+                  height:     isActive ? 13 : 0,
+                  marginTop:  isActive ? 2  : 0,
+                }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="relative z-10 text-[10px] font-bold leading-none overflow-hidden whitespace-nowrap"
+                style={{ color: ACTIVE_COLOR }}
+              >
+                {tab.label}
+              </motion.span>
             </button>
           );
         })}
