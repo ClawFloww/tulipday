@@ -2,32 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design tokens ──────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — licht thema (:root)
+   ═══════════════════════════════════════════════════════════════ */
 :root {
-  /* Achtergrond & pagina */
-  --background: #FAFAF9;
-  --foreground: #1A1A18;
+  /* Merkrood */
+  --color-primary:        #E8102A;
+  --color-primary-dark:   #C00D22;
+  --color-primary-light:  #FF3347;
+  --color-primary-subtle: #FFF0F2;
 
-  /* Oppervlakken — van licht naar donkerder */
+  /* Oppervlakken */
   --color-surface:   #FAFAF7;
-  --color-surface-2: #F3F2EC;
-  --color-surface-3: #ECEAE2;
+  --color-surface-2: #FFFFFF;
+  --color-surface-3: #F3F2EC;
 
   /* Randen */
   --color-border:        rgba(0, 0, 0, 0.08);
   --color-border-strong: rgba(0, 0, 0, 0.15);
 
-  /* Tekst — drie niveaus */
+  /* Tekst */
   --color-text:   #1A1A18;
   --color-text-2: #5C5C58;
   --color-text-3: #8C8C88;
 
-  /* Skeleton kleur — iets warmer dan puur grijs */
-  --color-skeleton:      #F0EFE8;
+  /* Score-indicatoren */
+  --color-score-good:   #2D7D46;
+  --color-score-medium: #D4820A;
+  --color-score-bad:    #E8102A;
+
+  /* Skeleton */
+  --color-skeleton:       #F0EFE8;
   --color-skeleton-shine: #E5E4DC;
+
+  /* Aliassen */
+  --background: var(--color-surface);
+  --foreground: var(--color-text);
 }
 
-/* ─── Basis ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — donker thema (.dark op <html>)
+   ═══════════════════════════════════════════════════════════════ */
+.dark {
+  /* Merkrood (iets helderder voor contrast op donkere achtergrond) */
+  --color-primary:        #F01030;
+  --color-primary-dark:   #C00D22;
+  --color-primary-light:  #FF3347;
+  --color-primary-subtle: #2A0008;
+
+  /* Oppervlakken */
+  --color-surface:   #0F0F0E;
+  --color-surface-2: #1A1A18;
+  --color-surface-3: #242420;
+
+  /* Randen */
+  --color-border:        rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Tekst */
+  --color-text:   #F5F5F2;
+  --color-text-2: #A8A8A4;
+  --color-text-3: #6C6C68;
+
+  /* Score-indicatoren */
+  --color-score-good:   #34D070;
+  --color-score-medium: #F0A020;
+  --color-score-bad:    #F01030;
+
+  /* Skeleton */
+  --color-skeleton:       #242420;
+  --color-skeleton-shine: #2E2E2A;
+
+  /* Aliassen */
+  --background: var(--color-surface);
+  --foreground: var(--color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASIS
+   ═══════════════════════════════════════════════════════════════ */
 body {
   color:      var(--foreground);
   background: var(--background);
@@ -35,53 +88,72 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Skeleton shimmer-animatie ──────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   SOEPELE THEMA-OVERGANG
+   Alleen achtergrond, rand en tekst — niet transform/opacity
+   (Framer Motion gebruikt transform/opacity en wordt niet geraakt)
+   ═══════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    border-color     0.3s ease,
+    color            0.2s ease;
+}
+
+/* Schakel transitie uit voor elementen die Framer Motion beheert */
+[data-framer-motion],
+[style*="transform"],
+[style*="opacity"] {
+  transition: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HULPKLASSEN
+   ═══════════════════════════════════════════════════════════════ */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
 
-/* ─── Hulpklassen ────────────────────────────────────────────── */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 
   /* Verberg scrollbalk */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-  /* Shimmer voor skeleton loaders — bootst een lichtgolf na */
+  /* Shimmer voor skeleton loaders — kleur wisselt per thema */
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      var(--color-skeleton)      0%,
+      var(--color-skeleton)       0%,
       var(--color-skeleton-shine) 50%,
-      var(--color-skeleton)      100%
+      var(--color-skeleton)       100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.6s ease-in-out infinite;
   }
 
-  /* Tap-feedback: lichte inkrimping bij indrukken */
-  .tap-scale {
-    @apply active:scale-[0.97] transition-transform duration-100;
-  }
+  /* Tap-feedback */
+  .tap-scale { @apply active:scale-[0.97] transition-transform duration-100; }
 
-  /* Kaart hover-lift: extra schaduw bij hover/press */
-  .card-lift {
-    @apply shadow-card hover:shadow-card-hover transition-shadow duration-200;
-  }
+  /* Kaart hover-lift */
+  .card-lift { @apply shadow-card hover:shadow-card-hover transition-shadow duration-200; }
 
-  /* Frosted glass — voor navigatiebalk en headers die over content hangen */
+  /* Frosted glass — licht thema */
   .nav-glass {
     background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Frosted glass — donker thema */
+  .dark .nav-glass {
+    background: rgba(15, 15, 14, 0.90);
   }
 }

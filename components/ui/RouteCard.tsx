@@ -34,7 +34,9 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-white shadow-card border border-gray-100 text-left hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+      className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-surface-2 shadow-card
+                 border border-[var(--color-border)] text-left
+                 hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
     >
       <div className="relative h-[200px] overflow-hidden">
         <Image src={route.cover_image_url ?? fallback} alt={route.title ?? "Route"} fill className="object-cover" />
@@ -49,8 +51,12 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
       </div>
 
       <div className="px-3 pt-2.5 pb-3 space-y-1.5">
-        <h3 className="text-sm font-bold text-[#1A1A1A] leading-tight line-clamp-2">{route.title}</h3>
-        <div className="flex items-center gap-3 text-[11px] text-gray-400">
+        <h3 className="text-sm font-bold leading-tight line-clamp-2"
+            style={{ color: "var(--color-text)" }}>
+          {route.title}
+        </h3>
+        <div className="flex items-center gap-3 text-[11px]"
+             style={{ color: "var(--color-text-3)" }}>
           {route.distance_km != null && <span className="font-medium">{route.distance_km} km</span>}
           {route.duration_minutes != null && (
             <span className="flex items-center gap-0.5">

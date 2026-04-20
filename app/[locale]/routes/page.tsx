@@ -75,7 +75,7 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-2xl overflow-hidden bg-white shadow-card hover:shadow-card-hover active:scale-[0.99] transition-all duration-200 text-left"
+      className="w-full rounded-2xl overflow-hidden bg-surface-2 shadow-card hover:shadow-card-hover active:scale-[0.99] transition-all duration-200 text-left"
     >
       <div className="relative h-52 overflow-hidden">
         <Image
@@ -118,19 +118,22 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
       </div>
 
       <div className="p-4">
-        <h3 className="text-base font-extrabold text-[#1A1A1A] leading-snug mb-1.5">{route.title}</h3>
+        <h3 className="text-base font-extrabold leading-snug mb-1.5"
+            style={{ color: "var(--color-text)" }}>{route.title}</h3>
         {route.description && (
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">{route.description}</p>
+          <p className="text-sm leading-relaxed line-clamp-2 mb-3"
+             style={{ color: "var(--color-text-2)" }}>{route.description}</p>
         )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {route.distance_km != null && (
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${type ? ROUTE_PILL[type] : "bg-gray-100 text-gray-600"}`}>
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${type ? ROUTE_PILL[type] : "bg-surface-3 text-[var(--color-text-2)]"}`}>
                 {route.distance_km} km
               </span>
             )}
             {route.duration_minutes != null && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-semibold bg-surface-3 px-2.5 py-1 rounded-full"
+                    style={{ color: "var(--color-text-2)" }}>
                 <Clock size={11} /> {formatDuration(route.duration_minutes)}
               </span>
             )}
@@ -168,9 +171,9 @@ export default function RoutesPage() {
   const filtered = activeFilter === "all" ? routes : routes.filter((r) => r.route_type === activeFilter);
 
   return (
-    <div className="min-h-screen bg-warm pb-28">
+    <div className="min-h-screen bg-surface pb-28">
 
-      <div className="bg-white px-5 pt-12 pb-4 border-b border-black/[0.06]">
+      <div className="bg-surface-2 px-5 pt-12 pb-4 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => router.push("/home")}

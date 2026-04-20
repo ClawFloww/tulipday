@@ -238,13 +238,13 @@ export default function HomePage() {
   const greetingKey = hour < 12 ? "greeting_morning" : hour < 18 ? "greeting_afternoon" : "greeting_evening";
 
   return (
-    <div className="min-h-screen bg-warm pb-24">
+    <div className="min-h-screen bg-surface pb-24">
 
       {/* Header */}
-      <div className="bg-white px-5 pt-12 pb-5 shadow-sm">
+      <div className="bg-surface-2 px-5 pt-12 pb-5 border-b border-[var(--color-border)]">
         <div className="flex items-center justify-between mb-1">
           <div>
-            <p className="text-xs text-gray-400 font-medium">{t(`home.${greetingKey}`)} 👋</p>
+            <p className="text-xs font-medium" style={{ color: "var(--color-text-3)" }}>{t(`home.${greetingKey}`)} 👋</p>
             <Image src="/logo.png" alt="TulipDay" width={240} height={160} className="object-contain" priority />
           </div>
           {userCoords && (
@@ -262,7 +262,8 @@ export default function HomePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("home.search_placeholder")}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 text-sm text-[#1A1A1A] placeholder-gray-400 outline-none focus:ring-2 focus:ring-tulip-300 transition"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-3 text-sm outline-none focus:ring-2 focus:ring-tulip-400 transition"
+              style={{ color: "var(--color-text)" }}
             />
           </div>
           <button

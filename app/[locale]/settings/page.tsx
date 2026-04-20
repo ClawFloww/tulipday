@@ -2,30 +2,34 @@
 
 import { useState, useEffect } from "react";
 import {
-  Globe, Info, Mail, ShieldCheck, Flower2,
+  Globe, Info, Mail, ShieldCheck, Flower2, Monitor,
   ChevronDown, ChevronUp, ExternalLink, Check, Crown, Bell, BellOff, Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useT, type Locale } from "@/lib/i18n-context";
 import { registerPushSubscription, unregisterPushSubscription, isPushSubscribed } from "@/lib/pushClient";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 function Accordion({ icon, title, accent = "text-gray-600", children }: {
   icon: React.ReactNode; title: string; accent?: string; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+    <div className="bg-surface-2 rounded-2xl shadow-card overflow-hidden">
       <button onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-gray-50 transition-colors">
+        className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-surface-3 transition-colors">
         <span className={`flex-shrink-0 ${accent}`}>{icon}</span>
-        <span className="flex-1 text-sm font-bold text-[#1A1A1A]">{title}</span>
-        <span className="text-gray-400 flex-shrink-0">
+        <span className="flex-1 text-sm font-bold" style={{ color: "var(--color-text)" }}>{title}</span>
+        <span className="flex-shrink-0" style={{ color: "var(--color-text-3)" }}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
       {open && (
-        <div className="px-4 pb-5 border-t border-gray-50">
-          <div className="pt-4 text-sm text-gray-600 leading-relaxed space-y-3">{children}</div>
+        <div className="px-4 pb-5 border-t border-[var(--color-border)]">
+          <div className="pt-4 text-sm leading-relaxed space-y-3"
+               style={{ color: "var(--color-text-2)" }}>
+            {children}
+          </div>
         </div>
       )}
     </div>
@@ -37,10 +41,10 @@ function SettingsRow({ icon, label, accent = "text-gray-500", right, onClick }: 
 }) {
   return (
     <button onClick={onClick} disabled={!onClick}
-      className="w-full bg-white rounded-2xl shadow-card flex items-center gap-3 px-4 py-4
-                 hover:bg-gray-50 active:scale-[0.99] transition-all disabled:cursor-default disabled:active:scale-100">
+      className="w-full bg-surface-2 rounded-2xl shadow-card flex items-center gap-3 px-4 py-4
+                 hover:bg-surface-3 active:scale-[0.99] transition-all disabled:cursor-default disabled:active:scale-100">
       <span className={`flex-shrink-0 ${accent}`}>{icon}</span>
-      <span className="flex-1 text-sm font-bold text-[#1A1A1A] text-left">{label}</span>
+      <span className="flex-1 text-sm font-bold text-left" style={{ color: "var(--color-text)" }}>{label}</span>
       {right && <span className="flex-shrink-0">{right}</span>}
     </button>
   );
@@ -50,11 +54,11 @@ function LanguageSetting() {
   const { t, locale, setLocale } = useT();
 
   return (
-    <div className="bg-white rounded-2xl shadow-card overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50">
+    <div className="bg-surface-2 rounded-2xl shadow-card overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--color-border)]">
         <Globe size={18} className="text-tulip-500 flex-shrink-0" />
-        <span className="text-sm font-bold text-[#1A1A1A] flex-1">{t("settings.language")}</span>
-        <span className="text-[11px] text-gray-400 font-medium">
+        <span className="text-sm font-bold flex-1" style={{ color: "var(--color-text)" }}>{t("settings.language")}</span>
+        <span className="text-[11px] font-medium" style={{ color: "var(--color-text-3)" }}>
           {locale === "en" ? "English" : "Nederlands"}
         </span>
       </div>
@@ -65,7 +69,8 @@ function LanguageSetting() {
             <button key={l} onClick={() => setLocale(l)}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold
                           border-2 transition-all duration-200 active:scale-[0.97]
-                          ${active ? "bg-tulip-500 border-tulip-500 text-white shadow-sm shadow-tulip-200" : "bg-white border-gray-200 text-gray-500 hover:border-tulip-300"}`}>
+                          ${active ? "bg-tulip-500 border-tulip-500 text-white" : "bg-surface-3 border-[var(--color-border)] hover:border-tulip-400"}`}
+              style={{ color: active ? "white" : "var(--color-text-2)" }}>
               <span className="text-base">{l === "en" ? "🇬🇧" : "🇳🇱"}</span>
               {l === "en" ? "English" : "Nederlands"}
               {active && <Check size={14} className="text-white/80" />}
@@ -78,7 +83,12 @@ function LanguageSetting() {
 }
 
 function SectionLabel({ label }: { label: string }) {
-  return <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest px-1 pt-2 pb-1">{label}</p>;
+  return (
+    <p className="text-[11px] font-extrabold uppercase tracking-widest px-1 pt-2 pb-1"
+       style={{ color: "var(--color-text-3)" }}>
+      {label}
+    </p>
+  );
 }
 
 function PushToggle() {
@@ -109,13 +119,15 @@ function PushToggle() {
 
   return (
     <button onClick={toggle} disabled={loading}
-      className="w-full bg-white rounded-2xl shadow-card flex items-center gap-3 px-4 py-4 hover:bg-gray-50 active:scale-[0.99] transition-all">
-      <span className={subscribed ? "text-tulip-500" : "text-gray-400"}>
+      className="w-full bg-surface-2 rounded-2xl shadow-card flex items-center gap-3 px-4 py-4 hover:bg-surface-3 active:scale-[0.99] transition-all">
+      <span className={subscribed ? "text-tulip-500" : "text-[var(--color-text-3)]"}>
         {subscribed ? <Bell size={18} /> : <BellOff size={18} />}
       </span>
       <div className="flex-1 text-left">
-        <p className="text-sm font-bold text-[#1A1A1A]">Bloei-meldingen</p>
-        <p className="text-xs text-gray-400 mt-0.5">{subscribed ? "Actief — tik om uit te zetten" : "Ontvang alerts als tulpen in volle bloei zijn"}</p>
+        <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Bloei-meldingen</p>
+        <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
+          {subscribed ? "Actief — tik om uit te zetten" : "Ontvang alerts als tulpen in volle bloei zijn"}
+        </p>
       </div>
       {loading
         ? <Loader2 size={16} className="animate-spin text-gray-400" />
@@ -145,7 +157,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-warm pb-28">
+    <div className="min-h-screen bg-surface pb-28">
 
       <div className="bg-white px-5 pt-12 pb-5 border-b border-black/[0.06]">
         <div className="flex items-center gap-3">
@@ -169,6 +181,19 @@ export default function SettingsPage() {
           right={<span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">Upgrade →</span>}
           onClick={() => router.push("/premium")}
         />
+
+        {/* Weergave-sectie met thema-toggle */}
+        <SectionLabel label="Weergave" />
+        <div className="bg-surface-2 rounded-2xl shadow-card px-4 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Monitor size={18} className="text-tulip-500 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Donkere modus</p>
+              <p className="text-xs" style={{ color: "var(--color-text-3)" }}>Kies licht, donker of volg het systeem</p>
+            </div>
+          </div>
+          <ThemeToggle />
+        </div>
 
         <SectionLabel label={t("settings.section_preferences")} />
         <PushToggle />

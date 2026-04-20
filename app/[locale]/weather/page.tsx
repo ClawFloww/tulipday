@@ -18,10 +18,10 @@ export default function WeatherPage() {
   const [showLocationCard, setShowLocationCard] = useState(false);
 
   return (
-    <div className="min-h-screen bg-warm pb-28">
+    <div className="min-h-screen bg-surface pb-28">
 
       {/* Header */}
-      <div className="bg-white px-5 pt-12 pb-5 border-b border-black/[0.06]">
+      <div className="bg-surface-2 px-5 pt-12 pb-5 border-b border-[var(--color-border)]">
         <h1 className="font-display font-bold text-2xl text-[var(--color-text)] leading-tight">
           Fietsweer
         </h1>

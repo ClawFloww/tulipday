@@ -38,7 +38,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
+    // suppressHydrationWarning: de .dark klasse wordt client-side gezet via het anti-FOUC script
+    <html suppressHydrationWarning>
+      <head>
+        {/*
+          Anti-FOUC script — wordt synchroon uitgevoerd vóór de eerste render.
+          Leest de opgeslagen thema-voorkeur en zet de .dark klasse direct op <html>
+          zodat de pagina nooit oplicht in het verkeerde thema.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('tulipday_theme')||'system';var dark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',dark);document.documentElement.classList.toggle('light',!dark);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body
         className={`${playfair.variable} ${inter.variable} ${interTight.variable} font-sans antialiased`}
       >

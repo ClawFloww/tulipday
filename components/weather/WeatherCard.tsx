@@ -22,9 +22,9 @@ interface Props {
   error:            string | null;
   lastUpdated:      Date | null;
   onRefresh:        () => void;
-  locationLabel?:   string;   // "bij jouw locatie" / "in Lisse" / "in Hillegom"
+  locationLabel?:   string;
   isUsingGPS?:      boolean;
-  onLocationClick?: () => void; // Tik om locatiekaart opnieuw te openen
+  onLocationClick?: () => void;
 }
 
 function formatTime(date: Date): string {
@@ -41,23 +41,23 @@ export default function WeatherCard({
   isUsingGPS = false,
   onLocationClick,
 }: Props) {
-  // Titel op basis van locatiestatus
   const titleSuffix = locationLabel ?? "vandaag";
   const isFallback  = !isUsingGPS && (locationLabel === "in Lisse" || !locationLabel);
 
-  // ── Skeleton ────────────────────────────────────────────────────────────────
+  // ── Skeleton ──────────────────────────────────────────────────
   if (isLoading && !current) {
     return (
-      <div className="mx-4 rounded-2xl bg-white shadow-card p-5 animate-pulse">
+      <div className="mx-4 rounded-2xl bg-surface-2 shadow-card p-5">
         <div className="flex items-center gap-5">
-          <div className="w-24 h-24 rounded-full bg-gray-200 flex-shrink-0" />
+          {/* Score-ring placeholder */}
+          <div className="w-24 h-24 rounded-full skeleton-shimmer flex-shrink-0" />
           <div className="flex-1 space-y-2.5">
-            <div className="h-3 bg-gray-200 rounded w-2/5" />
-            <div className="h-5 bg-gray-200 rounded w-2/3" />
-            <div className="h-3 bg-gray-200 rounded w-1/2" />
+            <div className="h-3 skeleton-shimmer rounded w-2/5" />
+            <div className="h-5 skeleton-shimmer rounded w-2/3" />
+            <div className="h-3 skeleton-shimmer rounded w-1/2" />
             <div className="flex gap-3 pt-1">
-              <div className="h-3 bg-gray-200 rounded w-16" />
-              <div className="h-3 bg-gray-200 rounded w-16" />
+              <div className="h-3 skeleton-shimmer rounded w-16" />
+              <div className="h-3 skeleton-shimmer rounded w-16" />
             </div>
           </div>
         </div>
@@ -65,19 +65,22 @@ export default function WeatherCard({
     );
   }
 
-  // ── Foutmelding ─────────────────────────────────────────────────────────────
+  // ── Foutmelding ───────────────────────────────────────────────
   if (error && !current) {
     return (
-      <div className="mx-4 rounded-2xl bg-red-50 border border-red-100 p-4 flex items-center justify-between">
+      <div className="mx-4 rounded-2xl bg-surface-2 border border-[var(--color-border)] p-4 flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-red-700">
+          <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
             Weerdata tijdelijk niet beschikbaar
           </p>
-          <p className="text-xs text-red-400 mt-0.5">Controleer je verbinding</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
+            Controleer je verbinding
+          </p>
         </div>
         <button
           onClick={onRefresh}
-          className="p-2 rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
+          className="p-2 rounded-full bg-surface-3 transition-colors tap-scale"
+          style={{ color: "var(--color-text-2)" }}
         >
           <RefreshCw size={16} />
         </button>
@@ -94,11 +97,10 @@ export default function WeatherCard({
   const label      = weatherLabel(current.weathercode);
 
   return (
-    <div className="mx-4 rounded-2xl bg-white shadow-card overflow-hidden">
+    <div className="mx-4 rounded-2xl bg-surface-2 shadow-card overflow-hidden">
 
       {/* Header-balk */}
       <div className="px-5 pt-4 flex items-center justify-between">
-        {/* Klikbaar locatie-label */}
         <button
           onClick={onLocationClick}
           disabled={!onLocationClick}
@@ -106,9 +108,11 @@ export default function WeatherCard({
         >
           <MapPin
             size={11}
-            className={`flex-shrink-0 ${isUsingGPS ? "text-[#E8527A]" : "text-gray-400"}`}
+            className="flex-shrink-0 transition-colors"
+            style={{ color: isUsingGPS ? "var(--color-primary)" : "var(--color-text-3)" }}
           />
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-600 transition-colors">
+          <p className="text-[11px] font-bold uppercase tracking-wider transition-colors"
+             style={{ color: "var(--color-text-3)" }}>
             Fietsweer {titleSuffix}
           </p>
         </button>
@@ -116,7 +120,8 @@ export default function WeatherCard({
         <button
           onClick={onRefresh}
           disabled={isLoading}
-          className="p-1.5 -mr-1 rounded-full text-gray-400 hover:text-gray-600 disabled:opacity-40 transition-colors"
+          className="p-1.5 -mr-1 rounded-full transition-colors disabled:opacity-40 tap-scale"
+          style={{ color: "var(--color-text-3)" }}
           aria-label="Ververs weer"
         >
           <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
@@ -129,10 +134,12 @@ export default function WeatherCard({
         {/* Score-ring */}
         <div className="relative flex-shrink-0" style={{ width: 96, height: 96 }}>
           <svg width={96} height={96} viewBox="0 0 120 120" aria-hidden="true">
-            {/* Achtergrond-ring */}
+            {/* Achtergrond-ring — past mee met thema */}
             <circle
               cx={60} cy={60} r={R}
-              fill="none" stroke="#F3F4F6" strokeWidth={10}
+              fill="none"
+              stroke="var(--color-surface-3)"
+              strokeWidth={10}
             />
             {/* Voortgangs-ring */}
             <g transform="rotate(-90 60 60)">
@@ -149,7 +156,7 @@ export default function WeatherCard({
               />
             </g>
           </svg>
-          {/* Score-getal gecentreerd over de ring */}
+          {/* Score-getal gecentreerd */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.span
               className="text-2xl font-extrabold leading-none"
@@ -160,7 +167,10 @@ export default function WeatherCard({
             >
               {score}
             </motion.span>
-            <span className="text-[9px] font-semibold text-gray-400 mt-0.5">/ 100</span>
+            <span className="text-[9px] font-semibold mt-0.5"
+                  style={{ color: "var(--color-text-3)" }}>
+              / 100
+            </span>
           </div>
         </div>
 
@@ -168,22 +178,29 @@ export default function WeatherCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-2xl leading-none">{icon}</span>
-            <span className="text-sm text-gray-600 font-medium truncate">{label}</span>
+            <span className="text-sm font-medium truncate"
+                  style={{ color: "var(--color-text-2)" }}>
+              {label}
+            </span>
           </div>
-          <p className="text-base font-extrabold text-gray-900 leading-tight mb-2.5">
+          <p className="text-base font-extrabold leading-tight mb-2.5"
+             style={{ color: "var(--color-text)" }}>
             {current.cyclingLabel}
           </p>
           <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-            <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
-              <Thermometer size={12} style={{ color: "#E8527A" }} />
+            <span className="flex items-center gap-1 text-xs font-semibold"
+                  style={{ color: "var(--color-text-2)" }}>
+              <Thermometer size={12} style={{ color: "var(--color-primary)" }} />
               {Math.round(current.temperature)}°C
             </span>
-            <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
+            <span className="flex items-center gap-1 text-xs font-semibold"
+                  style={{ color: "var(--color-text-2)" }}>
               <Wind size={12} className="text-sky-400" />
               {Math.round(current.windspeed)} km/u {windDirectionLabel(current.winddirection)}
             </span>
             {current.precipitation > 0 && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
+              <span className="flex items-center gap-1 text-xs font-semibold"
+                    style={{ color: "var(--color-text-2)" }}>
                 <Droplets size={12} className="text-blue-400" />
                 {current.precipitation.toFixed(1)} mm
               </span>
@@ -194,17 +211,12 @@ export default function WeatherCard({
 
       {/* Footer */}
       <div className="px-5 pb-4">
-        {isFallback ? (
-          <p className="text-[10px] text-gray-400">
-            Locatie onbekend · Gebaseerd op Lisse
-            {lastUpdated && ` · ${formatTime(lastUpdated)}`}
-          </p>
-        ) : (
-          <p className="text-[10px] text-gray-400">
-            Vandaag in de Bollenstreek
-            {lastUpdated && ` · Laatste update: ${formatTime(lastUpdated)}`}
-          </p>
-        )}
+        <p className="text-[10px]" style={{ color: "var(--color-text-3)" }}>
+          {isFallback
+            ? `Locatie onbekend · Gebaseerd op Lisse${lastUpdated ? ` · ${formatTime(lastUpdated)}` : ""}`
+            : `Vandaag in de Bollenstreek${lastUpdated ? ` · Laatste update: ${formatTime(lastUpdated)}` : ""}`
+          }
+        </p>
       </div>
     </div>
   );

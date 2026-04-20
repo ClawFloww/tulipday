@@ -18,8 +18,8 @@ interface Tab {
   Icon:    LucideIcon;
 }
 
-// Kleuren
-const ACTIVE_COLOR   = "#E8334A"; // tulip-500
+// Kleuren — actief gebruikt CSS variabele voor automatische donker-modus
+const ACTIVE_COLOR   = "var(--color-primary)";
 const INACTIVE_COLOR = "#B0B0B0";
 
 const TABS: Tab[] = [
@@ -63,11 +63,12 @@ export function BottomNavigation() {
               aria-current={isActive ? "page" : undefined}
               className="relative flex-1 flex flex-col items-center justify-center tap-scale"
             >
-              {/* Verschuivende achtergrond-capsule voor actieve tab */}
+              {/* Verschuivende achtergrond-capsule — gebruik CSS var voor donker thema */}
               {isActive && (
                 <motion.div
                   layoutId="nav-active-pill"
-                  className="absolute inset-x-1.5 top-2 bottom-2 rounded-full bg-tulip-50"
+                  className="absolute inset-x-1.5 top-2 bottom-2 rounded-full"
+                  style={{ backgroundColor: "var(--color-primary-subtle)" }}
                   transition={{ type: "spring", stiffness: 500, damping: 38 }}
                 />
               )}

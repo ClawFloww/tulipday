@@ -54,8 +54,9 @@ export function AppBar({
         {showBack ? (
           <button
             onClick={() => (backHref ? router.push(backHref) : router.back())}
-            className="w-8 h-8 rounded-full bg-gray-100/80 flex items-center justify-center
-                       text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0 tap-scale"
+            className="w-8 h-8 rounded-full flex items-center justify-center
+                       transition-colors flex-shrink-0 tap-scale"
+            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
             aria-label="Terug"
           >
             <ArrowLeft size={16} />

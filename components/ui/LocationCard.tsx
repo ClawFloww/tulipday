@@ -13,7 +13,9 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-48 rounded-2xl overflow-hidden bg-white shadow-card border border-gray-100 text-left hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+      className="flex-shrink-0 w-48 rounded-2xl overflow-hidden bg-surface-2 shadow-card
+                 border border-[var(--color-border)] text-left
+                 hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
     >
       <div className="relative h-[200px] overflow-hidden">
         <Image src={location.image_url ?? fallback} alt={location.title} fill className="object-cover" />
@@ -26,13 +28,18 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
       </div>
 
       <div className="px-3 pt-2.5 pb-3 space-y-1">
-        <p className="text-[11px] font-semibold text-tulip-500 uppercase tracking-wide">
+        <p className="text-[11px] font-semibold uppercase tracking-wide"
+           style={{ color: "var(--color-primary)" }}>
           {t(`category.${location.category}`)}
         </p>
-        <h3 className="text-sm font-bold text-[#1A1A1A] leading-tight line-clamp-2">{location.title}</h3>
+        <h3 className="text-sm font-bold leading-tight line-clamp-2"
+            style={{ color: "var(--color-text)" }}>
+          {location.title}
+        </h3>
 
         {location.address && (
-          <p className="flex items-center gap-1 text-[11px] text-gray-400">
+          <p className="flex items-center gap-1 text-[11px] truncate"
+             style={{ color: "var(--color-text-3)" }}>
             <MapPin size={10} className="flex-shrink-0" />
             <span className="truncate">{location.address}</span>
           </p>
@@ -44,7 +51,10 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
               <Star
                 key={i}
                 size={10}
-                className={i < location.photo_score! ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
+                style={{
+                  color: i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
+                  fill:  i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
+                }}
               />
             ))}
           </div>
