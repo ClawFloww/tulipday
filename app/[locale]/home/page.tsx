@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, MapPin, Loader2, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Location, Route, OnboardingPrefs, Category } from "@/lib/types";
+import { Location, Route, OnboardingPrefs, Category, RouteType } from "@/lib/types";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { useT } from "@/lib/i18n-context";
@@ -32,6 +32,55 @@ function getRecommended(all: Location[], prefs: OnboardingPrefs | null): Locatio
   }
   return matches.slice(0, MAX_RECOMMENDED);
 }
+
+// Vervoermiddel uit onboarding → route_type in database
+const TRANSPORT_TO_ROUTE_TYPE: Record<string, RouteType> = {
+  bike:    "bike",
+  car:     "car",
+  walking: "walk",
+};
+
+// Intent kan ook een route-type suggereren
+const INTENT_TO_ROUTE_TYPE: Partial<Record<string, RouteType>> = {
+  photo_spots:  "photo",
+  family_trip:  "family",
+  quiet_route:  "walk",
+};
+
+function getRecommendedRoutes(all: Route[], prefs: OnboardingPrefs | null): Route[] {
+  if (!prefs) return all.filter((r) => r.is_featured).slice(0, 5);
+
+  // Bepaal gewenste route-types op basis van vervoer én intent
+  const byTransport = TRANSPORT_TO_ROUTE_TYPE[prefs.transport];
+  const byIntent    = INTENT_TO_ROUTE_TYPE[prefs.intent];
+  const wantedTypes = new Set<RouteType>([byTransport, byIntent].filter(Boolean) as RouteType[]);
+
+  let filtered = wantedTypes.size > 0
+    ? all.filter((r) => r.route_type && wantedTypes.has(r.route_type as RouteType))
+    : [...all];
+
+  // Filter op tijdsduur
+  if (prefs.time === "short") {
+    filtered = filtered.filter((r) => !r.duration_minutes || r.duration_minutes <= 90);
+  } else if (prefs.time === "half_day") {
+    filtered = filtered.filter((r) => !r.duration_minutes || r.duration_minutes <= 240);
+  }
+  // full_day: geen duurfilter
+
+  // Fallback als er niets overblijft
+  if (filtered.length === 0) filtered = all.filter((r) => r.is_featured);
+  if (filtered.length === 0) filtered = all;
+
+  return filtered.slice(0, 5);
+}
+
+// Leesbaar label voor de routes-sectietitel
+const TRANSPORT_LABEL: Record<string, string> = {
+  bike: "🚴 Fiets", car: "🚗 Auto", walking: "🚶 Wandel",
+};
+const TIME_LABEL: Record<string, string> = {
+  short: "kort", half_day: "halve dag", full_day: "hele dag",
+};
 
 function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -83,7 +132,7 @@ export default function HomePage() {
   const [bestBlooms, setBestBlooms]     = useState<Location[]>([]);
   const [recommended, setRecommended]   = useState<Location[]>([]);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
-  const [featuredRoutes, setFeaturedRoutes] = useState<Route[]>([]);
+  const [allRoutes, setAllRoutes] = useState<Route[]>([]);
   const [photoSpots, setPhotoSpots]     = useState<Location[]>([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(false);
@@ -108,7 +157,7 @@ export default function HomePage() {
       const [{ data: allLocs, error: locsError }, { data: routes, error: routesError }] =
         await Promise.all([
           supabase.from("locations").select("*").eq("is_active", true),
-          supabase.from("routes").select("*").eq("is_featured", true).eq("is_active", true),
+          supabase.from("routes").select("*").eq("is_active", true).order("is_featured", { ascending: false }),
         ]);
 
       if (locsError || routesError) {
@@ -121,7 +170,7 @@ export default function HomePage() {
       const locs = allLocs ?? [];
       setBestBlooms(locs.filter((l) => l.bloom_status === "peak" && l.is_featured));
       setAllLocations(locs);
-      setFeaturedRoutes(routes ?? []);
+      setAllRoutes(routes ?? []);
       setPhotoSpots(locs.filter((l) => l.category === "photo_spot"));
       setLoading(false);
     }
@@ -280,12 +329,17 @@ export default function HomePage() {
                 ))}
           </Section>
 
-          <Section title={t("home.popular_routes")} onSeeAll={() => router.push("/routes")}>
+          <Section
+            title={prefs
+              ? `${TRANSPORT_LABEL[prefs.transport] ?? "🗺"}-routes · ${TIME_LABEL[prefs.time] ?? ""}`
+              : t("home.popular_routes")}
+            onSeeAll={() => router.push("/routes")}
+          >
             {loading
               ? Array.from({ length: SKELETON_ROUTE_COUNT }).map((_, i) => <SkeletonCard key={i} wide />)
-              : featuredRoutes.length === 0
+              : getRecommendedRoutes(allRoutes, prefs).length === 0
               ? <p className="text-sm text-gray-400 pl-1">{t("home.no_routes")}</p>
-              : featuredRoutes.map((route) => (
+              : getRecommendedRoutes(allRoutes, prefs).map((route) => (
                   <RouteCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
                 ))}
           </Section>
