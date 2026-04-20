@@ -10,6 +10,8 @@ export interface CurrentWeather {
   weathercode: number;    // WMO code
   cyclingScore: number;   // 0–100
   cyclingLabel: string;
+  walkingScore: number;   // 0–100
+  walkingLabel: string;
 }
 
 export interface DailyForecast {
@@ -165,6 +167,29 @@ export function cyclingScoreLabel(score: number): string {
   return "Slechte fietsdag";
 }
 
+// Wandelen: wind weegt minder zwaar, regen weegt zwaarder
+export function calcWalkingScore(
+  temp: number,
+  wind: number,
+  rain: number,
+  code: number,
+): number {
+  return Math.round(
+    tempScore(temp)        * 0.35 +
+    windScore(wind)        * 0.15 +
+    rainScore(rain)        * 0.40 +
+    weathercodeScore(code) * 0.10,
+  );
+}
+
+export function walkingScoreLabel(score: number): string {
+  if (score >= 80) return "Perfecte wandeldag 🚶";
+  if (score >= 60) return "Goed wandelweer";
+  if (score >= 40) return "Redelijk wandelweer";
+  if (score >= 20) return "Matig wandelweer";
+  return "Slechte wandeldag";
+}
+
 export function cyclingScoreColor(score: number): string {
   if (score >= 70) return "#2D7D46";
   if (score >= 40) return "#E8A020";
@@ -207,7 +232,13 @@ export function parseOpenMeteo(
   const d = data as OpenMeteoResponse;
   const c = d.current;
 
-  const currentScore = calcCyclingScore(
+  const currentScore  = calcCyclingScore(
+    c.temperature_2m,
+    c.windspeed_10m,
+    c.precipitation,
+    c.weathercode,
+  );
+  const currentWalkScore = calcWalkingScore(
     c.temperature_2m,
     c.windspeed_10m,
     c.precipitation,
@@ -215,13 +246,15 @@ export function parseOpenMeteo(
   );
 
   const current: CurrentWeather = {
-    temperature:  c.temperature_2m,
-    windspeed:    c.windspeed_10m,
+    temperature:   c.temperature_2m,
+    windspeed:     c.windspeed_10m,
     winddirection: c.winddirection_10m,
     precipitation: c.precipitation,
-    weathercode:  c.weathercode,
-    cyclingScore: currentScore,
-    cyclingLabel: cyclingScoreLabel(currentScore),
+    weathercode:   c.weathercode,
+    cyclingScore:  currentScore,
+    cyclingLabel:  cyclingScoreLabel(currentScore),
+    walkingScore:  currentWalkScore,
+    walkingLabel:  walkingScoreLabel(currentWalkScore),
   };
 
   const scores = d.daily.time.map((_, i) => {

@@ -604,6 +604,7 @@ export default function OnboardingPage() {
       case 5: {
         const route = generatedRoute;
         const cyclingLabel = weather.current?.cyclingLabel ?? "Goed fietsweer";
+        const walkingLabel = weather.current?.walkingLabel ?? "Goed wandelweer";
 
         return (
           <div className="flex flex-col min-h-screen pb-10"
@@ -652,7 +653,8 @@ export default function OnboardingPage() {
                   {[
                     `${route.fields.length} bollenvelden onderweg`,
                     `${route.distanceKm} km · ±${route.estimatedMinutes} minuten`,
-                    `Weerbericht: ${cyclingLabel}`,
+                    `Fietsweer: ${cyclingLabel}`,
+                    `Wandelweer: ${walkingLabel}`,
                   ].map((text, i) => (
                     <motion.div
                       key={text}
