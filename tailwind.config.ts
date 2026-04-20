@@ -62,7 +62,7 @@ const config: Config = {
 
       fontFamily: {
         sans:    ["var(--font-body)",    "Inter",            "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "Playfair Display", "Georgia",   "serif"    ],
+        display: ["var(--font-display)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
         mono:    ["var(--font-mono)",    "Inter Tight",      "system-ui", "sans-serif"],
       },
 

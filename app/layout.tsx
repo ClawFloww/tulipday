@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Inter_Tight } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 
-// Display font: Playfair Display voor titels en headers — geeft een premium, seizoensgebonden gevoel
-const playfair = Playfair_Display({
+// Display font: Plus Jakarta Sans voor titels en headers — modern, helder en leesbaar
+const playfair = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display",
   weight: ["400", "500", "600", "700", "800"],
