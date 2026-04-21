@@ -27,6 +27,14 @@ export interface Location {
   updated_at: string;
 }
 
+export type RouteSource = "osm" | "routedatabank" | "tulipday" | "mixed";
+
+export interface PhotoSpot {
+  lat:    number;
+  lng:    number;
+  tip_nl: string;
+}
+
 export interface Route {
   id: string;
   title: string;
@@ -39,6 +47,16 @@ export interface Route {
   is_featured: boolean;
   is_active: boolean;
   created_at: string;
+  // Licentie & bronvermelding (ODbL-verplichting)
+  source?: RouteSource;
+  license?: string;
+  attribution?: string;
+  source_url?: string;
+  osm_relation?: string;
+  // Extra metadata
+  theme?: string;
+  bloom_peak?: string[];
+  photo_spots?: PhotoSpot[];
 }
 
 export interface RouteStop {

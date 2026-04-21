@@ -64,6 +64,11 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
             </span>
           )}
         </div>
+        {route.attribution && (
+          <p className="text-[9px] truncate" style={{ color: "var(--color-text-3)", opacity: 0.7 }}>
+            {route.attribution}
+          </p>
+        )}
       </div>
     </button>
   );

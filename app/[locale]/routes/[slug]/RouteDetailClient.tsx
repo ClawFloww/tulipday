@@ -166,6 +166,17 @@ export default function RouteDetailClient() {
           <p className="text-[15px] leading-relaxed" style={{ color: "var(--color-text-2)" }}>{route.description}</p>
         )}
 
+        {route.attribution && (
+          <p className="text-xs" style={{ color: "var(--color-text-3)", opacity: 0.7 }}>
+            {route.attribution}
+            {route.source_url && (
+              <> · <a href={route.source_url} target="_blank" rel="noopener noreferrer"
+                      className="underline underline-offset-2">bron</a></>
+            )}
+            {route.license && ` · ${route.license}`}
+          </p>
+        )}
+
         {stops.length > 0 && (
           <div>
             <h2 className="text-base font-extrabold mb-3" style={{ color: "var(--color-text)" }}>{t("route_detail.route_stops")}</h2>
