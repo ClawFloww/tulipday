@@ -24,10 +24,10 @@ export default function SplashPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-warm flex flex-col items-center justify-center overflow-hidden px-6">
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-tulip-100 rounded-full opacity-60 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-32 w-[28rem] h-[28rem] bg-petal/30 rounded-full opacity-50 blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 left-0 w-48 h-48 bg-leaf/40 rounded-full opacity-70 blur-2xl pointer-events-none" />
+    <div className="relative min-h-screen bg-warm dark:bg-black flex flex-col items-center justify-center overflow-hidden px-6">
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-tulip-100 rounded-full opacity-60 blur-3xl pointer-events-none dark:hidden" />
+      <div className="absolute -bottom-40 -left-32 w-[28rem] h-[28rem] bg-petal/30 rounded-full opacity-50 blur-3xl pointer-events-none dark:hidden" />
+      <div className="absolute top-1/3 left-0 w-48 h-48 bg-leaf/40 rounded-full opacity-70 blur-2xl pointer-events-none dark:hidden" />
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
         <div className="mb-6 select-none">
@@ -48,7 +48,7 @@ export default function SplashPage() {
               className={`w-full py-3.5 rounded-xl font-bold text-base transition-all duration-200 active:scale-[0.98]
                 ${primary
                   ? "bg-tulip-500 text-white shadow-lg shadow-tulip-200 hover:bg-tulip-600"
-                  : "bg-white text-tulip-500 border-2 border-tulip-200 shadow-sm hover:border-tulip-400 hover:bg-tulip-50"
+                  : "bg-white dark:bg-white/10 text-tulip-500 dark:text-white border-2 border-tulip-200 dark:border-white/20 shadow-sm hover:border-tulip-400 hover:bg-tulip-50 dark:hover:bg-white/20"
                 }`}
             >
               <span className="mr-2">{flag}</span>{label}
