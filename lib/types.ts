@@ -27,7 +27,7 @@ export interface Location {
   updated_at: string;
 }
 
-export type RouteSource = "osm" | "routedatabank" | "tulipday" | "mixed";
+export type RouteSource = "osm" | "overpass" | "tulipday" | "mixed";
 
 export interface PhotoSpot {
   lat:    number;
