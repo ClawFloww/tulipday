@@ -1,20 +1,22 @@
 "use client";
 
 // Onboarding flow voor TulipDay — volledig scherm per stap, Duolingo-stijl
-// Screens: 0 Welkom · 1 Activiteit · 2 Duur · 3 Locatie · 4 Laden · 5 Resultaat
+// Screens: 0 Juridisch · 1 Welkom · 2 Activiteit · 3 Duur · 4 Locatie · 5 Laden · 6 Resultaat
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, MapPin } from "lucide-react";
+import { ChevronLeft, MapPin, X } from "lucide-react";
 import { buildGeneratedRoute } from "@/lib/routeGenerator";
 import type { GeneratedRoute } from "@/lib/routeGenerator";
 import { useWeather } from "@/hooks/useWeather";
 import RouteMapPreview from "@/components/routes/RouteMapPreview";
+import { useT } from "@/lib/i18n-context";
+import { TERMS_VERSION, TERMS_DATE, getLegalDocs } from "@/constants/legal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Activity = "cycling" | "walking";
+type Activity = "cycling" | "walking" | "driving" | "motorcycle";
 type Duration = "short"   | "normal"  | "long";
 
 interface StartLocation {
@@ -55,8 +57,10 @@ const LOADING_TEXTS = [
 // Activiteit + duur → maximale afstand in km
 function getMaxKm(activity: Activity, duration: Duration): number {
   const map: Record<Activity, Record<Duration, number>> = {
-    cycling: { short: 8,  normal: 12, long: 20 },
-    walking: { short: 4,  normal: 7,  long: 12 },
+    cycling:    { short: 8,  normal: 12, long: 20 },
+    walking:    { short: 4,  normal: 7,  long: 12 },
+    driving:    { short: 15, normal: 30, long: 50 },
+    motorcycle: { short: 15, normal: 30, long: 50 },
   };
   return map[activity][duration];
 }
@@ -108,23 +112,141 @@ function CheckIcon() {
   );
 }
 
+// ── Geanimeerde checkbox voor juridisch scherm ────────────────────────────────
+
+function LegalCheckbox({ checked, animating }: { checked: boolean; animating: boolean }) {
+  return (
+    <motion.div
+      animate={animating ? { scale: [1, 0.8, 1.1, 1.0] } : { scale: 1 }}
+      transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+      className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+      style={{
+        borderColor:     checked ? "#E8102A" : "var(--color-border-strong)",
+        backgroundColor: checked ? "#E8102A" : "transparent",
+        transition:      "background-color 0.2s, border-color 0.2s",
+      }}
+    >
+      <svg viewBox="0 0 10 8" fill="none" className="w-3.5 h-3.5">
+        <motion.path
+          d="M1 4l2.5 2.5L9 1"
+          stroke="white"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={false}
+          animate={{ pathLength: checked ? 1 : 0 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+        />
+      </svg>
+    </motion.div>
+  );
+}
+
+// ── Document bottom-sheet ─────────────────────────────────────────────────────
+
+function LegalDocSheet({
+  title, content, closeLabel, onClose,
+}: {
+  title:      string;
+  content:    string;
+  closeLabel: string;
+  onClose:    () => void;
+}) {
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-black/50"
+        onClick={onClose}
+      />
+
+      {/* Sheet */}
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+        style={{
+          backgroundColor: "var(--color-surface-2)",
+          maxHeight:        "85vh",
+        }}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full"
+               style={{ backgroundColor: "var(--color-border-strong)" }} />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-2 pb-3"
+             style={{ borderBottom: "1px solid var(--color-border)" }}>
+          <h3 className="text-base font-bold" style={{ color: "var(--color-text)" }}>
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Scrollbare tekst */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <pre className="text-[13px] leading-relaxed whitespace-pre-wrap font-sans"
+               style={{ color: "var(--color-text-2)" }}>
+            {content}
+          </pre>
+        </div>
+
+        {/* Sluiten */}
+        <div className="px-5 py-4" style={{ borderTop: "1px solid var(--color-border)" }}>
+          <button
+            onClick={onClose}
+            className="w-full py-3.5 rounded-xl text-sm font-bold transition-colors"
+            style={{
+              backgroundColor: "var(--color-surface-3)",
+              color:            "var(--color-text)",
+            }}
+          >
+            {closeLabel}
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ── Hoofdcomponent ────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) ?? "nl";
+  const { t }  = useT();
 
-  const [screen,          setScreen]        = useState(0);
-  const [direction,       setDirection]     = useState(1);
-  const [obState,         setObState]       = useState<OnboardingState>({
+  const [screen,         setScreen]        = useState(0);
+  const [direction,      setDirection]     = useState(1);
+  const [obState,        setObState]       = useState<OnboardingState>({
     activity: null, duration: null, startLocation: null, completedAt: null,
   });
-  const [generatedRoute,  setGeneratedRoute] = useState<GeneratedRoute | null>(null);
-  const [progress,        setProgress]      = useState(0);
-  const [loadingTextIdx,  setLoadingTextIdx] = useState(0);
-  const [gpsError,        setGpsError]      = useState(false);
+  const [generatedRoute, setGeneratedRoute] = useState<GeneratedRoute | null>(null);
+  const [progress,       setProgress]      = useState(0);
+  const [loadingTextIdx, setLoadingTextIdx] = useState(0);
+  const [gpsError,       setGpsError]      = useState(false);
   const advancedRef = useRef(false);
+
+  // ── Juridisch scherm state ─────────────────────────────────────────────────
+  const [acceptedTerms,     setAcceptedTerms]     = useState(false);
+  const [acceptedPrivacy,   setAcceptedPrivacy]   = useState(false);
+  const [termsAnimating,    setTermsAnimating]    = useState(false);
+  const [privacyAnimating,  setPrivacyAnimating]  = useState(false);
+  const [openDoc,           setOpenDoc]           = useState<"terms" | "privacy" | null>(null);
 
   // Weerdata voor het resultaat-scherm (laadt op de achtergrond)
   const weather = useWeather(obState.startLocation?.coords ?? null);
@@ -137,6 +259,7 @@ export default function OnboardingPage() {
   }
 
   function goBack() {
+    // Scherm 0 (juridisch) en 1 (welkom) hebben geen terug-knop
     if (screen <= 1) return;
     setDirection(-1);
     setScreen((s) => Math.max(1, s - 1));
@@ -153,12 +276,14 @@ export default function OnboardingPage() {
     // Bewaar ook in oud formaat voor bestaande home-page compatibiliteit
     const legacyPrefs = {
       intent:    "blooming_fields",
-      transport: state.activity === "cycling" ? "bike" : "walking",
+      transport: state.activity === "cycling"    ? "bike"
+               : state.activity === "driving"    ? "car"
+               : state.activity === "motorcycle" ? "motorcycle"
+               : "walking",
       time:      state.duration === "short" ? "short"
                : state.duration === "normal" ? "half_day"
                : "full_day",
     };
-    // Merge met completedState zodat bestaande lezers werken
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...completedState, ...legacyPrefs }));
     } catch {}
@@ -166,9 +291,9 @@ export default function OnboardingPage() {
     // Gebruikersvoorkeuren
     if (state.startLocation) {
       const prefs = {
-        activity:         state.activity,
-        defaultDuration:  state.duration,
-        defaultLocation:  { ...state.startLocation.coords, label: state.startLocation.label },
+        activity:        state.activity,
+        defaultDuration: state.duration,
+        defaultLocation: { ...state.startLocation.coords, label: state.startLocation.label },
       };
       try { localStorage.setItem(PREF_STORAGE_KEY, JSON.stringify(prefs)); } catch {}
     }
@@ -187,10 +312,10 @@ export default function OnboardingPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Loading-scherm: wisselende tekst ──────────────────────────────────────
+  // ── Loading-scherm (5): wisselende tekst ──────────────────────────────────
 
   useEffect(() => {
-    if (screen !== 4) return;
+    if (screen !== 5) return;
     setLoadingTextIdx(0);
     const id = setInterval(() => {
       setLoadingTextIdx((i) => (i + 1) % LOADING_TEXTS.length);
@@ -198,10 +323,10 @@ export default function OnboardingPage() {
     return () => clearInterval(id);
   }, [screen]);
 
-  // ── Loading-scherm: route genereren + voortgangsbalk ──────────────────────
+  // ── Loading-scherm (5): route genereren + voortgangsbalk ──────────────────
 
   useEffect(() => {
-    if (screen !== 4) return;
+    if (screen !== 5) return;
     if (!obState.startLocation || !obState.activity || !obState.duration) return;
 
     advancedRef.current = false;
@@ -217,7 +342,7 @@ export default function OnboardingPage() {
       advancedRef.current = true;
       setTimeout(() => {
         setGeneratedRoute(routeData.current);
-        advanceTo(5);
+        advanceTo(6);
       }, 300);
     }
 
@@ -253,16 +378,32 @@ export default function OnboardingPage() {
 
   // ── Selectie-handlers ──────────────────────────────────────────────────────
 
+  function toggleTerms() {
+    if (!acceptedTerms) {
+      setTermsAnimating(true);
+      setTimeout(() => setTermsAnimating(false), 450);
+    }
+    setAcceptedTerms((v) => !v);
+  }
+
+  function togglePrivacy() {
+    if (!acceptedPrivacy) {
+      setPrivacyAnimating(true);
+      setTimeout(() => setPrivacyAnimating(false), 450);
+    }
+    setAcceptedPrivacy((v) => !v);
+  }
+
   function selectActivity(activity: Activity) {
     const next = { ...obState, activity };
     setObState(next);
-    setTimeout(() => advanceTo(2), 350);
+    setTimeout(() => advanceTo(3), 350);
   }
 
   function selectDuration(duration: Duration) {
     const next = { ...obState, duration };
     setObState(next);
-    setTimeout(() => advanceTo(3), 350);
+    setTimeout(() => advanceTo(4), 350);
   }
 
   function selectPreset(loc: (typeof PRESET_LOCATIONS)[number]) {
@@ -273,7 +414,7 @@ export default function OnboardingPage() {
     };
     const next = { ...obState, startLocation };
     setObState(next);
-    setTimeout(() => advanceTo(4), 350);
+    setTimeout(() => advanceTo(5), 350);
   }
 
   function requestGPS() {
@@ -287,7 +428,7 @@ export default function OnboardingPage() {
         };
         const next = { ...obState, startLocation };
         setObState(next);
-        setTimeout(() => advanceTo(4), 350);
+        setTimeout(() => advanceTo(5), 350);
       },
       () => setGpsError(true),
       { timeout: 10_000 },
@@ -312,8 +453,152 @@ export default function OnboardingPage() {
   function renderScreen() {
     switch (screen) {
 
-      // ── Scherm 0: Welkom ─────────────────────────────────────────────────
-      case 0:
+      // ── Scherm 0: Juridische acceptatie ─────────────────────────────────
+      case 0: {
+        const allAccepted = acceptedTerms && acceptedPrivacy;
+        const { termsContent, privacyContent } = getLegalDocs(locale);
+        const tl = (k: string) => t(`onboarding.legal.${k}`);
+
+        return (
+          <div
+            className="flex flex-col min-h-screen px-6 pt-14 pb-10"
+            style={{ backgroundColor: "var(--color-surface)" }}
+          >
+            {/* Logo */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center mb-10"
+            >
+              <span className="text-5xl mb-2 select-none">🌷</span>
+              <span className="text-xl font-extrabold" style={{ color: "#E8102A" }}>
+                TulipDay
+              </span>
+            </motion.div>
+
+            {/* Titel + subtitel */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="mb-8"
+            >
+              <h1 className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}>
+                {tl("title")}
+              </h1>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-3)" }}>
+                {tl("subtitle")}
+              </p>
+            </motion.div>
+
+            {/* Checkboxrijen */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="space-y-2 mb-8"
+            >
+              {/* Gebruiksvoorwaarden / Terms */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={toggleTerms}
+                onKeyDown={(e) => e.key === "Enter" && toggleTerms()}
+                className="flex items-center gap-4 py-3.5 cursor-pointer rounded-xl px-3 -mx-3 transition-colors hover:bg-[var(--color-surface-3)]"
+                style={{ minHeight: 48 }}
+              >
+                <LegalCheckbox checked={acceptedTerms} animating={termsAnimating} />
+                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
+                  {tl("terms_prefix")}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); }}
+                    className="font-semibold underline"
+                    style={{ color: "#E8102A" }}
+                  >
+                    {tl("terms_link")}
+                  </button>
+                  {tl("terms_suffix")}
+                </p>
+              </div>
+
+              {/* Privacybeleid / Privacy */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={togglePrivacy}
+                onKeyDown={(e) => e.key === "Enter" && togglePrivacy()}
+                className="flex items-center gap-4 py-3.5 cursor-pointer rounded-xl px-3 -mx-3 transition-colors hover:bg-[var(--color-surface-3)]"
+                style={{ minHeight: 48 }}
+              >
+                <LegalCheckbox checked={acceptedPrivacy} animating={privacyAnimating} />
+                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
+                  {tl("privacy_prefix")}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); }}
+                    className="font-semibold underline"
+                    style={{ color: "#E8102A" }}
+                  >
+                    {tl("privacy_link")}
+                  </button>
+                  {tl("privacy_suffix")}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Doorgaan-knop + footer */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="mt-auto space-y-4"
+            >
+              <motion.button
+                key={allAccepted ? "enabled" : "disabled"}
+                initial={allAccepted ? { scale: 0.97 } : false}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                disabled={!allAccepted}
+                onClick={() => advanceTo(1)}
+                className="w-full py-4 rounded-2xl text-base font-extrabold text-white active:scale-[0.97] transition-transform"
+                style={{
+                  backgroundColor: allAccepted ? "#E8102A" : "#CCCCCC",
+                  cursor:           allAccepted ? "pointer" : "not-allowed",
+                }}
+              >
+                {tl("continue")}
+              </motion.button>
+
+              <p className="text-center text-[11px]" style={{ color: "var(--color-text-3)" }}>
+                v{TERMS_VERSION} · {TERMS_DATE} · info@tulipday.nl
+              </p>
+            </motion.div>
+
+            {/* Document sheets */}
+            <AnimatePresence>
+              {openDoc === "terms" && (
+                <LegalDocSheet
+                  title={tl("terms_title")}
+                  content={termsContent}
+                  closeLabel={tl("close")}
+                  onClose={() => setOpenDoc(null)}
+                />
+              )}
+              {openDoc === "privacy" && (
+                <LegalDocSheet
+                  title={tl("privacy_title")}
+                  content={privacyContent}
+                  closeLabel={tl("close")}
+                  onClose={() => setOpenDoc(null)}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      }
+
+      // ── Scherm 1: Welkom ─────────────────────────────────────────────────
+      case 1:
         return (
           <div className="flex flex-col items-center justify-between min-h-screen px-6 pt-20 pb-12"
                style={{ backgroundColor: "#FFF9E6" }}>
@@ -349,7 +634,7 @@ export default function OnboardingPage() {
               transition={{ delay: 0.35, duration: 0.4 }}
             >
               <button
-                onClick={() => advanceTo(1)}
+                onClick={() => advanceTo(2)}
                 className="w-full py-4 rounded-2xl text-white font-extrabold text-base
                            active:scale-[0.97] transition-transform"
                 style={{ backgroundColor: "#E8527A" }}
@@ -374,11 +659,13 @@ export default function OnboardingPage() {
           </div>
         );
 
-      // ── Scherm 1: Activiteit ─────────────────────────────────────────────
-      case 1: {
+      // ── Scherm 2: Activiteit ─────────────────────────────────────────────
+      case 2: {
         const options: { value: Activity; emoji: string; label: string; sub: string }[] = [
-          { value: "cycling", emoji: "🚴", label: "Fietsen", sub: "Ontdek meer velden" },
-          { value: "walking", emoji: "🚶", label: "Wandelen", sub: "Rustig genieten" },
+          { value: "cycling",    emoji: "🚴",  label: "Fietsen",   sub: "Ontdek meer velden"   },
+          { value: "walking",    emoji: "🚶",  label: "Wandelen",  sub: "Rustig genieten"       },
+          { value: "driving",    emoji: "🚗",  label: "Auto",      sub: "Rijden langs velden"   },
+          { value: "motorcycle", emoji: "🏍️", label: "Motor",     sub: "Vrij de weg op"        },
         ];
         return (
           <div className="flex flex-col min-h-screen px-5 pt-16 pb-10"
@@ -417,10 +704,10 @@ export default function OnboardingPage() {
         );
       }
 
-      // ── Scherm 2: Duur ───────────────────────────────────────────────────
-      case 2: {
+      // ── Scherm 3: Duur ───────────────────────────────────────────────────
+      case 3: {
         const options: { value: Duration; emoji: string; label: string; sub: string }[] = [
-          { value: "short",  emoji: "⚡", label: "Kort",   sub: "30 – 60 minuten" },
+          { value: "short",  emoji: "⚡", label: "Kort",    sub: "30 – 60 minuten" },
           { value: "normal", emoji: "🌷", label: "Normaal", sub: "1 – 2 uur" },
           { value: "long",   emoji: "🗺️", label: "Lang",   sub: "2 – 3 uur" },
         ];
@@ -468,8 +755,8 @@ export default function OnboardingPage() {
         );
       }
 
-      // ── Scherm 3: Locatie ────────────────────────────────────────────────
-      case 3: {
+      // ── Scherm 4: Locatie ────────────────────────────────────────────────
+      case 4: {
         const selected = obState.startLocation;
         return (
           <div className="flex flex-col min-h-screen px-5 pt-16 pb-10"
@@ -559,8 +846,8 @@ export default function OnboardingPage() {
         );
       }
 
-      // ── Scherm 4: Laden ──────────────────────────────────────────────────
-      case 4:
+      // ── Scherm 5: Laden ──────────────────────────────────────────────────
+      case 5:
         return (
           <div className="flex flex-col items-center justify-center min-h-screen px-6 pb-12"
                style={{ backgroundColor: "#FFF9E6" }}>
@@ -600,9 +887,9 @@ export default function OnboardingPage() {
           </div>
         );
 
-      // ── Scherm 5: Resultaat ──────────────────────────────────────────────
-      case 5: {
-        const route = generatedRoute;
+      // ── Scherm 6: Resultaat ──────────────────────────────────────────────
+      case 6: {
+        const route        = generatedRoute;
         const cyclingLabel = weather.current?.cyclingLabel ?? "Goed fietsweer";
         const walkingLabel = weather.current?.walkingLabel ?? "Goed wandelweer";
 
@@ -648,7 +935,7 @@ export default function OnboardingPage() {
                   </div>
                 </motion.div>
 
-                {/* Drie highlights */}
+                {/* Highlights */}
                 <div className="mx-5 mb-6 space-y-2.5">
                   {[
                     `${route.fields.length} bollenvelden onderweg`,

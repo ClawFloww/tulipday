@@ -35,6 +35,10 @@
   --color-skeleton:       #F0EFE8;
   --color-skeleton-shine: #E5E4DC;
 
+  /* Corso event-kleur */
+  --color-corso:       #F0306A;
+  --color-corso-light: #FFF0F5;
+
   /* Aliassen */
   --background: var(--color-surface);
   --foreground: var(--color-text);
@@ -72,6 +76,10 @@
   /* Skeleton */
   --color-skeleton:       #242420;
   --color-skeleton-shine: #2E2E2A;
+
+  /* Corso event-kleur */
+  --color-corso:       #F0306A;
+  --color-corso-light: #1A0610;
 
   /* Aliassen */
   --background: var(--color-surface);

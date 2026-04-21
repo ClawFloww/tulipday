@@ -50,6 +50,20 @@
       "half_day_sub": "轻松的上午或下午",
       "full_day": "全天",
       "full_day_sub": "尽览一切"
+    },
+    "legal": {
+      "title": "欢迎使用 TulipDay",
+      "subtitle": "请阅读并接受条款以继续",
+      "terms_prefix": "我同意",
+      "terms_link": "使用条款",
+      "terms_suffix": "",
+      "privacy_prefix": "我同意",
+      "privacy_link": "隐私政策",
+      "privacy_suffix": "",
+      "continue": "继续",
+      "close": "关闭",
+      "terms_title": "使用条款",
+      "privacy_title": "隐私政策"
     }
   },
   "nav": {

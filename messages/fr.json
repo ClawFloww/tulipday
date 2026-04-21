@@ -50,6 +50,20 @@
       "half_day_sub": "Matinée ou après-midi détendu(e)",
       "full_day": "Journée entière",
       "full_day_sub": "Tout voir"
+    },
+    "legal": {
+      "title": "Bienvenue sur TulipDay",
+      "subtitle": "Veuillez lire et accepter les conditions pour continuer",
+      "terms_prefix": "J'accepte les ",
+      "terms_link": "Conditions d'utilisation",
+      "terms_suffix": "",
+      "privacy_prefix": "J'accepte la ",
+      "privacy_link": "Politique de confidentialité",
+      "privacy_suffix": "",
+      "continue": "Continuer",
+      "close": "Fermer",
+      "terms_title": "Conditions d'utilisation",
+      "privacy_title": "Politique de confidentialité"
     }
   },
   "nav": {

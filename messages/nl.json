@@ -51,6 +51,20 @@
       "half_day_sub": "Een rustige ochtend of middag",
       "full_day": "Hele dag",
       "full_day_sub": "Alles zien"
+    },
+    "legal": {
+      "title": "Welkom bij TulipDay",
+      "subtitle": "Lees en accepteer de voorwaarden om door te gaan",
+      "terms_prefix": "Ik ga akkoord met de ",
+      "terms_link": "Gebruiksvoorwaarden",
+      "terms_suffix": "",
+      "privacy_prefix": "Ik ga akkoord met het ",
+      "privacy_link": "Privacybeleid",
+      "privacy_suffix": "",
+      "continue": "Doorgaan",
+      "close": "Sluiten",
+      "terms_title": "Gebruiksvoorwaarden",
+      "privacy_title": "Privacybeleid"
     }
   },
   "nav": {

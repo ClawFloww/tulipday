@@ -50,6 +50,20 @@
       "half_day_sub": "Una mañana o tarde relajada",
       "full_day": "Todo el día",
       "full_day_sub": "Verlo todo"
+    },
+    "legal": {
+      "title": "Bienvenido a TulipDay",
+      "subtitle": "Lee y acepta los términos para continuar",
+      "terms_prefix": "Acepto los ",
+      "terms_link": "Términos de uso",
+      "terms_suffix": "",
+      "privacy_prefix": "Acepto la ",
+      "privacy_link": "Política de privacidad",
+      "privacy_suffix": "",
+      "continue": "Continuar",
+      "close": "Cerrar",
+      "terms_title": "Términos de uso",
+      "privacy_title": "Política de privacidad"
     }
   },
   "nav": {
