@@ -42,7 +42,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls = "w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition";
+const inputCls = "w-full px-3 py-2 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition";
 
 function Input({ value, onChange, type = "text", placeholder }: {
   value: string | number; onChange: (v: string) => void;
@@ -275,7 +275,7 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
                   <select
                     value={loc.bloom_status ?? ""}
                     onChange={(e) => handleBloom(loc.id, e.target.value)}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
+                    className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
                   >
                     <option value="">—</option>
                     {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -896,7 +896,7 @@ function BloomSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => 
                       value={loc.bloom_status ?? ""}
                       onClick={e => e.stopPropagation()}
                       onChange={e => handleSingleUpdate(loc.id, e.target.value)}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
+                      className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
                     >
                       {BLOOM_OPTS_NL.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
