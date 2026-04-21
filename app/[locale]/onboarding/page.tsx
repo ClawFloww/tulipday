@@ -641,7 +641,7 @@ export default function OnboardingPage() {
       case 1:
         return (
           <div className="flex flex-col items-center justify-between min-h-screen px-6 pt-20 pb-12"
-               style={{ backgroundColor: "#FFF9E6" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
             <div className="flex-1 flex flex-col items-center justify-center text-center">
               {/* Groeiende tulp */}
               <motion.div
@@ -658,10 +658,10 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
               >
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-3 leading-tight">
+                <h1 className="text-3xl font-extrabold mb-3 leading-tight" style={{ color: "var(--color-text)" }}>
                   Welkom bij TulipDay
                 </h1>
-                <p className="text-base text-gray-500 leading-relaxed max-w-xs">
+                <p className="text-base leading-relaxed max-w-xs" style={{ color: "var(--color-text-3)" }}>
                   Ontdek de mooiste bollenvelden van de Bollenstreek
                 </p>
               </motion.div>
@@ -683,7 +683,8 @@ export default function OnboardingPage() {
               </button>
               <button
                 disabled
-                className="w-full py-2 text-gray-400 text-sm font-medium disabled:cursor-not-allowed"
+                className="w-full py-2 text-sm font-medium disabled:cursor-not-allowed"
+                style={{ color: "var(--color-text-3)" }}
               >
                 Al een account? Inloggen
               </button>
@@ -691,7 +692,8 @@ export default function OnboardingPage() {
               {/* Dev-hulp: reset onboarding */}
               <button
                 onClick={devReset}
-                className="w-full py-1.5 text-gray-300 text-[10px] font-medium"
+                className="w-full py-1.5 text-[10px] font-medium"
+                style={{ color: "var(--color-text-3)", opacity: 0.5 }}
               >
                 ↺ Reset onboarding
               </button>
@@ -709,12 +711,12 @@ export default function OnboardingPage() {
         ];
         return (
           <div className="flex flex-col min-h-screen px-5 pt-16 pb-10"
-               style={{ backgroundColor: "#FAFAF7" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
             <div className="mb-8">
               <ProgressBar step={1} />
             </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-1.5">Hoe ga jij op pad?</h2>
-            <p className="text-sm text-gray-400 mb-8">We passen je route hierop aan</p>
+            <h2 className="text-2xl font-extrabold mb-1.5" style={{ color: "var(--color-text)" }}>Hoe ga jij op pad?</h2>
+            <p className="text-sm mb-8" style={{ color: "var(--color-text-3)" }}>We passen je route hierop aan</p>
 
             <div className="flex flex-col gap-3 flex-1">
               {options.map((opt) => {
@@ -724,16 +726,16 @@ export default function OnboardingPage() {
                     key={opt.value}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => selectActivity(opt.value)}
-                    className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border-2 text-left transition-colors"
-                    style={{
-                      borderColor:     active ? "#E8527A" : "#E8E8E0",
-                      backgroundColor: active ? "#FFF0F3" : "#FFFFFF",
-                    }}
+                    className={`w-full flex items-center gap-4 px-5 py-5 rounded-2xl border-2 text-left transition-colors
+                      ${active
+                        ? "border-tulip-500 bg-tulip-50 dark:bg-tulip-900/20"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-2)]"
+                      }`}
                   >
                     <span className="text-4xl leading-none">{opt.emoji}</span>
                     <div className="flex-1">
-                      <p className="font-extrabold text-gray-900 text-base">{opt.label}</p>
-                      <p className="text-sm text-gray-400 mt-0.5">{opt.sub}</p>
+                      <p className="font-extrabold text-base" style={{ color: "var(--color-text)" }}>{opt.label}</p>
+                      <p className="text-sm mt-0.5" style={{ color: "var(--color-text-3)" }}>{opt.sub}</p>
                     </div>
                     {active && <CheckIcon />}
                   </motion.button>
@@ -753,19 +755,19 @@ export default function OnboardingPage() {
         ];
         return (
           <div className="flex flex-col min-h-screen px-5 pt-16 pb-10"
-               style={{ backgroundColor: "#FAFAF7" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
             <div className="mb-8 flex items-center gap-3">
-              <button onClick={goBack} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
+              <button onClick={goBack} className="p-2 -ml-2" style={{ color: "var(--color-text-3)" }}>
                 <ChevronLeft size={22} />
               </button>
               <div className="flex-1">
                 <ProgressBar step={2} />
               </div>
             </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-1.5">
+            <h2 className="text-2xl font-extrabold mb-1.5" style={{ color: "var(--color-text)" }}>
               Hoe lang wil je onderweg zijn?
             </h2>
-            <p className="text-sm text-gray-400 mb-8">We kiezen de juiste routelengte</p>
+            <p className="text-sm mb-8" style={{ color: "var(--color-text-3)" }}>We kiezen de juiste routelengte</p>
 
             <div className="flex flex-col gap-3 flex-1">
               {options.map((opt) => {
@@ -775,16 +777,16 @@ export default function OnboardingPage() {
                     key={opt.value}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => selectDuration(opt.value)}
-                    className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border-2 text-left transition-colors"
-                    style={{
-                      borderColor:     active ? "#E8527A" : "#E8E8E0",
-                      backgroundColor: active ? "#FFF0F3" : "#FFFFFF",
-                    }}
+                    className={`w-full flex items-center gap-4 px-5 py-5 rounded-2xl border-2 text-left transition-colors
+                      ${active
+                        ? "border-tulip-500 bg-tulip-50 dark:bg-tulip-900/20"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-2)]"
+                      }`}
                   >
                     <span className="text-4xl leading-none">{opt.emoji}</span>
                     <div className="flex-1">
-                      <p className="font-extrabold text-gray-900 text-base">{opt.label}</p>
-                      <p className="text-sm text-gray-400 mt-0.5">{opt.sub}</p>
+                      <p className="font-extrabold text-base" style={{ color: "var(--color-text)" }}>{opt.label}</p>
+                      <p className="text-sm mt-0.5" style={{ color: "var(--color-text-3)" }}>{opt.sub}</p>
                     </div>
                     {active && <CheckIcon />}
                   </motion.button>
@@ -800,19 +802,19 @@ export default function OnboardingPage() {
         const selected = obState.startLocation;
         return (
           <div className="flex flex-col min-h-screen px-5 pt-16 pb-10"
-               style={{ backgroundColor: "#FAFAF7" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
             <div className="mb-8 flex items-center gap-3">
-              <button onClick={goBack} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
+              <button onClick={goBack} className="p-2 -ml-2" style={{ color: "var(--color-text-3)" }}>
                 <ChevronLeft size={22} />
               </button>
               <div className="flex-1">
                 <ProgressBar step={3} />
               </div>
             </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-1.5">
+            <h2 className="text-2xl font-extrabold mb-1.5" style={{ color: "var(--color-text)" }}>
               Waar begin je je tocht?
             </h2>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm mb-6" style={{ color: "var(--color-text-3)" }}>
               Zo vinden we velden bij jou in de buurt
             </p>
 
@@ -821,19 +823,19 @@ export default function OnboardingPage() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={requestGPS}
-                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 mb-5 text-left transition-colors"
-                style={{
-                  borderColor:     selected?.type === "gps" ? "#E8527A" : "#E8527A",
-                  backgroundColor: selected?.type === "gps" ? "#FFF0F3" : "#FFF0F3",
-                }}
+                className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 mb-5 text-left transition-colors
+                  ${selected?.type === "gps"
+                    ? "border-tulip-500 bg-tulip-50 dark:bg-tulip-900/20"
+                    : "border-tulip-300 bg-tulip-50/60 dark:bg-tulip-900/10 dark:border-tulip-700"
+                  }`}
               >
                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                      style={{ backgroundColor: "#E8527A" }}>
                   <MapPin size={18} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-extrabold text-gray-900 text-sm">Gebruik mijn locatie</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Meest nauwkeurig</p>
+                  <p className="font-extrabold text-sm" style={{ color: "var(--color-text)" }}>Gebruik mijn locatie</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>Meest nauwkeurig</p>
                 </div>
                 {selected?.type === "gps" && <CheckIcon />}
               </motion.button>
@@ -844,7 +846,7 @@ export default function OnboardingPage() {
               </p>
             )}
 
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--color-text-3)" }}>
               Of kies een startplaats
             </p>
 
@@ -857,14 +859,14 @@ export default function OnboardingPage() {
                     key={loc.key}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => selectPreset(loc)}
-                    className="flex flex-col items-center gap-1.5 py-4 rounded-2xl border-2 transition-colors"
-                    style={{
-                      borderColor:     active ? "#E8527A" : "#E8E8E0",
-                      backgroundColor: active ? "#FFF0F3" : "#FFFFFF",
-                    }}
+                    className={`flex flex-col items-center gap-1.5 py-4 rounded-2xl border-2 transition-colors
+                      ${active
+                        ? "border-tulip-500 bg-tulip-50 dark:bg-tulip-900/20"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-2)]"
+                      }`}
                   >
                     <span className="text-2xl leading-none">{loc.emoji}</span>
-                    <p className="text-xs font-bold text-gray-700">{loc.name}</p>
+                    <p className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>{loc.name}</p>
                     {active && (
                       <motion.span
                         className="w-4 h-4 rounded-full flex items-center justify-center"
@@ -890,7 +892,7 @@ export default function OnboardingPage() {
       case 5:
         return (
           <div className="flex flex-col items-center justify-center min-h-screen px-6 pb-12"
-               style={{ backgroundColor: "#FFF9E6" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
             {/* Pulserende tulp */}
             <motion.div
               animate={{ scale: [1, 1.12, 1] }}
@@ -908,14 +910,16 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.3 }}
-                className="text-base font-bold text-gray-700 mb-8 text-center"
+                className="text-base font-bold mb-8 text-center"
+                style={{ color: "var(--color-text-2)" }}
               >
                 {LOADING_TEXTS[loadingTextIdx]}
               </motion.p>
             </AnimatePresence>
 
             {/* Voortgangsbalk */}
-            <div className="w-64 h-2 bg-amber-100 rounded-full overflow-hidden">
+            <div className="w-64 h-2 rounded-full overflow-hidden"
+                 style={{ backgroundColor: "var(--color-border)" }}>
               <motion.div
                 className="h-full rounded-full"
                 style={{ backgroundColor: "#E8527A" }}
@@ -923,7 +927,7 @@ export default function OnboardingPage() {
                 transition={{ duration: 0.08, ease: "linear" }}
               />
             </div>
-            <p className="text-xs text-amber-400 font-semibold mt-2">{Math.round(progress)}%</p>
+            <p className="text-xs font-semibold mt-2" style={{ color: "var(--color-text-3)" }}>{Math.round(progress)}%</p>
           </div>
         );
 
@@ -935,7 +939,7 @@ export default function OnboardingPage() {
 
         return (
           <div className="flex flex-col min-h-screen pb-10"
-               style={{ backgroundColor: "#FAFAF7" }}>
+               style={{ backgroundColor: "var(--color-surface)" }}>
 
             {/* Header */}
             <div className="px-5 pt-14 pb-6 text-center">
@@ -951,7 +955,8 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="text-2xl font-extrabold text-gray-900"
+                className="text-2xl font-extrabold"
+                style={{ color: "var(--color-text)" }}
               >
                 Jouw route is klaar!
               </motion.h2>
@@ -967,9 +972,9 @@ export default function OnboardingPage() {
                   transition={{ delay: 0.2, duration: 0.35 }}
                 >
                   <RouteMapPreview route={route} className="w-full" />
-                  <div className="bg-white px-4 py-3">
-                    <p className="text-sm font-extrabold text-gray-900 truncate">{route.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                  <div className="px-4 py-3" style={{ backgroundColor: "var(--color-surface-2)" }}>
+                    <p className="text-sm font-extrabold truncate" style={{ color: "var(--color-text)" }}>{route.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
                       Vertrekt bij {route.startLocation.label}
                     </p>
                   </div>
@@ -991,24 +996,23 @@ export default function OnboardingPage() {
                       transition={{ delay: 0.35 + i * 0.15 }}
                     >
                       <span
-                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: "#F0FDF4" }}
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-forest-50 dark:bg-forest-900/30"
                       >
                         <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2.5">
                           <path d="M1 4l2.5 2.5L9 1" stroke="#2D7D46" strokeWidth="1.8"
                                 strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </span>
-                      <p className="text-sm font-semibold text-gray-700">{text}</p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--color-text-2)" }}>{text}</p>
                     </motion.div>
                   ))}
                 </div>
               </>
             ) : (
               // Geen route gegenereerd (fout)
-              <div className="mx-5 mb-6 rounded-2xl bg-orange-50 border border-orange-100 p-4 text-center">
-                <p className="text-sm font-bold text-orange-700">Route niet beschikbaar</p>
-                <p className="text-xs text-orange-400 mt-1">
+              <div className="mx-5 mb-6 rounded-2xl bg-orange-50 border border-orange-100 p-4 text-center dark:bg-orange-900/20 dark:border-orange-800">
+                <p className="text-sm font-bold text-orange-700 dark:text-orange-400">Route niet beschikbaar</p>
+                <p className="text-xs text-orange-400 mt-1 dark:text-orange-500">
                   Probeer een andere locatie of afstand
                 </p>
               </div>
@@ -1031,7 +1035,8 @@ export default function OnboardingPage() {
               </button>
               <button
                 onClick={() => { saveAndComplete(obState); router.push(`/${locale}/fietsroutes`); }}
-                className="w-full py-2 text-gray-500 text-sm font-semibold"
+                className="w-full py-2 text-sm font-semibold"
+                style={{ color: "var(--color-text-3)" }}
               >
                 Bekijk alle routes
               </button>
