@@ -5,7 +5,7 @@ type Res = { error?: string };
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
-  return password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+  return password === process.env.ADMIN_PASSWORD;
 }
 
 // ─── Locations ────────────────────────────────────────────────────────────────
