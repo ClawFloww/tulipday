@@ -159,7 +159,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-surface pb-28">
 
-      <div className="bg-white px-5 pt-12 pb-5 border-b border-black/[0.06]">
+      <div className="px-5 pt-12 pb-5" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-tulip-50 flex items-center justify-center">
             <span className="text-xl">🌷</span>

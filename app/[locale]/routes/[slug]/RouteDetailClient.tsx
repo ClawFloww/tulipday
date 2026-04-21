@@ -88,10 +88,10 @@ export default function RouteDetailClient() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface)" }}>
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={32} className="text-tulip-400 animate-spin" />
-          <p className="text-sm text-gray-400">{t("route_detail.loading")}</p>
+          <p className="text-sm" style={{ color: "var(--color-text-3)" }}>{t("route_detail.loading")}</p>
         </div>
       </div>
     );
@@ -99,9 +99,9 @@ export default function RouteDetailClient() {
 
   if (notFound || !route) {
     return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4 px-8 text-center">
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center" style={{ backgroundColor: "var(--color-surface)" }}>
         <span className="text-5xl">🗺</span>
-        <h2 className="text-xl font-bold text-[#1A1A1A]">{t("route_detail.not_found")}</h2>
+        <h2 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>{t("route_detail.not_found")}</h2>
         <button onClick={() => router.back()} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
           {t("common.go_back")}
         </button>
@@ -112,7 +112,7 @@ export default function RouteDetailClient() {
   const type = route.route_type as RouteType | undefined;
 
   return (
-    <div className="min-h-screen bg-warm pb-32">
+    <div className="min-h-screen pb-32" style={{ backgroundColor: "var(--color-surface)" }}>
 
       <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-200">
         <Image
@@ -139,20 +139,23 @@ export default function RouteDetailClient() {
       <div className="px-5 py-5 space-y-6">
 
         <div>
-          <h1 className="text-2xl font-extrabold text-[#1A1A1A] leading-tight mb-3">{route.title}</h1>
+          <h1 className="text-2xl font-extrabold leading-tight mb-3" style={{ color: "var(--color-text)" }}>{route.title}</h1>
           <div className="flex flex-wrap gap-2">
             {route.distance_km != null && (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm">
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" }}>
                 {type ? ROUTE_ICON[type] : <Bike size={13} />} {route.distance_km} km
               </span>
             )}
             {route.duration_minutes != null && (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm">
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" }}>
                 <Clock size={13} /> {formatDuration(route.duration_minutes)}
               </span>
             )}
             {stops.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm">
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" }}>
                 <MapPin size={13} /> {t("route_detail.spots", { count: stops.length })}
               </span>
             )}
@@ -160,22 +163,23 @@ export default function RouteDetailClient() {
         </div>
 
         {route.description && (
-          <p className="text-gray-600 text-[15px] leading-relaxed">{route.description}</p>
+          <p className="text-[15px] leading-relaxed" style={{ color: "var(--color-text-2)" }}>{route.description}</p>
         )}
 
         {stops.length > 0 && (
           <div>
-            <h2 className="text-base font-extrabold text-[#1A1A1A] mb-3">{t("route_detail.route_stops")}</h2>
+            <h2 className="text-base font-extrabold mb-3" style={{ color: "var(--color-text)" }}>{t("route_detail.route_stops")}</h2>
             <div className="space-y-3">
               {stops.map((stop, idx) => (
-                <div key={stop.id} className="flex items-start gap-3 bg-white rounded-2xl p-4 shadow-sm">
+                <div key={stop.id} className="flex items-start gap-3 rounded-2xl p-4 shadow-sm"
+                     style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
                   <div className="w-7 h-7 rounded-full bg-tulip-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <span className="text-white text-xs font-extrabold">{idx + 1}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#1A1A1A] leading-snug">{stop.locations.title}</p>
+                    <p className="text-sm font-bold leading-snug" style={{ color: "var(--color-text)" }}>{stop.locations.title}</p>
                     {stop.locations.address && (
-                      <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+                      <p className="flex items-center gap-1 text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
                         <MapPin size={10} className="flex-shrink-0" />
                         <span className="truncate">{stop.locations.address}</span>
                       </p>
@@ -188,7 +192,7 @@ export default function RouteDetailClient() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-4 py-3 pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 pb-safe" style={{ backgroundColor: "var(--color-surface-2)", borderTop: "1px solid var(--color-border)" }}>
         <div className="flex gap-3 max-w-lg mx-auto">
           {/* Start route → Google Maps with all stops as waypoints */}
           <button
@@ -212,7 +216,8 @@ export default function RouteDetailClient() {
             onClick={handleSave}
             disabled={saving}
             className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
-                        ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "bg-white border-tulip-200 text-tulip-500 hover:border-tulip-400"}`}
+                        ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "border-tulip-200 text-tulip-500 hover:border-tulip-400"}`}
+                     style={!saved ? { backgroundColor: "var(--color-surface)" } : {}}
           >
             {saving ? <Loader2 size={17} className="animate-spin" /> : <Heart size={17} className={saved ? "fill-white" : ""} />}
             {saved ? t("common.saved") : t("common.save")}
