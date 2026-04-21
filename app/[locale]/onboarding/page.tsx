@@ -437,7 +437,18 @@ export default function OnboardingPage() {
 
   function completeOnboarding() {
     saveAndComplete(obState);
-    router.push(`/${locale}/home`);
+    if (generatedRoute) {
+      try {
+        localStorage.setItem("tulipday_active_route", JSON.stringify({
+          route:    generatedRoute,
+          activity: obState.activity ?? "cycling",
+        }));
+        localStorage.removeItem("tulipday_route_progress");
+      } catch {}
+      router.push(`/${locale}/active-route`);
+    } else {
+      router.push(`/${locale}/home`);
+    }
   }
 
   function devReset() {
