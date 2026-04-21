@@ -197,9 +197,10 @@ export async function buildGeneratedRoute(
   maxDistanceKm: number,
   maxFields: number,
   direction: RouteDirection = "all",
+  fields: TulipField[] = TULIP_FIELDS,
 ): Promise<GeneratedRoute> {
   // Stap 1: filter velden binnen straal
-  const nearby = TULIP_FIELDS.filter(
+  const nearby = fields.filter(
     (f) => haversineDistance(start.lat, start.lng, f.lat, f.lng) <= maxDistanceKm * 1000,
   );
 

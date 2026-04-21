@@ -7,8 +7,10 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, MapPin, X } from "lucide-react";
-import { buildGeneratedRoute } from "@/lib/routeGenerator";
+import { buildGeneratedRoute, TULIP_FIELDS } from "@/lib/routeGenerator";
 import type { GeneratedRoute } from "@/lib/routeGenerator";
+import type { TulipField } from "@/lib/tulipFields";
+import { supabase } from "@/lib/supabase";
 import { useWeather } from "@/hooks/useWeather";
 import RouteMapPreview from "@/components/routes/RouteMapPreview";
 import { useT } from "@/lib/i18n-context";
@@ -358,19 +360,46 @@ export default function OnboardingPage() {
       }
     }, 50);
 
-    // Route genereren
+    // Route genereren met live Supabase-velden (fallback: statische lijst)
     const { activity, duration, startLocation } = obState;
     const maxKm     = getMaxKm(activity, duration);
     const maxFields = getMaxFields(duration);
 
-    buildGeneratedRoute(
-      { lat: startLocation.coords.lat, lng: startLocation.coords.lng, label: startLocation.label },
-      maxKm,
-      maxFields,
-    )
-      .then((route) => { routeData.current = route; })
-      .catch(() => {})
-      .finally(() => { routeDone.current = true; tryAdvance(); });
+    (async () => {
+      // Live bollenvelden ophalen
+      let liveFields: TulipField[] = TULIP_FIELDS;
+      try {
+        const { data } = await supabase
+          .from("locations")
+          .select("id, title, latitude, longitude")
+          .eq("is_active", true)
+          .eq("category", "flower_field")
+          .not("latitude", "is", null)
+          .not("longitude", "is", null);
+        if (data && data.length > 0) {
+          liveFields = data.map((l) => ({
+            id:  l.id,
+            name: l.title,
+            lat:  l.latitude  as number,
+            lng:  l.longitude as number,
+          }));
+        }
+      } catch {}
+
+      try {
+        const route = await buildGeneratedRoute(
+          { lat: startLocation.coords.lat, lng: startLocation.coords.lng, label: startLocation.label },
+          maxKm,
+          maxFields,
+          "all",
+          liveFields,
+        );
+        routeData.current = route;
+      } catch {}
+
+      routeDone.current = true;
+      tryAdvance();
+    })();
 
     return () => clearInterval(intervalId);
   // eslint-disable-next-line react-hooks/exhaustive-deps

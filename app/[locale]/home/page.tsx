@@ -325,7 +325,10 @@ export default function HomePage() {
       }
 
       const locs = allLocs ?? [];
-      setBestBlooms(locs.filter((l) => l.bloom_status === "peak" && l.is_featured));
+      // Toon featured peak/blooming velden; als geen featured beschikbaar, val terug op alle peak/blooming
+      const blooming = locs.filter((l) => l.bloom_status === "peak" || l.bloom_status === "blooming");
+      const featured = blooming.filter((l) => l.is_featured);
+      setBestBlooms((featured.length > 0 ? featured : blooming).slice(0, 12));
       setAllLocations(locs);
       setAllRoutes(routes ?? []);
       setPhotoSpots(locs.filter((l) => l.category === "photo_spot"));
