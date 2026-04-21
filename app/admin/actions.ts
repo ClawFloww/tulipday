@@ -1,3 +1,5 @@
+"use server";
+
 import { getAdminClient } from "@/lib/supabase-admin-client";
 
 type Res = { error?: string };
