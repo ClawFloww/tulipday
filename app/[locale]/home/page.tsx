@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, MapPin, Loader2, ChevronRight } from "lucide-react";
+import { Search, MapPin, Loader2, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Location, Route, OnboardingPrefs, Category, RouteType } from "@/lib/types";
 import { LocationCard } from "@/components/ui/LocationCard";
@@ -17,7 +17,8 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import WeatherCard from "@/components/weather/WeatherCard";
 import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
-import { AnimatePresence } from "framer-motion";
+import { CorsoLiveBanner } from "@/components/corso/CorsoLiveBanner";
+import { motion, AnimatePresence } from "framer-motion";
 
 const INTENT_TO_CATEGORY: Record<string, Category> = {
   blooming_fields: "flower_field",
@@ -97,6 +98,148 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ── Alles-zien overlay ────────────────────────────────────────────────────────
+
+function SeeAllSheet({
+  title,
+  locations,
+  onClose,
+  onNavigate,
+}: {
+  title:      string;
+  locations:  Location[];
+  onClose:    () => void;
+  onNavigate: (slug: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = query.trim()
+    ? locations.filter(
+        (l) =>
+          l.title.toLowerCase().includes(query.toLowerCase()) ||
+          l.address?.toLowerCase().includes(query.toLowerCase()),
+      )
+    : locations;
+
+  return (
+    <motion.div
+      initial={{ y: "100%" }}
+      animate={{ y: 0 }}
+      exit={{ y: "100%" }}
+      transition={{ type: "spring", damping: 32, stiffness: 300 }}
+      className="fixed inset-0 z-[100] flex flex-col"
+      style={{ backgroundColor: "var(--color-surface)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center gap-3 px-5 pt-14 pb-3 flex-shrink-0"
+        style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-surface-2)" }}
+      >
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+        >
+          <X size={18} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-bold truncate" style={{ color: "var(--color-text)" }}>
+            {title}
+          </h2>
+          <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
+            {locations.length} locaties
+          </p>
+        </div>
+      </div>
+
+      {/* Zoekbalk */}
+      <div className="px-5 py-3 flex-shrink-0" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--color-text-3)" }} />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Zoeken…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tulip-500/40"
+            style={{
+              backgroundColor: "var(--color-surface-3)",
+              color:            "var(--color-text)",
+              border:           "1px solid var(--color-border)",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Lijst */}
+      <div className="flex-1 overflow-y-auto pb-8">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <span className="text-4xl">🔍</span>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text-3)" }}>
+              Geen resultaten voor &ldquo;{query}&rdquo;
+            </p>
+          </div>
+        ) : (
+          <div className="px-5 pt-3 space-y-2">
+            {filtered.map((loc) => (
+              <button
+                key={loc.id}
+                onClick={() => onNavigate(loc.slug)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform"
+                style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+              >
+                {/* Thumbnail */}
+                {loc.image_url ? (
+                  <Image
+                    src={loc.image_url}
+                    alt={loc.title}
+                    width={56}
+                    height={56}
+                    className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
+                       style={{ backgroundColor: "var(--color-surface-3)" }}>
+                    🌷
+                  </div>
+                )}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>
+                    {loc.title}
+                  </p>
+                  {loc.address && (
+                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--color-text-3)" }}>
+                      {loc.address}
+                    </p>
+                  )}
+                  {loc.bloom_status && (
+                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: loc.bloom_status === "peak" ? "#F0FDF4" : "var(--color-surface-3)",
+                            color:           loc.bloom_status === "peak" ? "#2D7D46" : "var(--color-text-3)",
+                          }}>
+                      {loc.bloom_status === "peak"     ? "🌸 Top bloei"
+                       : loc.bloom_status === "blooming" ? "🌷 In bloei"
+                       : loc.bloom_status === "early"    ? "🌱 Vroeg"
+                       : "🍂 Voorbij"}
+                    </span>
+                  )}
+                </div>
+
+                <ChevronRight size={16} style={{ color: "var(--color-text-3)", flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function Section({ title, children, onSeeAll }: { title: string; children: React.ReactNode; onSeeAll?: () => void }) {
   const { t } = useT();
   return (
@@ -146,6 +289,7 @@ export default function HomePage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [premium, setPremium]           = useState(true);
   const [showLocationCard, setShowLocationCard] = useState(false);
+  const [seeAll, setSeeAll] = useState<{ title: string; locations: Location[] } | null>(null);
 
   // Locatiebepaling met GPS-fallback naar Lisse
   const location = useUserLocation();
@@ -334,21 +478,12 @@ export default function HomePage() {
           </div>
 
           {/* Bloemencorso live banner */}
-          <div className="mx-4 mb-6">
-            <button
-              onClick={() => router.push("/corso")}
-              className="w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white flex items-center justify-between gap-3 shadow-md active:scale-95 transition-all"
-            >
-              <div className="text-left">
-                <p className="text-xs font-semibold opacity-80 uppercase tracking-widest">Live · 19 april 2026</p>
-                <p className="text-base font-extrabold leading-tight">🌸 Bloemencorso Live</p>
-                <p className="text-xs opacity-80 mt-0.5">Deel je foto&apos;s van de stoet</p>
-              </div>
-              <ChevronRight size={20} className="flex-shrink-0 opacity-80" />
-            </button>
-          </div>
+          <CorsoLiveBanner />
 
-          <Section title={t("home.best_blooms")} onSeeAll={() => {}}>
+          <Section
+            title={t("home.best_blooms")}
+            onSeeAll={() => setSeeAll({ title: t("home.best_blooms"), locations: bestBlooms })}
+          >
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : bestBlooms.length === 0
@@ -358,7 +493,10 @@ export default function HomePage() {
                 ))}
           </Section>
 
-          <Section title={t(prefs ? "home.recommended" : "home.explore")} onSeeAll={() => {}}>
+          <Section
+            title={t(prefs ? "home.recommended" : "home.explore")}
+            onSeeAll={() => setSeeAll({ title: t(prefs ? "home.recommended" : "home.explore"), locations: recommended })}
+          >
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : recommended.length === 0
@@ -383,7 +521,10 @@ export default function HomePage() {
                 ))}
           </Section>
 
-          <Section title={t("home.photo_spots_section")} onSeeAll={() => {}}>
+          <Section
+            title={t("home.photo_spots_section")}
+            onSeeAll={() => setSeeAll({ title: t("home.photo_spots_section"), locations: photoSpots })}
+          >
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : photoSpots.length === 0
@@ -406,6 +547,22 @@ export default function HomePage() {
           )}
         </div>
       )}
+
+      {/* Alles-zien overlay */}
+      <AnimatePresence>
+        {seeAll && (
+          <SeeAllSheet
+            key="see-all"
+            title={seeAll.title}
+            locations={seeAll.locations}
+            onClose={() => setSeeAll(null)}
+            onNavigate={(slug) => {
+              setSeeAll(null);
+              router.push(`/location/${slug}`);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );
