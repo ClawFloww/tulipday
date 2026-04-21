@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Navigation, Check, Trophy } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Navigation, Check } from "lucide-react";
 import type { GeneratedRoute } from "@/lib/routeGenerator";
 import ActiveRouteMap from "@/components/routes/ActiveRouteMap";
 
