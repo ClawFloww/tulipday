@@ -33,9 +33,9 @@ function Pill({
       className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-bold border transition-all
         ${active
           ? "bg-[#E8527A] border-[#E8527A] text-white shadow-sm"
-          : "bg-white border-gray-200 text-gray-600 hover:border-[#E8527A] hover:text-[#E8527A]"
+          : "border-[var(--color-border)] hover:border-[#E8527A] hover:text-[#E8527A]"
         }`}
-      style={{ minHeight: 36 }}
+      style={!active ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)", minHeight: 36 } : { minHeight: 36 }}
     >
       {children}
     </motion.button>
@@ -44,11 +44,11 @@ function Pill({
 
 export default function RouteFilters({ filters, onChange, onGenerate, isLoading }: Props) {
   return (
-    <div className="bg-white border-b border-gray-100 px-4 py-4 space-y-4">
+    <div className="px-4 py-4 space-y-4" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
 
       {/* Startpunt */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2 flex items-center gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5" style={{ color: "var(--color-text-3)" }}>
           <Navigation size={11} /> Startpunt
         </p>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
@@ -77,7 +77,7 @@ export default function RouteFilters({ filters, onChange, onGenerate, isLoading 
 
       {/* Afstand */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--color-text-3)" }}>
           Max. afstand
         </p>
         <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default function RouteFilters({ filters, onChange, onGenerate, isLoading 
 
       {/* Aantal velden */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--color-text-3)" }}>
           Aantal bollenvelden
         </p>
         <div className="flex gap-2">
@@ -115,7 +115,7 @@ export default function RouteFilters({ filters, onChange, onGenerate, isLoading 
 
       {/* Sortering */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--color-text-3)" }}>
           Sorteren op
         </p>
         <div className="flex gap-2">

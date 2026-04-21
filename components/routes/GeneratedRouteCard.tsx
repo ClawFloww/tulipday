@@ -47,12 +47,12 @@ export default function GeneratedRouteCard({
           ? "ring-2 ring-[#E8527A] shadow-lg"
           : "shadow-card hover:shadow-card-hover"
         }`}
-      style={{ backgroundColor: "#FFFFFF" }}
+      style={{ backgroundColor: "var(--color-surface-2)" }}
     >
       {/* Header */}
       <div
         className="px-4 pt-4 pb-3 flex items-start justify-between gap-2"
-        style={{ borderBottom: "1.5px solid #F5F5F5" }}
+        style={{ borderBottom: "1.5px solid var(--color-border)" }}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -69,28 +69,29 @@ export default function GeneratedRouteCard({
               <Zap size={10} /> {route.difficulty}
             </span>
           </div>
-          <h3 className="text-base font-extrabold text-gray-900 leading-tight truncate">
+          <h3 className="text-base font-extrabold leading-tight truncate" style={{ color: "var(--color-text)" }}>
             {route.name}
           </h3>
         </div>
         <ChevronRight
           size={18}
-          className={`flex-shrink-0 mt-1 transition-transform ${isSelected ? "rotate-90 text-[#E8527A]" : "text-gray-300"}`}
+          className={`flex-shrink-0 mt-1 transition-transform ${isSelected ? "rotate-90 text-[#E8527A]" : ""}`}
+        style={!isSelected ? { color: "var(--color-text-3)" } : {}}
         />
       </div>
 
       {/* Stats */}
       <div className="px-4 py-3 flex items-center gap-4">
-        <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
-          <Bike size={15} className="text-gray-400" />
+        <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: "var(--color-text-2)" }}>
+          <Bike size={15} style={{ color: "var(--color-text-3)" }} />
           {route.distanceKm} km
         </div>
-        <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
-          <Clock size={15} className="text-gray-400" />
+        <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: "var(--color-text-2)" }}>
+          <Clock size={15} style={{ color: "var(--color-text-3)" }} />
           ±{route.estimatedMinutes} min
         </div>
-        <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
-          <Flower2 size={15} className="text-gray-400" />
+        <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: "var(--color-text-2)" }}>
+          <Flower2 size={15} style={{ color: "var(--color-text-3)" }} />
           {route.fields.length} bollenvelden
         </div>
         {bloomingOnRoute > 0 && (

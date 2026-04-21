@@ -50,7 +50,7 @@ function formatDuration(min: number): string {
 
 function SkeletonRouteCard() {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white shadow-card">
+    <div className="rounded-2xl overflow-hidden shadow-card" style={{ backgroundColor: "var(--color-surface-2)" }}>
       {/* Afbeelding-placeholder met shimmer */}
       <div className="h-52 skeleton-shimmer" />
       <div className="p-4 space-y-3">
@@ -177,7 +177,8 @@ export default function RoutesPage() {
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => router.push("/home")}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0 tap-scale"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 tap-scale"
+            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
           >
             <ArrowLeft size={18} />
           </button>
@@ -205,13 +206,15 @@ export default function RoutesPage() {
                 onClick={() => setFilter(f.id)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold
                             border transition-all duration-200 active:scale-95
-                            ${isActive ? "bg-tulip-500 border-tulip-500 text-white shadow-sm" : "bg-white border-gray-200 text-gray-600 hover:border-tulip-300"}`}
+                            ${isActive ? "bg-tulip-500 border-tulip-500 text-white shadow-sm" : "border-[var(--color-border)] hover:border-tulip-300"}`}
+                style={!isActive ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" } : {}}
               >
                 <span>{f.emoji}</span>
                 {t(f.labelKey)}
                 {!loading && count > 0 && (
                   <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none
-                                   ${isActive ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"}`}>
+                                   ${isActive ? "bg-white/25 text-white" : ""}`}
+                    style={!isActive ? { backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" } : {}}>
                     {count}
                   </span>
                 )}
