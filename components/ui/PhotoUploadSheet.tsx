@@ -310,7 +310,8 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
 
               {/* Caption */}
               <div>
-                <label htmlFor="photo-caption" className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">
+                <label htmlFor="photo-caption" className="text-xs font-semibold uppercase tracking-wide block mb-1.5"
+                       style={{ color: "var(--color-text-3)" }}>
                   {t("photos.caption_label")}
                 </label>
                 <textarea
@@ -320,9 +321,8 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
                   placeholder={t("photos.caption_placeholder")}
                   rows={2}
                   aria-label={t("photos.caption_label")}
-                  className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-tulip-300 focus:border-tulip-400
-                             resize-none transition-all"
+                  className="w-full px-3 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-tulip-300 focus:border-tulip-400 resize-none transition-all"
+                  style={{ backgroundColor: "var(--color-surface-3)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}
                 />
                 <p className="text-xs text-gray-400 text-right mt-1">
                   {t("photos.caption_hint").replace("{n}", String(caption.length))}
