@@ -20,7 +20,7 @@ interface Tab {
 
 // Kleuren — actief gebruikt CSS variabele voor automatische donker-modus
 const ACTIVE_COLOR   = "var(--color-primary)";
-const INACTIVE_COLOR = "#B0B0B0";
+const INACTIVE_COLOR = "var(--color-text-3)";
 
 const TABS: Tab[] = [
   { id: "map",     label: "Kaart",   segment: "map",      Icon: Map     },

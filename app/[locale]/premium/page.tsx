@@ -29,7 +29,6 @@ export default function PremiumPage() {
       : "price_1TNzeGCMTdZLUsIuoBlniI6q";
 
     if (!stripeConfigured) {
-      // Demo fallback
       activateDemo();
       return;
     }
@@ -57,33 +56,35 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="min-h-screen bg-warm pb-12">
-      <div className="bg-white px-5 pt-12 pb-5 border-b border-gray-100">
+    <div className="min-h-screen pb-12" style={{ backgroundColor: "var(--color-surface)" }}>
+      <div className="px-5 pt-12 pb-5" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center gap-3 mb-2">
           <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0">
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}>
             <ArrowLeft size={18} />
           </button>
-          <h1 className="text-xl font-extrabold text-[#1A1A1A]">🌷 TulipDay Premium</h1>
+          <h1 className="text-xl font-extrabold" style={{ color: "var(--color-text)" }}>🌷 TulipDay Premium</h1>
         </div>
-        <p className="text-sm text-gray-500 ml-12">Alles uit het tulpenseizoen halen</p>
+        <p className="text-sm ml-12" style={{ color: "var(--color-text-3)" }}>Alles uit het tulpenseizoen halen</p>
       </div>
 
       <div className="px-4 pt-6 space-y-6">
         {/* Feature comparison */}
-        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
-          <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-100">
-            <div className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Feature</div>
-            <div className="py-3 px-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wide">Gratis</div>
-            <div className="py-3 px-2 text-center text-xs font-bold text-tulip-600 uppercase tracking-wide">Premium</div>
+        <div className="rounded-2xl shadow-card overflow-hidden" style={{ backgroundColor: "var(--color-surface-2)" }}>
+          <div className="grid grid-cols-3" style={{ backgroundColor: "var(--color-surface-3)", borderBottom: "1px solid var(--color-border)" }}>
+            <div className="py-3 px-4 text-xs font-bold uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>Feature</div>
+            <div className="py-3 px-2 text-center text-xs font-bold uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>Gratis</div>
+            <div className="py-3 px-2 text-center text-xs font-bold uppercase tracking-wide text-tulip-600">Premium</div>
           </div>
-          <div className="divide-y divide-gray-50">
-            {ALL_FEATURES.map((f) => (
-              <div key={f.label} className="grid grid-cols-3 items-center px-1 py-2.5">
-                <span className="px-3 text-sm text-gray-700">{f.label}</span>
+          <div style={{ borderTop: "1px solid var(--color-border)" }}>
+            {ALL_FEATURES.map((f, i) => (
+              <div key={f.label} className="grid grid-cols-3 items-center px-1 py-2.5"
+                   style={i > 0 ? { borderTop: "1px solid var(--color-border)" } : {}}>
+                <span className="px-3 text-sm" style={{ color: "var(--color-text-2)" }}>{f.label}</span>
                 <div className="flex justify-center">
                   {f.free ? <Check size={16} className="text-green-500" strokeWidth={3} />
-                           : <span className="text-gray-300 font-bold text-base">–</span>}
+                           : <span className="font-bold text-base" style={{ color: "var(--color-text-3)" }}>–</span>}
                 </div>
                 <div className="flex justify-center">
                   <Check size={16} className="text-tulip-500" strokeWidth={3} />
@@ -96,13 +97,13 @@ export default function PremiumPage() {
         {/* Pricing */}
         <div className="grid grid-cols-2 gap-3">
           {/* Monthly */}
-          <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Maandelijks</p>
-            <p className="text-2xl font-extrabold text-gray-900 mb-0.5">€2,99</p>
-            <p className="text-xs text-gray-400 mb-4">per maand</p>
+          <div className="rounded-2xl shadow-card p-5 flex flex-col" style={{ backgroundColor: "var(--color-surface-2)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-3)" }}>Maandelijks</p>
+            <p className="text-2xl font-extrabold mb-0.5" style={{ color: "var(--color-text)" }}>€2,99</p>
+            <p className="text-xs mb-4" style={{ color: "var(--color-text-3)" }}>per maand</p>
             <ul className="space-y-2 flex-1 mb-4">
               {PREMIUM_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-1.5 text-xs text-gray-600">
+                <li key={f} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--color-text-2)" }}>
                   <Check size={11} className="text-tulip-500 flex-shrink-0" strokeWidth={3} /> {f}
                 </li>
               ))}
@@ -149,7 +150,7 @@ export default function PremiumPage() {
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-400 pb-4">
+        <p className="text-center text-xs pb-4" style={{ color: "var(--color-text-3)" }}>
           iDEAL & creditcard · Eenvoudig opzegbaar · Tulpenseizoen april–mei
         </p>
       </div>

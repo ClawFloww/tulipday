@@ -164,8 +164,8 @@ export default function DiscoverPage() {
   return (
     <div className="min-h-screen bg-warm" style={{ paddingBottom: 80 }}>
       {/* Header */}
-      <div className="bg-white px-5 pt-12 pb-4 shadow-sm">
-        <h1 className="text-xl font-extrabold text-[#1A1A1A] mb-4">🌷 Ontdek velden</h1>
+      <div className="px-5 pt-12 pb-4 shadow-sm" style={{ backgroundColor: "var(--color-surface-2)" }}>
+        <h1 className="text-xl font-extrabold mb-4" style={{ color: "var(--color-text)" }}>🌷 Ontdek velden</h1>
         <FilterChips chips={CHIPS} active={activeChip} onChange={(chip) => {
           setActiveChip(chip);
           if (chip !== "Alle") track("filter_applied", { filter: chip });
@@ -173,7 +173,7 @@ export default function DiscoverPage() {
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 px-5 py-3 text-xs font-semibold text-gray-400">
+      <div className="flex items-center gap-4 px-5 py-3 text-xs font-semibold" style={{ color: "var(--color-text-3)" }}>
         {loading ? (
           <span>Laden…</span>
         ) : (
@@ -191,15 +191,15 @@ export default function DiscoverPage() {
         style={{ maxWidth: 430, paddingLeft: 16, paddingRight: 16, minHeight: 520 }}
       >
         {loading ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white" style={{ height: 460, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+          <div className="flex flex-col items-center justify-center rounded-3xl" style={{ height: 460, backgroundColor: "var(--color-surface-2)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
             <Loader2 size={36} className="text-tulip-400 animate-spin" />
-            <p className="text-sm text-gray-400 mt-3">Velden laden…</p>
+            <p className="text-sm mt-3" style={{ color: "var(--color-text-3)" }}>Velden laden…</p>
           </div>
         ) : visibleFields.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white text-center" style={{ height: 460, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+          <div className="flex flex-col items-center justify-center rounded-3xl text-center" style={{ height: 460, backgroundColor: "var(--color-surface-2)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
             <span style={{ fontSize: 56 }}>🌷</span>
-            <p className="text-lg font-extrabold text-[#1A1A1A] mt-4 mb-2">Alle velden bekeken!</p>
-            <p className="text-sm text-gray-400 mb-6 px-8">Probeer een ander filter of begin opnieuw.</p>
+            <p className="text-lg font-extrabold mt-4 mb-2" style={{ color: "var(--color-text)" }}>Alle velden bekeken!</p>
+            <p className="text-sm mb-6 px-8" style={{ color: "var(--color-text-3)" }}>Probeer een ander filter of begin opnieuw.</p>
             <button onClick={handleReset} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: "#639922" }}>
               Opnieuw beginnen
             </button>
@@ -241,7 +241,7 @@ export default function DiscoverPage() {
         {/* Meer laden indicator */}
         {loadingMore && !loading && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-            <span className="text-xs text-gray-300 flex items-center gap-1">
+            <span className="text-xs flex items-center gap-1" style={{ color: "var(--color-text-3)" }}>
               <Loader2 size={11} className="animate-spin" /> meer velden laden…
             </span>
           </div>
@@ -249,7 +249,7 @@ export default function DiscoverPage() {
       </div>
 
       {visibleFields.length > 0 && !loading && (
-        <p className="text-center text-xs text-gray-300 mt-4 pb-2">sleep of gebruik de knoppen</p>
+        <p className="text-center text-xs mt-4 pb-2" style={{ color: "var(--color-text-3)" }}>sleep of gebruik de knoppen</p>
       )}
     </div>
   );

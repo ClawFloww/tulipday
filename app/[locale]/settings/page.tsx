@@ -130,9 +130,11 @@ function PushToggle() {
         </p>
       </div>
       {loading
-        ? <Loader2 size={16} className="animate-spin text-gray-400" />
-        : <div className={`w-11 h-6 rounded-full transition-colors ${subscribed ? "bg-tulip-500" : "bg-gray-200"} flex items-center px-1`}>
-            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${subscribed ? "translate-x-5" : "translate-x-0"}`} />
+        ? <Loader2 size={16} className="animate-spin" style={{ color: "var(--color-text-3)" }} />
+        : <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 ${subscribed ? "bg-tulip-500" : ""}`}
+               style={!subscribed ? { backgroundColor: "var(--color-surface-3)" } : {}}>
+            <div className={`w-4 h-4 rounded-full shadow transition-transform ${subscribed ? "translate-x-5 bg-white" : "translate-x-0"}`}
+                 style={!subscribed ? { backgroundColor: "var(--color-text-3)" } : {}} />
           </div>
       }
     </button>
@@ -219,7 +221,7 @@ export default function SettingsPage() {
           label={t("settings.contact")}
           accent="text-forest-500"
           right={
-            <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1 text-xs" style={{ color: "var(--color-text-3)" }}>
               hello@tulipday.nl <ExternalLink size={11} />
             </span>
           }
@@ -231,11 +233,11 @@ export default function SettingsPage() {
         <Accordion icon={<ShieldCheck size={18} />} title={t("settings.privacy_title")} accent="text-forest-500">
           <p>{t("settings.privacy_p1")}</p>
           <p>
-            <strong className="text-[#1A1A1A]">{t("settings.privacy_what_store")}</strong>{" "}
+            <strong style={{ color: "var(--color-text)" }}>{t("settings.privacy_what_store")}</strong>{" "}
             {t("settings.privacy_what_store_body")}
           </p>
           <p>
-            <strong className="text-[#1A1A1A]">{t("settings.privacy_not_store")}</strong>{" "}
+            <strong style={{ color: "var(--color-text)" }}>{t("settings.privacy_not_store")}</strong>{" "}
             {t("settings.privacy_not_store_body")}
           </p>
           <p>{t("settings.privacy_p4")}</p>
@@ -255,8 +257,8 @@ export default function SettingsPage() {
         </Accordion>
 
         <div className="pt-4 pb-2 text-center space-y-1">
-          <p className="text-[11px] text-gray-300 font-medium">{t("settings.footer_version")}</p>
-          <p className="text-[11px] text-gray-300">{t("settings.footer_copyright", { year: new Date().getFullYear() })}</p>
+          <p className="text-[11px] font-medium" style={{ color: "var(--color-text-3)" }}>{t("settings.footer_version")}</p>
+          <p className="text-[11px]" style={{ color: "var(--color-text-3)" }}>{t("settings.footer_copyright", { year: new Date().getFullYear() })}</p>
         </div>
       </div>
 

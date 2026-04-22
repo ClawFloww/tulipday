@@ -259,7 +259,7 @@ function Section({ title, children, onSeeAll }: { title: string; children: React
 
 function SkeletonCard({ wide = false }: { wide?: boolean }) {
   return (
-    <div className={`flex-shrink-0 ${wide ? "w-56" : "w-48"} rounded-2xl overflow-hidden bg-white shadow-card`}>
+    <div className={`flex-shrink-0 ${wide ? "w-56" : "w-48"} rounded-2xl overflow-hidden shadow-card`} style={{ backgroundColor: "var(--color-surface-2)" }}>
       {/* Afbeelding-placeholder met shimmer */}
       <div className="h-[200px] skeleton-shimmer" />
       <div className="p-3 space-y-2">
@@ -403,7 +403,7 @@ export default function HomePage() {
 
         <div className="flex gap-2 mt-4">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-3)] pointer-events-none" />
             <input
               type="text"
               value={search}
@@ -433,7 +433,7 @@ export default function HomePage() {
       {/* Search results */}
       {searchResults && (
         <div className="px-5 pt-6">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+          <p className="text-xs font-bold text-[var(--color-text-3)] uppercase tracking-widest mb-3">
             {t(searchResults.length === 1 ? "home.search_count" : "home.search_count_plural", {
               count: searchResults.length,
               query: debouncedSearch,
@@ -441,7 +441,7 @@ export default function HomePage() {
           </p>
           <div className="flex gap-3 flex-wrap">
             {searchResults.length === 0 ? (
-              <p className="text-sm text-gray-400">{t("home.no_locations_found")}</p>
+              <p className="text-sm text-[var(--color-text-3)]">{t("home.no_locations_found")}</p>
             ) : (
               searchResults.map((loc) => (
                 <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
@@ -490,7 +490,7 @@ export default function HomePage() {
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : bestBlooms.length === 0
-              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_peak_blooms")}</p>
+              ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_peak_blooms")}</p>
               : (premium ? bestBlooms : bestBlooms.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
@@ -503,7 +503,7 @@ export default function HomePage() {
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : recommended.length === 0
-              ? <p className="text-sm text-gray-400 pl-1">{t("home.nothing_found")}</p>
+              ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.nothing_found")}</p>
               : (premium ? recommended : recommended.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
@@ -518,7 +518,7 @@ export default function HomePage() {
             {loading
               ? Array.from({ length: SKELETON_ROUTE_COUNT }).map((_, i) => <SkeletonCard key={i} wide />)
               : getRecommendedRoutes(allRoutes, prefs).length === 0
-              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_routes")}</p>
+              ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_routes")}</p>
               : getRecommendedRoutes(allRoutes, prefs).map((route) => (
                   <RouteCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
                 ))}
@@ -531,7 +531,7 @@ export default function HomePage() {
             {loading
               ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => <SkeletonCard key={i} />)
               : photoSpots.length === 0
-              ? <p className="text-sm text-gray-400 pl-1">{t("home.no_photo_spots")}</p>
+              ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_photo_spots")}</p>
               : (premium ? photoSpots : photoSpots.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
                   <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
