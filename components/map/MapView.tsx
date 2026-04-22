@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import type { Location, Category } from "@/lib/types";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check } from "lucide-react";
+import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { saveCustomRoute } from "@/lib/customRoutes";
 
@@ -356,6 +356,7 @@ export default function MapView() {
   const drawModeRef           = useRef(false);
   const waypointsRef          = useRef<[number, number][]>([]);
   const waypointMarkersRef    = useRef<maplibregl.Marker[]>([]);
+  const userMarkerRef         = useRef<maplibregl.Marker | null>(null);
 
   locationsRef.current    = locations;
   activeFilterRef.current = activeFilter;
@@ -382,6 +383,40 @@ export default function MapView() {
   }, []);
 
   useEffect(() => { updateSource(); }, [locations, activeFilter, userCoords, updateSource]);
+
+  // ── Gebruikerslocatie marker ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !userCoords) return;
+    const lngLat: [number, number] = [userCoords.lng, userCoords.lat];
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat(lngLat);
+      return;
+    }
+
+    // Blauw pulserende stip
+    const el = document.createElement("div");
+    el.style.cssText = [
+      "width:18px", "height:18px", "border-radius:50%",
+      "background:#3B82F6", "border:3px solid white",
+      "box-shadow:0 0 0 2px rgba(59,130,246,0.4),0 2px 10px rgba(59,130,246,0.35)",
+      "position:relative", "cursor:default",
+    ].join(";");
+
+    const ring = document.createElement("div");
+    ring.style.cssText = [
+      "position:absolute", "top:-11px", "left:-11px",
+      "width:40px", "height:40px", "border-radius:50%",
+      "background:rgba(59,130,246,0.18)",
+      "animation:user-loc-pulse 2s ease-out infinite",
+    ].join(";");
+    el.appendChild(ring);
+
+    userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "center" })
+      .setLngLat(lngLat)
+      .addTo(map);
+  }, [userCoords]);
 
   // ── Update map cursor when draw mode changes ──
   useEffect(() => {
@@ -623,10 +658,32 @@ export default function MapView() {
 
     return () => {
       mapReadyRef.current = false;
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Locate knop (losgekoppeld van filter) ──
+  const locateUser = useCallback(() => {
+    if (userCoords) {
+      mapRef.current?.flyTo({ center: [userCoords.lng, userCoords.lat], zoom: 14 });
+      return;
+    }
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserCoords(coords);
+        mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 14 });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }, [userCoords]);
 
   // ── Filter click ──
   const handleFilter = useCallback((id: FilterId) => {
@@ -715,15 +772,15 @@ export default function MapView() {
 
       {/* ── My location button ── */}
       <button
-        onClick={() => {
-          if (!userCoords) return handleFilter("nearby");
-          mapRef.current?.flyTo({ center: [userCoords.lng, userCoords.lat], zoom: 12 });
-        }}
-        className="absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
-                   shadow-lg flex items-center justify-center text-rose-600
-                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100"
+        onClick={locateUser}
+        className={`absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
+                   shadow-lg flex items-center justify-center
+                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100
+                   ${userCoords ? "text-blue-500" : "text-rose-600"}`}
       >
-        <Locate size={20} />
+        {locating
+          ? <Loader2 size={20} className="animate-spin text-rose-400" />
+          : <Locate size={20} />}
       </button>
 
       {/* ── Zoom buttons ── */}
@@ -830,6 +887,10 @@ export default function MapView() {
         }
         .animate-slide-up {
           animation: slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes user-loc-pulse {
+          0%   { transform: scale(0.6); opacity: 0.8; }
+          100% { transform: scale(2.2); opacity: 0;   }
         }
       `}</style>
     </div>
