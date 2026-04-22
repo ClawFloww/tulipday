@@ -56,6 +56,8 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement>(null);
+  // Cropped blob opslaan zodat het beschikbaar is in de upload stap (imgRef is dan unmounted)
+  const croppedBlobRef = useRef<Blob | null>(null);
 
   // Details state
   const [caption, setCaption] = useState("");
@@ -101,12 +103,22 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const { width, height } = e.currentTarget;
-    setCrop(centerAspectCrop(width, height));
+    const c = centerAspectCrop(width, height);
+    setCrop(c);
+    // Zet completedCrop meteen zodat de "Verder"-knop enabled is zonder te hoeven slepen
+    setCompletedCrop({
+      unit: "px",
+      x: Math.round((c.x / 100) * width),
+      y: Math.round((c.y / 100) * height),
+      width: Math.round((c.width / 100) * width),
+      height: Math.round((c.height / 100) * height),
+    });
   }
 
   async function handleCropDone() {
     if (!completedCrop || !imgRef.current) return;
     const blob = await getCroppedBlob(imgRef.current, completedCrop);
+    croppedBlobRef.current = blob;  // bewaar voor gebruik in upload (imgRef is dan unmounted)
     if (srcUrl) URL.revokeObjectURL(srcUrl);
     setSrcUrl(URL.createObjectURL(blob));
     setStep("details");
@@ -114,15 +126,13 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
 
   async function handleUpload() {
     if (!consent) { setError(t("photos.error_consent")); return; }
-    if (!srcUrl || !completedCrop || !imgRef.current) return;
+    if (!croppedBlobRef.current) return;
     setError(null);
     setStep("uploading");
 
     try {
-      // 1. Haal cropped blob op
       setProgress(t("photos.compress_progress"));
-      const croppedBlob = await getCroppedBlob(imgRef.current, completedCrop);
-      const croppedFile = new File([croppedBlob], "photo.jpg", { type: "image/jpeg" });
+      const croppedFile = new File([croppedBlobRef.current], "photo.jpg", { type: "image/jpeg" });
 
       // 2. Comprimeer + strip EXIF
       const compressed = await imageCompression(croppedFile, {
@@ -182,6 +192,7 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
     setSrcUrl(null);
     setCrop(undefined);
     setCompletedCrop(undefined);
+    croppedBlobRef.current = null;
     setCaption("");
     setBloomConfirmed(false);
     setConsent(false);
@@ -191,7 +202,7 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
@@ -219,7 +230,7 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
           </button>
         </div>
 
-        <div className="px-5 py-5">
+        <div className="px-5 py-5 pb-8">
 
           {/* ── Step: pick ── */}
           {step === "pick" && (
@@ -264,7 +275,8 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
                     src={srcUrl}
                     alt="Voorvertoning voor bijsnijden"
                     onLoad={onImageLoad}
-                    className="max-h-72 w-full object-contain"
+                    className="w-full object-contain"
+                    style={{ maxHeight: "45dvh" }}
                   />
                 </ReactCrop>
               </div>
@@ -339,9 +351,9 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                   aria-label={t("photos.consent_label")}
-                  className="mt-0.5 w-4 h-4 rounded accent-tulip-500"
+                  className="mt-0.5 w-4 h-4 flex-shrink-0 rounded accent-tulip-500"
                 />
-                <p className="text-sm text-tulip-800 leading-snug">{t("photos.consent_label")}</p>
+                <p className="text-sm leading-snug text-tulip-700">{t("photos.consent_label")}</p>
               </label>
 
               <button

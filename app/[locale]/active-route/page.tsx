@@ -279,7 +279,7 @@ export default function ActiveRoutePage() {
 
   if (!data) return null;
 
-  const { route, activity } = data;
+  const { route } = data;
   const allDone = activeIdx === -1;
 
   if (done || allDone) return <FinishedScreen route={route} onHome={finishRoute} />;

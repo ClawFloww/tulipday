@@ -6,9 +6,6 @@ import Image from "next/image";
 import { ArrowLeft, Search, MapPin, Route, X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { Location, Route as RouteType } from "@/lib/types";
-import { useT } from "@/lib/i18n-context";
-
-type ResultSection = "locations" | "routes";
 
 interface SearchResults {
   locations: Location[];
@@ -22,8 +19,6 @@ export default function SearchPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) ?? "nl";
-  const { t }  = useT();
-
   const [query,     setQuery]     = useState("");
   const [results,   setResults]   = useState<SearchResults>(EMPTY);
   const [loading,   setLoading]   = useState(false);

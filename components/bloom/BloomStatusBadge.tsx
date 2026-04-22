@@ -78,7 +78,7 @@ export default function BloomStatusBadge({ fieldId, statuses, extended = false }
           >
             {reliabilityLabel}
           </span>
-          <span className="text-[10px] text-gray-400">
+          <span className="text-[10px]" style={{ color: "var(--color-text-3)" }}>
             Laatste update door bezoekers
           </span>
         </div>

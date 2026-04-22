@@ -28,6 +28,7 @@ const interTight = Inter_Tight({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tulipday.nl"),
   title: "TulipDay",
   description: "Ontdek de mooiste tulpenvelden bij jou in de buurt.",
 };
