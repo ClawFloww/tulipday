@@ -1,5 +1,13 @@
 {
-  "background_color": "#FFF5F7",
+  "name": "TulipDay — Bollenvelden Bollenstreek",
+  "short_name": "TulipDay",
+  "description": "Ontdek de mooiste bollenvelden van de Bollenstreek. Fietsroutes, wandelingen en live bloei-updates.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#E8527A",
+  "background_color": "#FAFAF7",
+  "lang": "nl",
   "icons": [
     {
       "src": "../icons/icon-48.webp",

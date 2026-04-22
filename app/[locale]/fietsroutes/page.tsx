@@ -5,7 +5,6 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import RouteListScreen from "@/components/routes/RouteListScreen";
-import { MOCK_BLOOM_STATUSES } from "@/lib/tulipFields";
 
 export default function FietsroutesPage() {
   const router = useRouter();
@@ -44,7 +43,6 @@ export default function FietsroutesPage() {
           fieldCount:    "normaal",
           sort:          "dichtstbij",
         }}
-        statuses={MOCK_BLOOM_STATUSES}
       />
     </div>
   );

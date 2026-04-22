@@ -1,61 +1,74 @@
 "use client";
 
-// Hook voor periodieke synchronisatie van bloeistatussen (30s polling)
+// Hook voor periodieke synchronisatie van bloeistatussen uit Supabase (30s polling)
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 import type { FieldBloomStatus, BloomStatusType } from "@/lib/tulipFields";
 
-const POLL_INTERVAL_MS  = 30_000; // 30 seconden
-const CHANGE_PROBABILITY = 0.1;   // 10% kans per veld per poll
+const POLL_INTERVAL_MS = 30_000; // 30 seconden
 
-// Simuleer een server-update met realistische status-overgangen
-function simulateStatusUpdate(statuses: FieldBloomStatus[]): FieldBloomStatus[] {
-  const transitions: Record<BloomStatusType, BloomStatusType[]> = {
-    in_bloom: ["in_bloom", "in_bloom", "in_bloom", "fading"],
-    fading:   ["fading",   "fading",   "finished"],
-    finished: ["finished"],
-  };
+function mapBloomStatus(raw: string | null): BloomStatusType {
+  if (raw === "peak" || raw === "blooming") return "in_bloom";
+  if (raw === "ending" || raw === "early")  return "fading";
+  return "finished";
+}
 
-  return statuses.map((s) => {
-    if (Math.random() > CHANGE_PROBABILITY) return s;
-    const options   = transitions[s.status];
-    const newStatus = options[Math.floor(Math.random() * options.length)];
-    if (newStatus === s.status) return s;
-    return {
-      ...s,
-      status:           newStatus,
-      timestamp:        new Date(),
-      reliabilityScore: 0.6,
-      confirmedBy:      0,
-    };
-  });
+async function fetchFromSupabase(): Promise<FieldBloomStatus[]> {
+  const { data } = await supabase
+    .from("locations")
+    .select("id, bloom_status, updated_at")
+    .eq("is_active", true)
+    .eq("category", "flower_field")
+    .not("bloom_status", "is", null);
+
+  if (!data) return [];
+
+  return data.map((l) => ({
+    id:               l.id,
+    fieldId:          l.id,
+    userId:           "system",
+    status:           mapBloomStatus(l.bloom_status),
+    timestamp:        new Date(l.updated_at),
+    confirmedBy:      0,
+    reliabilityScore: 0.8,
+  }));
 }
 
 interface UseLiveBloomSyncResult {
-  statuses:   FieldBloomStatus[];
-  lastSync:   Date | null;
-  isSyncing:  boolean;
-  forceSync:  () => void;
+  statuses:  FieldBloomStatus[];
+  lastSync:  Date | null;
+  isSyncing: boolean;
+  forceSync: () => void;
 }
 
 export function useLiveBloomSync(
-  initialStatuses: FieldBloomStatus[],
+  initialStatuses: FieldBloomStatus[] = [],
 ): UseLiveBloomSyncResult {
   const [statuses,  setStatuses]  = useState<FieldBloomStatus[]>(initialStatuses);
   const [lastSync,  setLastSync]  = useState<Date | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const sync = useCallback(() => {
+  const sync = useCallback(async () => {
     setIsSyncing(true);
-    // Productie: fetch("/api/bloom/statuses").then(r => r.json()).then(setStatuses)
-    // Demo: simuleer een kleine update na netwerkvertraging
-    timerRef.current = setTimeout(() => {
-      setStatuses((prev) => simulateStatusUpdate(prev));
+    try {
+      const fresh = await fetchFromSupabase();
+      // Als Supabase leeg teruggeeft (nog geen bloom_status ingevuld), gebruik initialStatuses
+      setStatuses(fresh.length > 0 ? fresh : initialStatuses);
       setLastSync(new Date());
+    } catch {
+      // Bij netwerk-fout: stille fallback, geen UI-crash
+    } finally {
       setIsSyncing(false);
-    }, 600);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Eerste fetch bij mount
+  useEffect(() => {
+    sync();
+  }, [sync]);
 
   // Poll elke 30 seconden
   useEffect(() => {
@@ -65,11 +78,6 @@ export function useLiveBloomSync(
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [sync]);
-
-  // Reset statussen als initialStatuses wijzigen (bijv. andere pagina)
-  useEffect(() => {
-    setStatuses(initialStatuses);
-  }, [initialStatuses]);
 
   return { statuses, lastSync, isSyncing, forceSync: sync };
 }
