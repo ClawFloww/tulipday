@@ -29,7 +29,7 @@ function isToday(dateStr: string): boolean {
 
 function PhotoSkeleton() {
   return (
-    <div className="w-full aspect-[4/3] bg-gray-100 rounded-2xl animate-pulse" />
+    <div className="w-full aspect-[4/3] rounded-2xl animate-pulse" style={{ backgroundColor: "var(--color-surface-3)" }} />
   );
 }
 
@@ -90,10 +90,11 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
     return (
       <div className="space-y-3">
         <SectionTitle t={t} />
-        <div className="flex flex-col items-center justify-center gap-2 py-8 bg-gray-50 rounded-2xl text-center">
-          <Camera size={28} className="text-gray-300" />
-          <p className="text-sm font-bold text-gray-700">{t("photos.empty_title")}</p>
-          <p className="text-xs text-gray-400 max-w-[220px] leading-relaxed">{t("photos.empty_body")}</p>
+        <div className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl text-center"
+             style={{ backgroundColor: "var(--color-surface-3)" }}>
+          <Camera size={28} style={{ color: "var(--color-text-3)" }} />
+          <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t("photos.empty_title")}</p>
+          <p className="text-xs max-w-[220px] leading-relaxed" style={{ color: "var(--color-text-3)" }}>{t("photos.empty_body")}</p>
         </div>
       </div>
     );
@@ -106,14 +107,14 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <SectionTitle t={t} />
-        <span className="text-xs text-gray-400 font-medium">
+        <span className="text-xs font-medium" style={{ color: "var(--color-text-3)" }}>
           {activeIdx + 1} / {allPhotos.length}
         </span>
       </div>
 
       {/* Swipe stack */}
       <div className="relative">
-        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 select-none">
+        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden select-none" style={{ backgroundColor: "var(--color-surface-3)" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={current.id}
@@ -162,7 +163,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
 
         {/* Caption */}
         {current.caption && (
-          <p className="mt-2 text-sm text-gray-600 italic leading-relaxed px-1">
+          <p className="mt-2 text-sm italic leading-relaxed px-1" style={{ color: "var(--color-text-2)" }}>
             &ldquo;{current.caption}&rdquo;
           </p>
         )}
@@ -195,7 +196,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
 
 function SectionTitle({ t }: { t: (k: string) => string }) {
   return (
-    <h2 className="flex items-center gap-2 text-base font-extrabold text-gray-900">
+    <h2 className="flex items-center gap-2 text-base font-extrabold" style={{ color: "var(--color-text)" }}>
       <Flower2 size={16} className="text-tulip-500" />
       {t("photos.gallery_title")}
     </h2>

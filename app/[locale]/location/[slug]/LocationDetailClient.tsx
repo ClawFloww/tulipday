@@ -328,16 +328,16 @@ export default function LocationDetailPage() {
           </button>
         </div>
 
-        <div className="bg-tulip-50 dark:bg-tulip-950/30 rounded-2xl p-4">
+        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--color-primary-subtle)" }}>
           <div className="flex items-center gap-2 mb-4">
-            <ShieldCheck size={16} className="text-tulip-600 dark:text-tulip-400" />
-            <h3 className="text-sm font-extrabold text-tulip-900 dark:text-tulip-200">{t("location.etiquette_title")}</h3>
+            <ShieldCheck size={16} className="text-tulip-500" />
+            <h3 className="text-sm font-extrabold text-tulip-600">{t("location.etiquette_title")}</h3>
           </div>
           <ul className="space-y-3">
             {etiquetteRules.map((item, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
-                <p className="text-xs text-tulip-800 dark:text-tulip-300 leading-snug">{item.rule}</p>
+                <p className="text-xs leading-snug" style={{ color: "var(--color-text-2)" }}>{item.rule}</p>
               </li>
             ))}
           </ul>
