@@ -106,7 +106,7 @@ const EMPTY_LOC: Rec = {
   title: "", slug: "", category: "", latitude: "", longitude: "", address: "",
   short_description: "", full_description: "", flower_type: "", bloom_status: "",
   photo_score: "", crowd_score: "", access_type: "", parking_info: "",
-  best_visit_time: "", image_url: "", is_featured: false, is_active: true,
+  best_visit_time: "", image_url: "", opening_hours: "", is_featured: false, is_active: true,
 };
 
 function LocationForm({
@@ -144,6 +144,18 @@ function LocationForm({
       <Field label="Short description"><Textarea value={d.short_description} onChange={set("short_description")} rows={2} /></Field>
       <Field label="Full description"><Textarea value={d.full_description} onChange={set("full_description")} rows={4} /></Field>
 
+      {(d.category === "food" || d.opening_hours) && (
+        <Field label='Opening hours (JSON) — bijv. {"mon":["09:00","21:00"],"sun":null}'>
+          <Textarea
+            value={typeof d.opening_hours === "object" && d.opening_hours !== null
+              ? JSON.stringify(d.opening_hours, null, 2)
+              : (d.opening_hours ?? "")}
+            onChange={set("opening_hours")}
+            rows={5}
+          />
+        </Field>
+      )}
+
       <div className="flex gap-6">
         <Toggle checked={!!d.is_featured} onChange={set("is_featured")} label="Featured" />
         <Toggle checked={!!d.is_active}   onChange={set("is_active")}   label="Active"   />
@@ -170,6 +182,7 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
   const [editing, setEditing]     = useState<Rec | null>(null);
   const [adding, setAdding]       = useState(false);
   const [search, setSearch]       = useState("");
+  const [saving, setSaving]       = useState(false);
   const [isPending, startT]       = useTransition();
 
   const load = useCallback(() => {
@@ -179,23 +192,34 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
   useEffect(() => { load(); }, [load]);
 
   async function handleSave(data: Rec) {
+    setSaving(true);
+    // Parse opening_hours JSON string → object
+    let opening_hours: unknown = null;
+    if (data.opening_hours && typeof data.opening_hours === "string" && data.opening_hours.trim()) {
+      try { opening_hours = JSON.parse(data.opening_hours); } catch { toast("Ongeldige JSON bij opening hours", "err"); setSaving(false); return; }
+    } else if (typeof data.opening_hours === "object") {
+      opening_hours = data.opening_hours;
+    }
+
     const clean: Rec = {
       ...data,
       latitude:    data.latitude    !== "" ? parseFloat(data.latitude)    : null,
       longitude:   data.longitude   !== "" ? parseFloat(data.longitude)   : null,
       photo_score: data.photo_score !== "" ? parseInt(data.photo_score)   : null,
       crowd_score: data.crowd_score !== "" ? parseInt(data.crowd_score)   : null,
-      bloom_status: data.bloom_status || null,
-      category:     data.category   || null,
-      access_type:  data.access_type || null,
+      bloom_status:  data.bloom_status  || null,
+      category:      data.category      || null,
+      access_type:   data.access_type   || null,
+      opening_hours: opening_hours,
     };
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, created_at, updated_at, ...fields } = clean;
     const res = id
       ? await adminUpdateLocation(id, fields)
       : await adminCreateLocation(fields);
+    setSaving(false);
     if (res.error) { toast(res.error, "err"); return; }
-    toast(id ? "Location updated" : "Location created");
+    toast(id ? "Location updated ✓" : "Location created ✓");
     setEditing(null); setAdding(false); load();
   }
 
@@ -235,12 +259,12 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
 
       {/* Add form */}
       {adding && (
-        <LocationForm initial={{}} onSave={handleSave} onCancel={() => setAdding(false)} busy={isPending} />
+        <LocationForm initial={{}} onSave={handleSave} onCancel={() => setAdding(false)} busy={saving} />
       )}
 
       {/* Edit form */}
       {editing && (
-        <LocationForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} busy={isPending} />
+        <LocationForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} busy={saving} />
       )}
 
       {/* Table */}
@@ -282,14 +306,24 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
                   </select>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button onClick={() => adminSetFeatured("locations", loc.id, !loc.is_featured).then(load)}
+                  <button onClick={async () => {
+                    const next = !loc.is_featured;
+                    setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: next } : l));
+                    const res = await adminSetFeatured("locations", loc.id, next);
+                    if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: !next } : l)); toast(res.error, "err"); }
+                  }}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
                       ${loc.is_featured ? "bg-rose-500 border-rose-500 text-white" : "border-gray-300 hover:border-rose-400"}`}>
                     {loc.is_featured && <Check size={11} />}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button onClick={() => adminUpdateLocation(loc.id, { is_active: !loc.is_active }).then(load)}
+                  <button onClick={async () => {
+                    const next = !loc.is_active;
+                    setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: next } : l));
+                    const res = await adminUpdateLocation(loc.id, { is_active: next });
+                    if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: !next } : l)); toast(res.error, "err"); }
+                  }}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
                       ${loc.is_active ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-400"}`}>
                     {loc.is_active && <Check size={11} />}
@@ -475,6 +509,7 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
   const [locations, setLocs]  = useState<Rec[]>([]);
   const [editing, setEditing] = useState<Rec | null>(null);
   const [adding, setAdding]   = useState(false);
+  const [saving, setSaving]   = useState(false);
   const [isPending, startT]   = useTransition();
 
   const load = useCallback(() => {
@@ -487,6 +522,7 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
   useEffect(() => { load(); }, [load]);
 
   async function handleSave(data: Rec) {
+    setSaving(true);
     const clean: Rec = {
       ...data,
       duration_minutes: data.duration_minutes !== "" ? parseInt(data.duration_minutes) : null,
@@ -502,16 +538,17 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
       const r = await adminCreateRoute(fields);
       res = r;
       if (r.id && !r.error) {
-        // Open edit mode for the new route so stops can be added
+        setSaving(false);
         setAdding(false);
         setEditing({ ...clean, id: r.id });
-        toast("Route created — add stops below");
+        toast("Route created ✓ — add stops below");
         load();
         return;
       }
     }
+    setSaving(false);
     if (res.error) { toast(res.error, "err"); return; }
-    toast("Route saved");
+    toast("Route saved ✓");
     setEditing(null); setAdding(false); load();
   }
 
@@ -535,8 +572,8 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
         </button>
       </div>
 
-      {adding  && <RouteForm initial={{}}      allLocations={locations} onSave={handleSave} onCancel={() => setAdding(false)}  busy={isPending} />}
-      {editing && <RouteForm initial={editing} allLocations={locations} onSave={handleSave} onCancel={() => setEditing(null)} busy={isPending} />}
+      {adding  && <RouteForm initial={{}}      allLocations={locations} onSave={handleSave} onCancel={() => setAdding(false)}  busy={saving} />}
+      {editing && <RouteForm initial={editing} allLocations={locations} onSave={handleSave} onCancel={() => setEditing(null)} busy={saving} />}
 
       <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm min-w-[600px]">
@@ -568,14 +605,24 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
                   {r.duration_minutes ? `${r.duration_minutes} min` : ""}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button onClick={() => adminSetFeatured("routes", r.id, !r.is_featured).then(load)}
+                  <button onClick={async () => {
+                    const next = !r.is_featured;
+                    setRoutes(prev => prev.map(x => x.id === r.id ? { ...x, is_featured: next } : x));
+                    const res = await adminSetFeatured("routes", r.id, next);
+                    if (res.error) { setRoutes(prev => prev.map(x => x.id === r.id ? { ...x, is_featured: !next } : x)); toast(res.error, "err"); }
+                  }}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
                       ${r.is_featured ? "bg-rose-500 border-rose-500 text-white" : "border-gray-300 hover:border-rose-400"}`}>
                     {r.is_featured && <Check size={11} />}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button onClick={() => adminUpdateRoute(r.id, { is_active: !r.is_active }).then(load)}
+                  <button onClick={async () => {
+                    const next = !r.is_active;
+                    setRoutes(prev => prev.map(x => x.id === r.id ? { ...x, is_active: next } : x));
+                    const res = await adminUpdateRoute(r.id, { is_active: next });
+                    if (res.error) { setRoutes(prev => prev.map(x => x.id === r.id ? { ...x, is_active: !next } : x)); toast(res.error, "err"); }
+                  }}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
                       ${r.is_active ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-400"}`}>
                     {r.is_active && <Check size={11} />}
