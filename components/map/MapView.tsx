@@ -36,14 +36,13 @@ const CATEGORY_COLOR: Record<Category, string> = {
   parking:      "#94a3b8",
 };
 
-// opening_hours wordt pas toegevoegd nadat de Supabase migratie is uitgevoerd
-const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score";
+const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score,opening_hours";
 
 type MapLocation = Pick<Location,
   "id" | "title" | "slug" | "latitude" | "longitude" |
   "category" | "bloom_status" | "address" | "image_url" |
-  "access_type" | "crowd_score"
-> & { opening_hours?: Location["opening_hours"] };
+  "access_type" | "crowd_score" | "opening_hours"
+>;
 
 type FilterId = "peak" | "nearby" | "quiet" | "photo" | "family" | "free" | "horeca";
 
