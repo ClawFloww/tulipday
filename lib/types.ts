@@ -3,6 +3,8 @@ export type Category = "flower_field" | "photo_spot" | "attraction" | "food" | "
 export type RouteType = "car" | "bike" | "walk" | "family" | "photo";
 export type AccessType = "roadside_only" | "public_access" | "private_view_only";
 
+export type { OpeningHours } from "./openingHours";
+
 export interface Location {
   id: string;
   title: string;
@@ -21,6 +23,7 @@ export interface Location {
   parking_info: string | null;
   best_visit_time: string | null;
   image_url: string | null;
+  opening_hours: import("./openingHours").OpeningHours | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;

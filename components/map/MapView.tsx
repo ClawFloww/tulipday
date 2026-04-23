@@ -7,6 +7,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import type { Location, Category } from "@/lib/types";
+import { isCurrentlyOpen } from "@/lib/openingHours";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2 } from "lucide-react";
@@ -35,12 +36,12 @@ const CATEGORY_COLOR: Record<Category, string> = {
   parking:      "#94a3b8",
 };
 
-const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score";
+const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score,opening_hours";
 
 type MapLocation = Pick<Location,
   "id" | "title" | "slug" | "latitude" | "longitude" |
   "category" | "bloom_status" | "address" | "image_url" |
-  "access_type" | "crowd_score"
+  "access_type" | "crowd_score" | "opening_hours"
 >;
 
 type FilterId = "peak" | "nearby" | "quiet" | "photo" | "family" | "free" | "horeca";
@@ -148,6 +149,8 @@ function locationsToGeoJSON(
         address:      loc.address,
         image_url:    loc.image_url,
         color:        CATEGORY_COLOR[loc.category] ?? "#94a3b8",
+        // Voor horeca: null = geen data, true = open, false = gesloten
+        is_open:      loc.category === "food" ? isCurrentlyOpen(loc.opening_hours) : null,
       },
     });
   }
@@ -384,6 +387,12 @@ export default function MapView() {
 
   useEffect(() => { updateSource(); }, [locations, activeFilter, userCoords, updateSource]);
 
+  // ── Auto-refresh open/gesloten status elke minuut ──
+  useEffect(() => {
+    const id = setInterval(updateSource, 60_000);
+    return () => clearInterval(id);
+  }, [updateSource]);
+
   // ── Gebruikerslocatie marker ──
   useEffect(() => {
     const map = mapRef.current;
@@ -569,7 +578,7 @@ export default function MapView() {
         },
       });
 
-      // ── Bloom-status dot (kleine gekleurde stip bovenop de pin) ──
+      // ── Status dot (bloom voor bollenvelden, open/gesloten voor horeca) ──
       map.addLayer({
         id: "unclustered-bloom-dot",
         type: "circle",
@@ -577,12 +586,22 @@ export default function MapView() {
         filter: ["!", ["has", "point_count"]],
         paint: {
           "circle-color": [
-            "match", ["get", "bloom_status"],
-            "peak",     "#15803d",
-            "blooming", "#22c55e",
-            "early",    "#86efac",
-            "ending",   "#ef4444",
-            /* default – geen status */ "transparent",
+            "case",
+            // Horeca: kleur op basis van open/gesloten
+            ["==", ["get", "category"], "food"],
+            ["case",
+              ["==", ["get", "is_open"], true],  "#22c55e",  // open  → groen
+              ["==", ["get", "is_open"], false], "#ef4444",  // gesloten → rood
+              "transparent",                                  // geen data
+            ],
+            // Overige categorieën: bloom status kleur
+            ["match", ["get", "bloom_status"],
+              "peak",     "#15803d",
+              "blooming", "#22c55e",
+              "early",    "#86efac",
+              "ending",   "#ef4444",
+              "transparent",
+            ],
           ],
           "circle-radius": 4,
           "circle-stroke-width": 1.5,

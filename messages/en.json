@@ -164,7 +164,19 @@
     "etiquette_rule3": "Don't block the road or farm access when parking.",
     "etiquette_rule4": "Photograph from a distance — use a zoom lens.",
     "etiquette_rule5": "Keep noise levels low near residential areas.",
-    "etiquette_rule6": "Take all your rubbish with you."
+    "etiquette_rule6": "Take all your rubbish with you.",
+    "opening_hours": "Opening hours",
+    "open_now": "Open now",
+    "closed_now": "Closed now",
+    "closed_today": "Closed today",
+    "hours_unknown": "Opening hours unknown",
+    "day_mon": "Mon",
+    "day_tue": "Tue",
+    "day_wed": "Wed",
+    "day_thu": "Thu",
+    "day_fri": "Fri",
+    "day_sat": "Sat",
+    "day_sun": "Sun"
   },
   "routes": {
     "title": "Routes",

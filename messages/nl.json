@@ -164,7 +164,19 @@
     "etiquette_rule3": "Blokkeer de weg of boerderij niet bij het parkeren.",
     "etiquette_rule4": "Fotografeer op afstand — gebruik een zoomlens.",
     "etiquette_rule5": "Houd het geluid laag in de buurt van woningen.",
-    "etiquette_rule6": "Neem al je afval mee."
+    "etiquette_rule6": "Neem al je afval mee.",
+    "opening_hours": "Openingstijden",
+    "open_now": "Nu open",
+    "closed_now": "Nu gesloten",
+    "closed_today": "Vandaag gesloten",
+    "hours_unknown": "Openingstijden onbekend",
+    "day_mon": "Ma",
+    "day_tue": "Di",
+    "day_wed": "Wo",
+    "day_thu": "Do",
+    "day_fri": "Vr",
+    "day_sat": "Za",
+    "day_sun": "Zo"
   },
   "routes": {
     "title": "Routes",

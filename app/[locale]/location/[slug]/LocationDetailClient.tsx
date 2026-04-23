@@ -11,6 +11,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Location, AccessType, Category } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
+import { isCurrentlyOpen, getWeekSchedule } from "@/lib/openingHours";
+import type { DayKey } from "@/lib/openingHours";
 import { getOrCreateSessionId } from "@/lib/session";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { track } from "@/lib/analytics";
@@ -274,6 +276,10 @@ export default function LocationDetailPage() {
           )}
         </div>
 
+        {location.category === "food" && (
+          <OpeningHoursCard hours={location.opening_hours} t={t} />
+        )}
+
         {location.crowd_score != null && (
           <div className="bg-surface-2 rounded-2xl p-4 flex flex-col gap-2">
             <div className="flex items-center gap-2" style={{ color: "var(--color-text-3)" }}>
@@ -388,6 +394,73 @@ export default function LocationDetailPage() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function OpeningHoursCard({
+  hours,
+  t,
+}: {
+  hours: import("@/lib/openingHours").OpeningHours | null;
+  t: (k: string) => string;
+}) {
+  const isOpen = isCurrentlyOpen(hours);
+  const today  = (["sun","mon","tue","wed","thu","fri","sat"] as DayKey[])[new Date().getDay()];
+
+  return (
+    <div className="bg-surface-2 rounded-2xl p-4 flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2" style={{ color: "var(--color-text-3)" }}>
+          <Clock size={15} />
+          <span className="text-xs font-semibold uppercase tracking-wide">{t("location.opening_hours")}</span>
+        </div>
+        {isOpen === true && (
+          <span className="flex items-center gap-1.5 text-xs font-bold text-green-600">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            {t("location.open_now")}
+          </span>
+        )}
+        {isOpen === false && (
+          <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            {t("location.closed_now")}
+          </span>
+        )}
+      </div>
+
+      {/* Schedule */}
+      {hours ? (
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {getWeekSchedule(hours).map(({ key, schedule }) => {
+            const isToday = key === today;
+            return (
+              <div key={key} className={`flex flex-col items-center gap-1 rounded-xl py-1.5 px-0.5
+                ${isToday ? "bg-tulip-500/10" : ""}`}>
+                <span className={`text-[10px] font-bold uppercase ${isToday ? "text-tulip-600" : ""}`}
+                      style={isToday ? {} : { color: "var(--color-text-3)" }}>
+                  {t(`location.day_${key}`)}
+                </span>
+                {schedule ? (
+                  <>
+                    <span className="text-[10px] font-semibold leading-tight" style={{ color: "var(--color-text)" }}>
+                      {schedule[0]}
+                    </span>
+                    <span className="text-[10px] leading-tight" style={{ color: "var(--color-text-3)" }}>
+                      {schedule[1]}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[10px] font-medium" style={{ color: "var(--color-text-3)" }}>—</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm" style={{ color: "var(--color-text-3)" }}>{t("location.hours_unknown")}</p>
+      )}
     </div>
   );
 }
