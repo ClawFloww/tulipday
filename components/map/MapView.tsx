@@ -569,6 +569,28 @@ export default function MapView() {
         },
       });
 
+      // ── Bloom-status dot (kleine gekleurde stip bovenop de pin) ──
+      map.addLayer({
+        id: "unclustered-bloom-dot",
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": [
+            "match", ["get", "bloom_status"],
+            "peak",     "#15803d",
+            "blooming", "#22c55e",
+            "early",    "#86efac",
+            "ending",   "#ef4444",
+            /* default – geen status */ "transparent",
+          ],
+          "circle-radius": 4,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#ffffff",
+          "circle-translate": [6, -6],
+        },
+      });
+
       // ── Draw route source + layers ──
       map.addSource(DRAW_SOURCE_ID, {
         type: "geojson",
@@ -607,19 +629,23 @@ export default function MapView() {
       });
 
       // ── Point click → preview card ──
-      map.on("click", "unclustered-point", (e) => {
+      const handlePointClick = (e: maplibregl.MapLayerMouseEvent) => {
         if (drawModeRef.current) return;
         const props = e.features?.[0]?.properties;
         if (!props) return;
         const loc = locationsRef.current.find((l) => l.id === props.id);
         if (loc) setSelected(loc);
-      });
+      };
+      map.on("click", "unclustered-point",    handlePointClick);
+      map.on("click", "unclustered-bloom-dot", handlePointClick);
 
       // ── Pointer cursors ──
-      map.on("mouseenter", "clusters",          () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", "clusters",          () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
-      map.on("mouseenter", "unclustered-point", () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", "unclustered-point", () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", "clusters",             () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "clusters",             () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", "unclustered-point",    () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "unclustered-point",    () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", "unclustered-bloom-dot", () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "unclustered-bloom-dot", () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
 
       // ── General map click ──
       map.on("click", (e) => {
@@ -649,7 +675,7 @@ export default function MapView() {
         }
 
         // Normal mode: dismiss preview if empty area
-        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point"] });
+        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point", "unclustered-bloom-dot"] });
         if (hit.length === 0) setSelected(null);
       });
 
