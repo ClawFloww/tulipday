@@ -245,13 +245,16 @@ export default function OnboardingPage() {
   const advancedRef = useRef(false);
 
   // ── Juridisch scherm state ─────────────────────────────────────────────────
-  const [acceptedTerms,     setAcceptedTerms]     = useState(false);
-  const [acceptedPrivacy,   setAcceptedPrivacy]   = useState(false);
-  const [termsAnimating,    setTermsAnimating]    = useState(false);
-  const [privacyAnimating,  setPrivacyAnimating]  = useState(false);
-  const [openDoc,           setOpenDoc]           = useState<"terms" | "privacy" | null>(null);
-  const [viewedTerms,       setViewedTerms]       = useState(false);
-  const [viewedPrivacy,     setViewedPrivacy]     = useState(false);
+  const [acceptedTerms,      setAcceptedTerms]      = useState(false);
+  const [acceptedPrivacy,    setAcceptedPrivacy]    = useState(false);
+  const [acceptedEtiquette,  setAcceptedEtiquette]  = useState(false);
+  const [termsAnimating,     setTermsAnimating]     = useState(false);
+  const [privacyAnimating,   setPrivacyAnimating]   = useState(false);
+  const [etiquetteAnimating, setEtiquetteAnimating] = useState(false);
+  const [openDoc,            setOpenDoc]            = useState<"terms" | "privacy" | "etiquette" | null>(null);
+  const [viewedTerms,        setViewedTerms]        = useState(false);
+  const [viewedPrivacy,      setViewedPrivacy]      = useState(false);
+  const [viewedEtiquette,    setViewedEtiquette]    = useState(false);
 
   // Weerdata voor het resultaat-scherm (laadt op de achtergrond)
   const weather = useWeather(obState.startLocation?.coords ?? null);
@@ -426,6 +429,14 @@ export default function OnboardingPage() {
     setAcceptedPrivacy((v) => !v);
   }
 
+  function toggleEtiquette() {
+    if (!acceptedEtiquette) {
+      setEtiquetteAnimating(true);
+      setTimeout(() => setEtiquetteAnimating(false), 450);
+    }
+    setAcceptedEtiquette((v) => !v);
+  }
+
   function selectActivity(activity: Activity) {
     const next = { ...obState, activity };
     setObState(next);
@@ -498,8 +509,8 @@ export default function OnboardingPage() {
 
       // ── Scherm 0: Juridische acceptatie ─────────────────────────────────
       case 0: {
-        const allAccepted = acceptedTerms && acceptedPrivacy;
-        const { termsContent, privacyContent } = getLegalDocs(locale);
+        const allAccepted = acceptedTerms && acceptedPrivacy && acceptedEtiquette;
+        const { termsContent, privacyContent, etiquetteContent } = getLegalDocs(locale);
         const tl = (k: string) => t(`onboarding.legal.${k}`);
 
         return (
@@ -587,6 +598,29 @@ export default function OnboardingPage() {
                   {tl("privacy_suffix")}
                 </p>
               </div>
+
+              {/* Veldetiquette */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={viewedEtiquette ? toggleEtiquette : undefined}
+                onKeyDown={(e) => viewedEtiquette && e.key === "Enter" && toggleEtiquette()}
+                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
+                style={{ minHeight: 48, cursor: viewedEtiquette ? "pointer" : "default", opacity: viewedEtiquette ? 1 : 0.5 }}
+              >
+                <LegalCheckbox checked={acceptedEtiquette} animating={etiquetteAnimating} />
+                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
+                  {tl("etiquette_prefix")}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("etiquette"); setViewedEtiquette(true); }}
+                    className="font-semibold underline"
+                    style={{ color: "#E8102A" }}
+                  >
+                    {tl("etiquette_link")}
+                  </button>
+                  {tl("etiquette_suffix")}
+                </p>
+              </div>
             </motion.div>
 
             {/* Doorgaan-knop + footer */}
@@ -631,6 +665,14 @@ export default function OnboardingPage() {
                 <LegalDocSheet
                   title={tl("privacy_title")}
                   content={privacyContent}
+                  closeLabel={tl("close")}
+                  onClose={() => setOpenDoc(null)}
+                />
+              )}
+              {openDoc === "etiquette" && (
+                <LegalDocSheet
+                  title={tl("etiquette_title")}
+                  content={etiquetteContent}
                   closeLabel={tl("close")}
                   onClose={() => setOpenDoc(null)}
                 />

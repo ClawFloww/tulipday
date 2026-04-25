@@ -112,12 +112,75 @@ TulipDay does not use tracking cookies and does not share data with advertising 
 7. Contact and complaints
 Questions or complaints? Email info@tulipday.nl or file a complaint with the Dutch Data Protection Authority (autoriteitpersoonsgegevens.nl).`;
 
+// ── Veldetiquette ─────────────────────────────────────────────────────────────
+
+export const VELDETIQUETTE = `🌷 Veldetiquette — Respecteer de bollenvelden
+
+De bollenvelden in de Bollenstreek zijn werkende landbouwpercelen. Help ze te beschermen door deze regels te volgen.
+
+1. Blijf op paden en wegen
+Betreed de velden nooit. Tulpenbollen zijn kwetsbaar en worden beschadigd door voetafdrukken. Houd altijd de verharde weg of het fietspad aan.
+
+2. Pluk geen bloemen
+Het is verboden bloemen te plukken of mee te nemen uit de bollenvelden. De bloemen zijn eigendom van de kwekers en worden geveld voordat ze uitbloeien om de bol te versterken.
+
+3. Raak de gewassen niet aan
+Buig of breek geen bloemen voor een foto. Raak de tulpen of andere bolgewassen niet aan.
+
+4. Respecteer privéterrein
+Veel bollenvelden liggen op privégrond. Betreed alleen openbare paden en kijk goed of er borden staan. Volg altijd aanwijzingen van boeren en eigenaren op.
+
+5. Neem je afval mee
+Laat niets achter in of rond de velden. Afval kan schade veroorzaken aan gewassen en landbouwmachines.
+
+6. Geen drones zonder toestemming
+Het oplaten van drones boven bollenvelden is niet toegestaan zonder uitdrukkelijke toestemming van de grondeigenaar.
+
+7. Parkeer niet op de velden
+Parkeer uitsluitend op aangewezen parkeerplaatsen. Voertuigen op het veld of aan de rand veroorzaken schade aan de gewassen en de bodem.
+
+8. Houd rekening met anderen
+Geniet van de velden op een manier die ook anderen de kans geeft ervan te genieten. Houd muziek op een respectvol niveau en laat geen sporen achter.
+
+Bedankt voor jouw respect voor de Bollenstreek! 🌷`;
+
+export const FIELD_ETIQUETTE = `🌷 Field Etiquette — Respect the flower fields
+
+The flower fields in the Bollenstreek are working farmland. Help protect them by following these rules.
+
+1. Stay on paths and roads
+Never enter the fields. Tulip bulbs are fragile and damaged by footprints. Always keep to the paved road or cycle path.
+
+2. Do not pick flowers
+It is forbidden to pick or take flowers from the fields. The flowers belong to the growers and are cut before they fully bloom to strengthen the bulb.
+
+3. Do not touch the crops
+Do not bend or break flowers for a photo. Do not touch the tulips or other bulb crops.
+
+4. Respect private property
+Many flower fields are on private land. Only use public paths and watch for signs. Always follow instructions from farmers and landowners.
+
+5. Take your rubbish with you
+Leave nothing behind in or around the fields. Litter can damage crops and farm machinery.
+
+6. No drones without permission
+Flying drones over flower fields is not permitted without the explicit permission of the landowner.
+
+7. Do not park on the fields
+Park only in designated areas. Vehicles on or at the edge of the field damage crops and soil.
+
+8. Be considerate of others
+Enjoy the fields in a way that allows others to enjoy them too. Keep music at a respectful level and leave no trace.
+
+Thank you for respecting the Bollenstreek! 🌷`;
+
 // ── Hulpfunctie: geef juiste versie op basis van locale ──────────────────────
 
 export function getLegalDocs(locale: string) {
   const isNl = locale === "nl";
   return {
-    termsContent:   isNl ? GEBRUIKSVOORWAARDEN : TERMS_OF_USE,
-    privacyContent: isNl ? PRIVACYBELEID       : PRIVACY_POLICY,
+    termsContent:      isNl ? GEBRUIKSVOORWAARDEN : TERMS_OF_USE,
+    privacyContent:    isNl ? PRIVACYBELEID       : PRIVACY_POLICY,
+    etiquetteContent:  isNl ? VELDETIQUETTE       : FIELD_ETIQUETTE,
   };
 }

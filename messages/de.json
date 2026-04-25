@@ -64,7 +64,11 @@
       "continue": "Weiter",
       "close": "Schließen",
       "terms_title": "Nutzungsbedingungen",
-      "privacy_title": "Datenschutzerklärung"
+      "privacy_title": "Datenschutzerklärung",
+      "etiquette_prefix": "Ich habe die ",
+      "etiquette_link": "Feldetikette",
+      "etiquette_suffix": " gelesen und werde sie beachten",
+      "etiquette_title": "Feldetikette"
     }
   },
   "nav": {

@@ -64,7 +64,11 @@
       "continue": "继续",
       "close": "关闭",
       "terms_title": "使用条款",
-      "privacy_title": "隐私政策"
+      "privacy_title": "隐私政策",
+      "etiquette_prefix": "我已阅读",
+      "etiquette_link": "田野礼仪",
+      "etiquette_suffix": "并将遵守",
+      "etiquette_title": "田野礼仪"
     }
   },
   "nav": {

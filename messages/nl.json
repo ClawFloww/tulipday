@@ -64,7 +64,11 @@
       "continue": "Doorgaan",
       "close": "Sluiten",
       "terms_title": "Gebruiksvoorwaarden",
-      "privacy_title": "Privacybeleid"
+      "privacy_title": "Privacybeleid",
+      "etiquette_prefix": "Ik heb de ",
+      "etiquette_link": "Veldetiquette",
+      "etiquette_suffix": " gelezen en zal deze respecteren",
+      "etiquette_title": "Veldetiquette"
     }
   },
   "nav": {

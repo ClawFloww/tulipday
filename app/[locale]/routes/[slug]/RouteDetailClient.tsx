@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2 } from "lucide-react";
@@ -8,6 +8,113 @@ import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
+
+// ── SVG-kaartpreview op basis van stop-coördinaten ────────────────────────────
+
+const SVG_W = 400;
+const SVG_H = 220;
+const SVG_PAD = 28;
+
+function RouteStopMap({ stops }: { stops: RouteStop[] }) {
+  const pts = useMemo(() => {
+    const valid = stops.filter(
+      (s) => s.locations.latitude != null && s.locations.longitude != null,
+    );
+    if (valid.length < 1) return [];
+
+    const lngs = valid.map((s) => s.locations.longitude as number);
+    const lats  = valid.map((s) => s.locations.latitude  as number);
+    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+    const minLat  = Math.min(...lats),  maxLat  = Math.max(...lats);
+
+    const lngSpan = maxLng - minLng || 0.005;
+    const latSpan  = maxLat  - minLat  || 0.005;
+    const innerW   = SVG_W - 2 * SVG_PAD;
+    const innerH   = SVG_H - 2 * SVG_PAD;
+    const scale    = Math.min(innerW / lngSpan, innerH / latSpan);
+    const offX     = SVG_PAD + (innerW - lngSpan * scale) / 2;
+    const offY     = SVG_PAD + (innerH - latSpan  * scale) / 2;
+
+    return valid.map((s, i) => ({
+      x:     offX + ((s.locations.longitude as number) - minLng) * scale,
+      y:     SVG_H - offY - ((s.locations.latitude as number) - minLat) * scale,
+      label: i + 1,
+      isFirst: i === 0,
+      isLast:  i === valid.length - 1,
+    }));
+  }, [stops]);
+
+  if (pts.length < 1) return null;
+
+  const polyline = pts.map((p) => `${p.x},${p.y}`).join(" ");
+
+  return (
+    <div className="rounded-2xl overflow-hidden w-full" style={{ backgroundColor: "#EEF2E8" }}>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        aria-hidden="true"
+        style={{ display: "block" }}
+      >
+        {/* Achtergrond */}
+        <rect width={SVG_W} height={SVG_H} fill="#EEF2E8" />
+
+        {/* Routelijn — schaduw */}
+        {pts.length > 1 && (
+          <polyline
+            points={polyline}
+            fill="none"
+            stroke="white"
+            strokeWidth={6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={0.7}
+          />
+        )}
+
+        {/* Routelijn — gestippeld tulip-rood */}
+        {pts.length > 1 && (
+          <polyline
+            points={polyline}
+            fill="none"
+            stroke="#E8527A"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="8 5"
+          />
+        )}
+
+        {/* Stop-markers */}
+        {pts.map((pt) => (
+          <g key={pt.label}>
+            {/* Witte halo */}
+            <circle cx={pt.x} cy={pt.y} r={12} fill="white" />
+            {/* Gekleurde cirkel */}
+            <circle
+              cx={pt.x}
+              cy={pt.y}
+              r={9}
+              fill={pt.isFirst ? "#2D7D46" : pt.isLast ? "#E8102A" : "#E8527A"}
+            />
+            {/* Nummer */}
+            <text
+              x={pt.x}
+              y={pt.y + 3.5}
+              textAnchor="middle"
+              fill="white"
+              fontSize={8.5}
+              fontWeight="bold"
+              fontFamily="system-ui, sans-serif"
+            >
+              {pt.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 const ROUTE_ICON: Record<RouteType, React.ReactNode> = {
   bike:   <Bike       size={14} />,
@@ -112,7 +219,7 @@ export default function RouteDetailClient() {
   const type = route.route_type as RouteType | undefined;
 
   return (
-    <div className="min-h-screen pb-32" style={{ backgroundColor: "var(--color-surface)" }}>
+    <div className="min-h-screen pb-44" style={{ backgroundColor: "var(--color-surface)" }}>
 
       <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-200">
         <Image
@@ -177,6 +284,11 @@ export default function RouteDetailClient() {
           </p>
         )}
 
+        {/* Kaartpreview */}
+        {stops.length > 0 && (
+          <RouteStopMap stops={stops} />
+        )}
+
         {stops.length > 0 && (
           <div>
             <h2 className="text-base font-extrabold mb-3" style={{ color: "var(--color-text)" }}>{t("route_detail.route_stops")}</h2>
@@ -203,7 +315,14 @@ export default function RouteDetailClient() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 pb-safe" style={{ backgroundColor: "var(--color-surface-2)", borderTop: "1px solid var(--color-border)" }}>
+      <div
+        className="fixed left-0 right-0 z-40 px-4 py-3"
+        style={{
+          bottom: "calc(60px + env(safe-area-inset-bottom))",
+          backgroundColor: "var(--color-surface-2)",
+          borderTop: "1px solid var(--color-border)",
+        }}
+      >
         <div className="flex gap-3 max-w-lg mx-auto">
           {/* Start route → Google Maps with all stops as waypoints */}
           <button

@@ -64,7 +64,11 @@
       "continue": "Continue",
       "close": "Close",
       "terms_title": "Terms of Use",
-      "privacy_title": "Privacy Policy"
+      "privacy_title": "Privacy Policy",
+      "etiquette_prefix": "I have read the ",
+      "etiquette_link": "Field Etiquette",
+      "etiquette_suffix": " and will respect it",
+      "etiquette_title": "Field Etiquette"
     }
   },
   "nav": {

@@ -64,7 +64,11 @@
       "continue": "Continuar",
       "close": "Cerrar",
       "terms_title": "Términos de uso",
-      "privacy_title": "Política de privacidad"
+      "privacy_title": "Política de privacidad",
+      "etiquette_prefix": "He leído la ",
+      "etiquette_link": "Etiqueta en los campos",
+      "etiquette_suffix": " y la respetaré",
+      "etiquette_title": "Etiqueta en los campos"
     }
   },
   "nav": {
