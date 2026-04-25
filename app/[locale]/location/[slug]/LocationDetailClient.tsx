@@ -149,15 +149,14 @@ export default function LocationDetailPage() {
   }
 
   const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-  const streetViewUrl = location.latitude && location.longitude && mapsKey
-    ? `https://maps.googleapis.com/maps/api/streetview?size=800x500&location=${location.latitude},${location.longitude}&fov=90&pitch=10&key=${mapsKey}&return_error_code=true`
+  // Embed API (gratis, interactief) ipv Static API (betaald)
+  const streetViewEmbedUrl = location.latitude && location.longitude && mapsKey
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${mapsKey}&location=${location.latitude},${location.longitude}&fov=90&pitch=10`
     : null;
-  const fallback = location.latitude && location.longitude && mapsKey
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${location.latitude},${location.longitude}&zoom=17&size=800x500&maptype=hybrid&key=${mapsKey}`
-    : "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
 
+  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=1200";
   const mainPhoto = location.image_url ?? fallback;
-  const displayImage = showStreetView ? (streetViewUrl ?? fallback) : (imgError ? fallback : mainPhoto);
+  const displayImage = imgError ? fallback : mainPhoto;
 
   const catStyle = CATEGORY_STYLE[location.category];
   const crowdIdx = Math.min((location.crowd_score ?? 1) - 1, 4);
@@ -182,14 +181,26 @@ export default function LocationDetailPage() {
     <div className="min-h-screen bg-surface pb-32">
 
       <div className="relative h-72 sm:h-96 overflow-hidden bg-gray-200">
-        <Image
-          src={displayImage}
-          alt={location.title}
-          fill
-          className="object-cover transition-opacity duration-300"
-          onError={() => { if (!showStreetView) setImgError(true); }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />
+        {showStreetView && streetViewEmbedUrl ? (
+          <iframe
+            src={streetViewEmbedUrl}
+            className="absolute inset-0 w-full h-full border-0"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : (
+          <>
+            <Image
+              src={displayImage}
+              alt={location.title}
+              fill
+              className="object-cover transition-opacity duration-300"
+              onError={() => setImgError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />
+          </>
+        )}
 
         {/* Terug knop */}
         <button onClick={() => router.back()}
@@ -197,8 +208,8 @@ export default function LocationDetailPage() {
           <ArrowLeft size={20} />
         </button>
 
-        {/* Street View toggle — alleen zichtbaar als coördinaten bekend zijn */}
-        {streetViewUrl && (
+        {/* Street View toggle */}
+        {streetViewEmbedUrl && (
           <button
             onClick={() => setShowStreetView((v) => !v)}
             className="absolute top-12 right-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full backdrop-blur-sm text-xs font-bold transition-all active:scale-95"
