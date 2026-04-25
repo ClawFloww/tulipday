@@ -6,13 +6,15 @@ import Image from "next/image";
 import {
   Heart, Trash2, MapPin, Clock, ChevronRight,
   Bike, Car, Footprints, Camera, Users, Loader2,
+  Share2, Check,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getOrCreateSessionId } from "@/lib/session";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { Location, Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
-import { getCustomRoutes, deleteCustomRoute, type CustomRoute } from "@/lib/customRoutes";
+import { getCustomRoutes, deleteCustomRoute, updateCustomRoute, type CustomRoute } from "@/lib/customRoutes";
+import { shareCustomRoute } from "@/lib/sharedRoutes";
 
 type Tab = "locations" | "routes" | "custom";
 
@@ -37,12 +39,36 @@ function formatDuration(min: number) {
   return h === 0 ? `${m}m` : m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
+function ShareButton({ url, title }: { url: string; title?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    if (typeof navigator.share === "function") {
+      try { await navigator.share({ title: title ?? "TulipDay", url }); return; } catch { /* cancelled */ }
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <button onClick={handleShare}
+      className="w-8 h-8 rounded-full hover:bg-tulip-50 flex items-center justify-center hover:text-tulip-500 transition-colors"
+      style={{ backgroundColor: "var(--color-surface-3)", color: copied ? "#22c55e" : "var(--color-text-3)" }}>
+      {copied ? <Check size={14} /> : <Share2 size={14} />}
+    </button>
+  );
+}
+
 function LocationRow({ location, savedId, onDelete, onNavigate }: {
   location: Location; savedId: string; onDelete: (id: string) => void; onNavigate: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [leaving,  setLeaving]  = useState(false);
   const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=400";
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/location/${location.slug}`
+    : `/location/${location.slug}`;
 
   async function handleDelete() {
     setDeleting(true);
@@ -71,6 +97,7 @@ function LocationRow({ location, savedId, onDelete, onNavigate }: {
         )}
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
+        <ShareButton url={shareUrl} title={location.title} />
         <button onClick={onNavigate} className="w-8 h-8 rounded-full hover:bg-tulip-50 flex items-center justify-center hover:text-tulip-500 transition-colors"
                 style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}>
           <ChevronRight size={16} />
@@ -92,6 +119,9 @@ function RouteRow({ route, savedId, onDelete, onNavigate }: {
   const [leaving,  setLeaving]  = useState(false);
   const fallback = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400";
   const type = route.route_type as RouteType | undefined;
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/routes/${route.slug}`
+    : `/routes/${route.slug}`;
 
   async function handleDelete() {
     setDeleting(true);
@@ -125,6 +155,7 @@ function RouteRow({ route, savedId, onDelete, onNavigate }: {
         </div>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
+        <ShareButton url={shareUrl} title={route.title ?? undefined} />
         <button onClick={onNavigate} className="w-8 h-8 rounded-full hover:bg-tulip-50 flex items-center justify-center hover:text-tulip-500 transition-colors"
                 style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}>
           <ChevronRight size={16} />
@@ -149,12 +180,35 @@ function fmtDist(m: number) {
 }
 
 function CustomRouteRow({ route, onDelete }: { route: CustomRoute; onDelete: (id: string) => void }) {
-  const [leaving, setLeaving] = useState(false);
+  const [leaving,  setLeaving]  = useState(false);
+  const [sharing,  setSharing]  = useState(false);
+  const [shareId,  setShareId]  = useState(route.shareId ?? null);
+  const [copied,   setCopied]   = useState(false);
 
   function handleDelete() {
     deleteCustomRoute(route.id);
     setLeaving(true);
     setTimeout(() => onDelete(route.id), 280);
+  }
+
+  async function handleShare() {
+    // Gebruik bestaand shareId of maak nieuw aan
+    let sid = shareId;
+    if (!sid) {
+      setSharing(true);
+      sid = await shareCustomRoute(route);
+      if (!sid) { setSharing(false); return; }
+      setShareId(sid);
+      updateCustomRoute(route.id, { shareId: sid });
+      setSharing(false);
+    }
+    const url = `${window.location.origin}/route/custom/${sid}`;
+    if (typeof navigator.share === "function") {
+      try { await navigator.share({ title: route.name, url }); return; } catch { /* cancelled */ }
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const date = new Date(route.createdAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
@@ -173,13 +227,23 @@ function CustomRouteRow({ route, onDelete }: { route: CustomRoute; onDelete: (id
             <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-3)" }}>{date} · {route.waypoints.length} punt{route.waypoints.length !== 1 ? "en" : ""}</p>
           </div>
         </div>
-        <button
-          onClick={handleDelete}
-          className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center hover:text-red-500 transition-colors flex-shrink-0"
-          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="w-8 h-8 rounded-full hover:bg-tulip-50 flex items-center justify-center transition-colors flex-shrink-0 disabled:opacity-40"
+            style={{ backgroundColor: "var(--color-surface-3)", color: copied ? "#22c55e" : "var(--color-text-3)" }}
+          >
+            {sharing ? <Loader2 size={14} className="animate-spin" /> : copied ? <Check size={14} /> : <Share2 size={14} />}
+          </button>
+          <button
+            onClick={handleDelete}
+            className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center hover:text-red-500 transition-colors flex-shrink-0"
+            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

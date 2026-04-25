@@ -10,6 +10,7 @@ export interface CustomRoute {
   cycling: { duration: number; distance: number } | null;
   walking: { duration: number; distance: number } | null;
   driving: { duration: number; distance: number } | null;
+  shareId?: string;               // share_id in Supabase na delen
 }
 
 export function getCustomRoutes(): CustomRoute[] {
@@ -37,5 +38,10 @@ export function saveCustomRoute(
 
 export function deleteCustomRoute(id: string): void {
   const routes = getCustomRoutes().filter((r) => r.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routes));
+}
+
+export function updateCustomRoute(id: string, updates: Partial<CustomRoute>): void {
+  const routes = getCustomRoutes().map((r) => r.id === id ? { ...r, ...updates } : r);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(routes));
 }
