@@ -25,7 +25,7 @@ const CARD_FEATURES = [
   { emoji: "🔭", label: "Street View"   },
 ];
 
-const SEASON_PRICE_ID = "price_1TNzeGCMTdZLUsIuoBlniI6q";
+const SEASON_PRICE_ID = "price_1TQ3MiCMTdZLUsIufuuGl3vb";
 
 export default function PremiumPage() {
   const router = useRouter();
