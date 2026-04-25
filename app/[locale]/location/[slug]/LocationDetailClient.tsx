@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   ArrowLeft, MapPin, Star, Heart, Navigation, Loader2,
   ChevronRight, Camera, Clock, Footprints, ParkingCircle,
-  ShieldCheck, Flower2, Users, Plus, Share2, Check,
+  ShieldCheck, Flower2, Users, Plus, Share2, Check, ExternalLink,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Location, AccessType, Category } from "@/lib/types";
@@ -375,6 +375,20 @@ export default function LocationDetailPage() {
 
       <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 pb-safe border-t"
            style={{ backgroundColor: "var(--color-surface-2)", borderColor: "var(--color-border)" }}>
+        {location.website_url && (
+          <div className="max-w-lg mx-auto mb-2">
+            <a
+              href={location.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border-2 transition-all active:scale-[0.98]"
+              style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            >
+              <ExternalLink size={15} />
+              Bezoek website
+            </a>
+          </div>
+        )}
         <div className="flex gap-2 max-w-lg mx-auto">
           <button
             onClick={handleNavigate}

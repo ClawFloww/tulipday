@@ -24,6 +24,7 @@ export interface Location {
   best_visit_time: string | null;
   image_url: string | null;
   opening_hours: import("./openingHours").OpeningHours | null;
+  website_url: string | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;
