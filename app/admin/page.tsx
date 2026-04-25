@@ -237,10 +237,124 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
     toast("Bloom status updated");
   }
 
+  const CAT_META: Record<string, { emoji: string; label: string; color: string }> = {
+    flower_field: { emoji: "🌷", label: "Bollenvelden",  color: "bg-rose-50 text-rose-700 border-rose-200"   },
+    food:         { emoji: "🍴", label: "Horeca",        color: "bg-orange-50 text-orange-700 border-orange-200" },
+    attraction:   { emoji: "🏛",  label: "Attracties",   color: "bg-amber-50 text-amber-700 border-amber-200"  },
+    photo_spot:   { emoji: "📷", label: "Fotoplekken",   color: "bg-blue-50 text-blue-700 border-blue-200"    },
+    parking:      { emoji: "🅿️",  label: "Parkeren",     color: "bg-gray-50 text-gray-600 border-gray-200"    },
+  };
+  const CAT_ORDER = ["flower_field", "food", "attraction", "photo_spot", "parking"];
+
   const filtered = locations.filter((l) =>
     l.title?.toLowerCase().includes(search.toLowerCase()) ||
     l.category?.includes(search.toLowerCase())
   );
+
+  // Groepeer gefilterde locaties per categorie
+  const grouped = CAT_ORDER.reduce<Record<string, Rec[]>>((acc, cat) => {
+    const items = filtered.filter((l) => l.category === cat);
+    if (items.length) acc[cat] = items;
+    return acc;
+  }, {});
+  // Locaties zonder bekende categorie
+  const uncategorized = filtered.filter((l) => !CAT_ORDER.includes(l.category));
+
+  const LocationRow = ({ loc }: { loc: Rec }) => (
+    <tr key={loc.id} className="hover:bg-gray-50 transition-colors">
+      <td className="px-4 py-3 font-medium text-gray-900 max-w-[240px]">
+        <p className="truncate">{loc.title}</p>
+        <p className="text-[11px] text-gray-400 truncate">{loc.slug}</p>
+      </td>
+      <td className="px-4 py-3">
+        <select
+          value={loc.bloom_status ?? ""}
+          onChange={(e) => handleBloom(loc.id, e.target.value)}
+          className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
+        >
+          <option value="">—</option>
+          {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <button onClick={async () => {
+          const next = !loc.is_featured;
+          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: next } : l));
+          const res = await adminSetFeatured("locations", loc.id, next);
+          if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: !next } : l)); toast(res.error, "err"); }
+        }}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
+            ${loc.is_featured ? "bg-rose-500 border-rose-500 text-white" : "border-gray-300 hover:border-rose-400"}`}>
+          {loc.is_featured && <Check size={11} />}
+        </button>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <button onClick={async () => {
+          const next = !loc.is_active;
+          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: next } : l));
+          const res = await adminUpdateLocation(loc.id, { is_active: next });
+          if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: !next } : l)); toast(res.error, "err"); }
+        }}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
+            ${loc.is_active ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-400"}`}>
+          {loc.is_active && <Check size={11} />}
+        </button>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1">
+          <button onClick={() => { setEditing(loc); setAdding(false); window.scrollTo(0, 0); }}
+            className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+            <Pencil size={14} />
+          </button>
+          <button onClick={() => handleDelete(loc.id, loc.title)}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  const CategoryTable = ({ cat, items }: { cat: string; items: Rec[] }) => {
+    const [open, setOpen] = useState(true);
+    const meta = CAT_META[cat] ?? { emoji: "📍", label: cat, color: "bg-gray-50 text-gray-600 border-gray-200" };
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        {/* Sectie header */}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200"
+        >
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${meta.color}`}>
+            {meta.emoji} {meta.label}
+          </span>
+          <span className="text-xs text-gray-400 font-medium">{items.length} locaties</span>
+          <span className="ml-auto text-gray-400">
+            {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </span>
+        </button>
+
+        {open && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[620px]">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-gray-400 border-b border-gray-100">
+                  <th className="px-4 py-2 text-left font-semibold">Naam</th>
+                  <th className="px-4 py-2 text-left font-semibold">Bloei</th>
+                  <th className="px-4 py-2 text-center font-semibold">Featured</th>
+                  <th className="px-4 py-2 text-center font-semibold">Actief</th>
+                  <th className="px-4 py-2 text-right font-semibold">Acties</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {items.map((loc) => <LocationRow key={loc.id} loc={loc} />)}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -257,95 +371,24 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
         </button>
       </div>
 
-      {/* Add form */}
+      {/* Add / Edit form */}
       {adding && (
         <LocationForm initial={{}} onSave={handleSave} onCancel={() => setAdding(false)} busy={saving} />
       )}
-
-      {/* Edit form */}
       {editing && (
         <LocationForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} busy={saving} />
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-sm min-w-[700px]">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-              <th className="px-4 py-3 text-left font-semibold">Title</th>
-              <th className="px-4 py-3 text-left font-semibold">Category</th>
-              <th className="px-4 py-3 text-left font-semibold">Bloom status</th>
-              <th className="px-4 py-3 text-center font-semibold">Featured</th>
-              <th className="px-4 py-3 text-center font-semibold">Active</th>
-              <th className="px-4 py-3 text-right font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">No locations found</td></tr>
-            )}
-            {filtered.map((loc) => (
-              <tr key={loc.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px]">
-                  <p className="truncate">{loc.title}</p>
-                  <p className="text-[11px] text-gray-400 truncate">{loc.slug}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                    {loc.category ?? "—"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={loc.bloom_status ?? ""}
-                    onChange={(e) => handleBloom(loc.id, e.target.value)}
-                    className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
-                  >
-                    <option value="">—</option>
-                    {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button onClick={async () => {
-                    const next = !loc.is_featured;
-                    setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: next } : l));
-                    const res = await adminSetFeatured("locations", loc.id, next);
-                    if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_featured: !next } : l)); toast(res.error, "err"); }
-                  }}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
-                      ${loc.is_featured ? "bg-rose-500 border-rose-500 text-white" : "border-gray-300 hover:border-rose-400"}`}>
-                    {loc.is_featured && <Check size={11} />}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button onClick={async () => {
-                    const next = !loc.is_active;
-                    setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: next } : l));
-                    const res = await adminUpdateLocation(loc.id, { is_active: next });
-                    if (res.error) { setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, is_active: !next } : l)); toast(res.error, "err"); }
-                  }}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto transition-colors
-                      ${loc.is_active ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-400"}`}>
-                    {loc.is_active && <Check size={11} />}
-                  </button>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => { setEditing(loc); setAdding(false); window.scrollTo(0, 0); }}
-                      className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                      <Pencil size={14} />
-                    </button>
-                    <button onClick={() => handleDelete(loc.id, loc.title)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Groepen per categorie */}
+      {filtered.length === 0 && (
+        <p className="text-center text-gray-400 py-8 text-sm">No locations found</p>
+      )}
+      {Object.entries(grouped).map(([cat, items]) => (
+        <CategoryTable key={cat} cat={cat} items={items} />
+      ))}
+      {uncategorized.length > 0 && (
+        <CategoryTable cat="other" items={uncategorized} />
+      )}
 
       <p className="text-xs text-gray-400 text-right">{filtered.length} of {locations.length} locations</p>
     </div>
