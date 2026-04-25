@@ -10,7 +10,8 @@
     "share": "Partager",
     "copied": "Lien copié !",
     "see_all": "Tout voir",
-    "featured": "En vedette"
+    "featured": "En vedette",
+    "load_error": "Une erreur est survenue lors du chargement. Veuillez réessayer plus tard."
   },
   "splash": {
     "tagline": "Trouvez les plus belles fleurs aujourd'hui",
@@ -163,7 +164,19 @@
     "etiquette_rule3": "Ne bloquez pas la route ou l'accès à la ferme lors du stationnement.",
     "etiquette_rule4": "Photographiez à distance – utilisez un téléobjectif.",
     "etiquette_rule5": "Gardez le bruit bas près des zones résidentielles.",
-    "etiquette_rule6": "Emportez tous vos déchets."
+    "etiquette_rule6": "Emportez tous vos déchets.",
+    "opening_hours": "Horaires d'ouverture",
+    "open_now": "Ouvert maintenant",
+    "closed_now": "Fermé maintenant",
+    "closed_today": "Fermé aujourd'hui",
+    "hours_unknown": "Horaires inconnus",
+    "day_mon": "Lu",
+    "day_tue": "Ma",
+    "day_wed": "Me",
+    "day_thu": "Je",
+    "day_fri": "Ve",
+    "day_sat": "Sa",
+    "day_sun": "Di"
   },
   "routes": {
     "title": "Itinéraires",

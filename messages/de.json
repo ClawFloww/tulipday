@@ -10,7 +10,8 @@
     "share": "Teilen",
     "copied": "Link kopiert!",
     "see_all": "Alle anzeigen",
-    "featured": "Empfohlen"
+    "featured": "Empfohlen",
+    "load_error": "Beim Laden der Daten ist ein Fehler aufgetreten. Bitte versuche es später erneut."
   },
   "splash": {
     "tagline": "Die schönsten Blüten heute entdecken",
@@ -163,7 +164,19 @@
     "etiquette_rule3": "Blockieren Sie beim Parken nicht die Straße oder Hofzufahrten.",
     "etiquette_rule4": "Fotografieren Sie aus der Distanz – benutzen Sie ein Teleobjektiv.",
     "etiquette_rule5": "Halten Sie den Lärmpegel in Wohngebieten gering.",
-    "etiquette_rule6": "Nehmen Sie Ihren Müll mit."
+    "etiquette_rule6": "Nehmen Sie Ihren Müll mit.",
+    "opening_hours": "Öffnungszeiten",
+    "open_now": "Jetzt geöffnet",
+    "closed_now": "Jetzt geschlossen",
+    "closed_today": "Heute geschlossen",
+    "hours_unknown": "Öffnungszeiten unbekannt",
+    "day_mon": "Mo",
+    "day_tue": "Di",
+    "day_wed": "Mi",
+    "day_thu": "Do",
+    "day_fri": "Fr",
+    "day_sat": "Sa",
+    "day_sun": "So"
   },
   "routes": {
     "title": "Routen",

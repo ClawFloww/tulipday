@@ -10,7 +10,8 @@
     "share": "分享",
     "copied": "链接已复制！",
     "see_all": "查看全部",
-    "featured": "精选"
+    "featured": "精选",
+    "load_error": "加载数据时出错，请稍后重试。"
   },
   "splash": {
     "tagline": "今日寻觅最美花田",
@@ -163,7 +164,19 @@
     "etiquette_rule3": "停车时不要堵住道路或农场出入口。",
     "etiquette_rule4": "保持距离拍摄——请使用长焦镜头。",
     "etiquette_rule5": "在居民区附近保持低音量。",
-    "etiquette_rule6": "请带走所有垃圾。"
+    "etiquette_rule6": "请带走所有垃圾。",
+    "opening_hours": "营业时间",
+    "open_now": "现在营业",
+    "closed_now": "现在关闭",
+    "closed_today": "今天关闭",
+    "hours_unknown": "营业时间未知",
+    "day_mon": "周一",
+    "day_tue": "周二",
+    "day_wed": "周三",
+    "day_thu": "周四",
+    "day_fri": "周五",
+    "day_sat": "周六",
+    "day_sun": "周日"
   },
   "routes": {
     "title": "路线",

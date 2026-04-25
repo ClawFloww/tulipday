@@ -10,7 +10,8 @@
     "share": "Compartir",
     "copied": "¡Enlace copiado!",
     "see_all": "Ver todo",
-    "featured": "Destacado"
+    "featured": "Destacado",
+    "load_error": "Se produjo un error al cargar los datos. Por favor, inténtalo de nuevo más tarde."
   },
   "splash": {
     "tagline": "Encuentra las mejores flores hoy",
@@ -163,7 +164,19 @@
     "etiquette_rule3": "No bloquees la carretera ni el acceso a la granja al aparcar.",
     "etiquette_rule4": "Fotografía desde lejos — usa un teleobjetivo.",
     "etiquette_rule5": "Mantén el ruido bajo cerca de zonas residenciales.",
-    "etiquette_rule6": "Llévate toda tu basura."
+    "etiquette_rule6": "Llévate toda tu basura.",
+    "opening_hours": "Horario de apertura",
+    "open_now": "Abierto ahora",
+    "closed_now": "Cerrado ahora",
+    "closed_today": "Cerrado hoy",
+    "hours_unknown": "Horario desconocido",
+    "day_mon": "Lu",
+    "day_tue": "Ma",
+    "day_wed": "Mi",
+    "day_thu": "Ju",
+    "day_fri": "Vi",
+    "day_sat": "Sá",
+    "day_sun": "Do"
   },
   "routes": {
     "title": "Rutas",
