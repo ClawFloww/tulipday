@@ -33,9 +33,9 @@ const STEPS: Step[] = [
     position: "above",
   },
   {
-    selector: "[data-tour='nav-weather']",
-    title: "⛅ Weer",
-    body: "Bekijk het actuele weer en de verwachting voor de komende dagen in de Bollenstreek.",
+    selector: "[data-tour='nav-saved']",
+    title: "❤️ Opgeslagen",
+    body: "Sla je favoriete locaties en routes op via het hartje. Alles staat hier overzichtelijk bij elkaar.",
     position: "above",
   },
   {
