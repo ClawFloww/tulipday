@@ -1,3 +1,6 @@
+-- Voeg website_url kolom toe als die nog niet bestaat
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS website_url text DEFAULT NULL;
+
 -- Fietsverhuur locaties Bollenstreek
 INSERT INTO locations (id, title, slug, category, latitude, longitude, address, short_description, bloom_status, access_type, is_active, is_featured, website_url)
 VALUES
