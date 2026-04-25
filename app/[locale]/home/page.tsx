@@ -301,6 +301,10 @@ export default function HomePage() {
   useEffect(() => { setPremium(isPremium()); }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reset_tour") === "1") {
+      localStorage.removeItem("tulipday_feature_tour_v1");
+    }
     if (!localStorage.getItem("tulipday_feature_tour_v1")) setShowTour(true);
   }, []);
 
