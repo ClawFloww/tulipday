@@ -250,6 +250,8 @@ export default function OnboardingPage() {
   const [termsAnimating,    setTermsAnimating]    = useState(false);
   const [privacyAnimating,  setPrivacyAnimating]  = useState(false);
   const [openDoc,           setOpenDoc]           = useState<"terms" | "privacy" | null>(null);
+  const [viewedTerms,       setViewedTerms]       = useState(false);
+  const [viewedPrivacy,     setViewedPrivacy]     = useState(false);
 
   // Weerdata voor het resultaat-scherm (laadt op de achtergrond)
   const weather = useWeather(obState.startLocation?.coords ?? null);
@@ -544,16 +546,16 @@ export default function OnboardingPage() {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={toggleTerms}
-                onKeyDown={(e) => e.key === "Enter" && toggleTerms()}
-                className="flex items-center gap-4 py-3.5 cursor-pointer rounded-xl px-3 -mx-3 transition-colors hover:bg-[var(--color-surface-3)]"
-                style={{ minHeight: 48 }}
+                onClick={viewedTerms ? toggleTerms : undefined}
+                onKeyDown={(e) => viewedTerms && e.key === "Enter" && toggleTerms()}
+                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
+                style={{ minHeight: 48, cursor: viewedTerms ? "pointer" : "default", opacity: viewedTerms ? 1 : 0.5 }}
               >
                 <LegalCheckbox checked={acceptedTerms} animating={termsAnimating} />
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
                   {tl("terms_prefix")}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); }}
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); setViewedTerms(true); }}
                     className="font-semibold underline"
                     style={{ color: "#E8102A" }}
                   >
@@ -567,16 +569,16 @@ export default function OnboardingPage() {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={togglePrivacy}
-                onKeyDown={(e) => e.key === "Enter" && togglePrivacy()}
-                className="flex items-center gap-4 py-3.5 cursor-pointer rounded-xl px-3 -mx-3 transition-colors hover:bg-[var(--color-surface-3)]"
-                style={{ minHeight: 48 }}
+                onClick={viewedPrivacy ? togglePrivacy : undefined}
+                onKeyDown={(e) => viewedPrivacy && e.key === "Enter" && togglePrivacy()}
+                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
+                style={{ minHeight: 48, cursor: viewedPrivacy ? "pointer" : "default", opacity: viewedPrivacy ? 1 : 0.5 }}
               >
                 <LegalCheckbox checked={acceptedPrivacy} animating={privacyAnimating} />
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
                   {tl("privacy_prefix")}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); }}
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); setViewedPrivacy(true); }}
                     className="font-semibold underline"
                     style={{ color: "#E8102A" }}
                   >
