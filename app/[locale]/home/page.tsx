@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, MapPin, Loader2, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -274,6 +274,8 @@ function SkeletonCard({ wide = false }: { wide?: boolean }) {
 
 export default function HomePage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? "nl";
   const { t }  = useT();
 
   const [prefs, setPrefs]               = useState<OnboardingPrefs | null>(null);
@@ -478,16 +480,18 @@ export default function HomePage() {
 
           {/* Weerkaart */}
           <div className="mb-6">
-            <WeatherCard
-              current={weather.current}
-              isLoading={weather.isLoading}
-              error={weather.error}
-              lastUpdated={weather.lastUpdated}
-              onRefresh={weather.refresh}
-              locationLabel={location.locationLabel}
-              isUsingGPS={location.isUsingGPS}
-              onLocationClick={() => setShowLocationCard(true)}
-            />
+            <div onClick={() => router.push(`/${locale}/weather`)} className="cursor-pointer">
+              <WeatherCard
+                current={weather.current}
+                isLoading={weather.isLoading}
+                error={weather.error}
+                lastUpdated={weather.lastUpdated}
+                onRefresh={weather.refresh}
+                locationLabel={location.locationLabel}
+                isUsingGPS={location.isUsingGPS}
+                onLocationClick={() => setShowLocationCard(true)}
+              />
+            </div>
             <WeatherBanner current={weather.current} />
           </div>
 
