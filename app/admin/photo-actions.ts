@@ -1,3 +1,5 @@
+"use server";
+
 import { getAdminClient } from "@/lib/supabase-admin-client";
 import { LocationPhoto } from "@/lib/types";
 
