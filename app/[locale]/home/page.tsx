@@ -19,6 +19,7 @@ import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
 import { CorsoLiveBanner } from "@/components/corso/CorsoLiveBanner";
 import { motion, AnimatePresence } from "framer-motion";
+import { AppTour } from "@/components/ui/AppTour";
 
 const INTENT_TO_CATEGORY: Record<string, Category> = {
   blooming_fields: "flower_field",
@@ -290,6 +291,7 @@ export default function HomePage() {
   const [premium, setPremium]           = useState(true);
   const [showLocationCard, setShowLocationCard] = useState(false);
   const [seeAll, setSeeAll] = useState<{ title: string; locations: Location[] } | null>(null);
+  const [showTour, setShowTour] = useState(false);
 
   // Locatiebepaling met GPS-fallback naar Lisse
   const location = useUserLocation();
@@ -297,6 +299,10 @@ export default function HomePage() {
   const weather  = useWeather(location.coords);
 
   useEffect(() => { setPremium(isPremium()); }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem("tulipday_feature_tour_v1")) setShowTour(true);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 200);
@@ -386,6 +392,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-surface pb-24">
+      {showTour && <AppTour onDone={() => setShowTour(false)} />}
 
       {/* Header */}
       <div className="bg-surface-2 px-5 pt-12 pb-5 border-b border-[var(--color-border)]">
