@@ -1,75 +1,77 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
 
 const TOUR_KEY = "tulipday_feature_tour_v1";
 
-const SLIDES = [
+interface Step {
+  selector: string;
+  title: string;
+  body: string;
+  position: "above" | "below";
+}
+
+const STEPS: Step[] = [
   {
-    emoji: "🌷",
-    bg: "from-pink-50 to-rose-100",
-    accent: "#E8102A",
-    title: "Welkom bij TulipDay",
-    body: "Ontdek de mooiste bollenvelden, horeca en attracties in de Bollenstreek. We leggen je even alles uit.",
+    selector: "[data-tour='nav-fields']",
+    title: "🌷 Startpagina",
+    body: "Hier vind je aanbevolen bollenvelden, routes en het actuele weer op één plek.",
+    position: "above",
   },
   {
-    emoji: "🗺️",
-    bg: "from-sky-50 to-blue-100",
-    accent: "#0ea5e9",
-    title: "Interactieve kaart",
-    body: "Bekijk alle locaties op de kaart. Tik op een pin voor details, foto's en openingstijden.",
+    selector: "[data-tour='nav-map']",
+    title: "🗺️ Kaart",
+    body: "Bekijk alle locaties op de kaart. Gekleurde stippen tonen de bloei-status. Bij horeca zie je groen (open) of rood (gesloten).",
+    position: "above",
   },
   {
-    emoji: "🌸",
-    bg: "from-green-50 to-emerald-100",
-    accent: "#15803d",
-    title: "Bloei-status",
-    body: "Gekleurde stippen tonen de actuele bloei:\n🟢 Donkergroen = piek  🟩 Groen = bloeiend\n🩶 Lichtgroen = vroeg  🔴 Rood = eindfase",
+    selector: "[data-tour='nav-routes']",
+    title: "🚴 Routes",
+    body: "Kies een kant-en-klare route of teken zelf een route op de kaart. Deel hem daarna via een link.",
+    position: "above",
   },
   {
-    emoji: "☕",
-    bg: "from-amber-50 to-orange-100",
-    accent: "#d97706",
-    title: "Horeca open/gesloten",
-    body: "Bij eetgelegenheden zie je een groene stip als ze nu open zijn, en een rode stip als ze gesloten zijn. Altijd up-to-date.",
+    selector: "[data-tour='nav-weather']",
+    title: "⛅ Weer",
+    body: "Bekijk het actuele weer en de verwachting voor de komende dagen in de Bollenstreek.",
+    position: "above",
   },
   {
-    emoji: "🚴",
-    bg: "from-violet-50 to-purple-100",
-    accent: "#7c3aed",
-    title: "Routes",
-    body: "Kies een kant-en-klare route of teken je eigen route op de kaart. Deel hem daarna met vrienden via een link.",
-  },
-  {
-    emoji: "❤️",
-    bg: "from-rose-50 to-pink-100",
-    accent: "#E8102A",
-    title: "Bewaar je favorieten",
-    body: "Sla locaties en routes op via het hart-icoon. Alles is terug te vinden onder 'Opgeslagen' in het menu.",
+    selector: "[data-tour='nav-profile']",
+    title: "❤️ Opgeslagen & Instellingen",
+    body: "Sla je favoriete locaties en routes op. Pas taal en andere voorkeuren aan via Instellingen.",
+    position: "above",
   },
 ];
 
+interface Rect { top: number; left: number; width: number; height: number; }
+
+function getRect(selector: string): Rect | null {
+  const el = document.querySelector(selector);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { top: r.top, left: r.left, width: r.width, height: r.height };
+}
+
 export function AppTour({ onDone }: { onDone: () => void }) {
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const touchStartX = useRef<number | null>(null);
+  const [rect, setRect]   = useState<Rect | null>(null);
+
+  const updateRect = useCallback(() => {
+    setRect(getRect(STEPS[index].selector));
+  }, [index]);
+
+  useEffect(() => {
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    return () => window.removeEventListener("resize", updateRect);
+  }, [updateRect]);
 
   function next() {
-    if (index < SLIDES.length - 1) {
-      setDirection(1);
-      setIndex((i) => i + 1);
-    } else {
-      finish();
-    }
-  }
-
-  function prev() {
-    if (index > 0) {
-      setDirection(-1);
-      setIndex((i) => i - 1);
-    }
+    if (index < STEPS.length - 1) setIndex((i) => i + 1);
+    else finish();
   }
 
   function finish() {
@@ -77,91 +79,103 @@ export function AppTour({ onDone }: { onDone: () => void }) {
     onDone();
   }
 
-  function onTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
-  }
+  const step = STEPS[index];
+  const isLast = index === STEPS.length - 1;
+  const PAD = 6;
 
-  function onTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (dx < -50) next();
-    else if (dx > 50) prev();
-    touchStartX.current = null;
-  }
+  // Spotlight box
+  const spotlight = rect
+    ? {
+        left:   rect.left  - PAD,
+        top:    rect.top   - PAD,
+        width:  rect.width  + PAD * 2,
+        height: rect.height + PAD * 2,
+      }
+    : null;
 
-  const slide = SLIDES[index];
-  const isLast = index === SLIDES.length - 1;
+  // Tooltip positie: boven of onder het spotlight
+  const tooltipTop = spotlight
+    ? step.position === "above"
+      ? spotlight.top - 8   // tooltip bottom → just above spotlight
+      : spotlight.top + spotlight.height + 8
+    : window.innerHeight / 2;
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex flex-col"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      <AnimatePresence mode="wait" custom={direction}>
+    <div className="fixed inset-0 z-[9998] pointer-events-none">
+      {/* Donker overlay */}
+      <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={finish} />
+
+      {/* Spotlight cutout */}
+      {spotlight && (
+        <div
+          className="absolute rounded-xl pointer-events-none"
+          style={{
+            left:      spotlight.left,
+            top:       spotlight.top,
+            width:     spotlight.width,
+            height:    spotlight.height,
+            boxShadow: "0 0 0 9999px rgba(0,0,0,0.62)",
+            zIndex:    1,
+          }}
+        />
+      )}
+
+      {/* Tooltip */}
+      <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          custom={direction}
-          initial={{ x: direction * 60, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: direction * -60, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`absolute inset-0 bg-gradient-to-b ${slide.bg} flex flex-col`}
+          initial={{ opacity: 0, y: step.position === "above" ? 8 : -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{    opacity: 0, y: step.position === "above" ? 8 : -8 }}
+          transition={{ duration: 0.2 }}
+          className="absolute left-4 right-4 pointer-events-auto"
+          style={{
+            bottom: step.position === "above" ? `calc(100vh - ${tooltipTop}px)` : undefined,
+            top:    step.position === "below" ? tooltipTop : undefined,
+            zIndex: 2,
+          }}
         >
-          {/* Overslaan knop */}
-          <div className="flex justify-end px-5 pt-12">
-            <button
-              onClick={finish}
-              className="flex items-center gap-1 text-sm text-gray-400 font-medium"
-            >
-              <X size={15} />
-              Overslaan
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6">
-            <div className="text-8xl leading-none select-none">{slide.emoji}</div>
-            <div className="space-y-3">
-              <h1 className="text-2xl font-extrabold text-gray-900">{slide.title}</h1>
-              <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-line">
-                {slide.body}
-              </p>
+          <div className="bg-white rounded-2xl shadow-2xl p-4">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h2 className="text-base font-extrabold text-gray-900 leading-tight">{step.title}</h2>
+              <button onClick={finish} className="text-gray-300 hover:text-gray-500 flex-shrink-0 mt-0.5">
+                <X size={16} />
+              </button>
             </div>
-          </div>
 
-          {/* Dots */}
-          <div className="flex justify-center gap-2 pb-6">
-            {SLIDES.map((_, i) => (
+            {/* Body */}
+            <p className="text-sm text-gray-500 leading-relaxed mb-4">{step.body}</p>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between">
+              {/* Dots */}
+              <div className="flex gap-1.5">
+                {STEPS.map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-1.5 rounded-full transition-all duration-300"
+                    style={{
+                      width:           i === index ? 16 : 6,
+                      backgroundColor: i === index ? "#E8102A" : "#e5e7eb",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Knop */}
               <button
-                key={i}
-                onClick={() => { setDirection(i > index ? 1 : -1); setIndex(i); }}
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: i === index ? 20 : 8,
-                  backgroundColor: i === index ? slide.accent : "#d1d5db",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Knop */}
-          <div className="px-6 pb-12">
-            <button
-              onClick={next}
-              className="w-full py-4 rounded-2xl text-white font-extrabold text-base shadow-md active:scale-95 transition-transform"
-              style={{ backgroundColor: slide.accent }}
-            >
-              {isLast ? "Begin! 🌷" : "Volgende"}
-            </button>
+                onClick={next}
+                className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold text-white"
+                style={{ backgroundColor: "#E8102A" }}
+              >
+                {isLast ? "Klaar!" : "Volgende"}
+                {!isLast && <ChevronRight size={14} />}
+              </button>
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
     </div>
   );
-}
-
-export function useShouldShowTour() {
-  if (typeof window === "undefined") return false;
-  return !localStorage.getItem(TOUR_KEY);
 }

@@ -58,6 +58,7 @@ export function BottomNavigation() {
           return (
             <button
               key={tab.id}
+              data-tour={`nav-${tab.id}`}
               onClick={() => router.push(`/${locale}/${tab.segment}`)}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
