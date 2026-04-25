@@ -1,44 +1,43 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Star, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { PREMIUM_FEATURES } from "@/lib/premium";
 import { getOrCreateSessionId } from "@/lib/session";
 
-const ALL_FEATURES = [
-  { label: "10 locaties",          free: true,  premium: true },
-  { label: "Alle locaties",        free: false, premium: true },
-  { label: "2 routes",             free: true,  premium: true },
-  { label: "Alle routes",          free: false, premium: true },
-  { label: "Basis kaart",          free: true,  premium: true },
-  { label: "Bloei-alerts",         free: false, premium: true },
-  { label: "Street View",          free: false, premium: true },
-  { label: "Exclusieve routes",    free: false, premium: true },
+const FEATURES_TABLE = [
+  { label: "10 locaties",       free: true,  season: true  },
+  { label: "Alle locaties",     free: false, season: true  },
+  { label: "2 routes",          free: true,  season: true  },
+  { label: "Alle routes",       free: false, season: true  },
+  { label: "Basis kaart",       free: true,  season: true  },
+  { label: "Bloei-alerts",      free: false, season: true  },
+  { label: "Street View",       free: false, season: true  },
+  { label: "Exclusieve routes", free: false, season: true  },
 ];
 
-const stripeConfigured = true; // Keys configured
+const CARD_FEATURES = [
+  { emoji: "📍", label: "Alle locaties" },
+  { emoji: "🗺️", label: "Alle routes"   },
+  { emoji: "🌸", label: "Bloei-alerts"  },
+  { emoji: "🚲", label: "Excl. routes"  },
+  { emoji: "📵", label: "Offline mode"  },
+  { emoji: "🔭", label: "Street View"   },
+];
+
+const SEASON_PRICE_ID = "price_1TNzeGCMTdZLUsIuoBlniI6q";
 
 export default function PremiumPage() {
-  const router  = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
 
-  async function handleCheckout(plan: "monthly" | "season") {
-    const priceId = plan === "monthly"
-      ? "price_1TNzeGCMTdZLUsIuZ9w2O8Vk"
-      : "price_1TNzeGCMTdZLUsIuoBlniI6q";
-
-    if (!stripeConfigured) {
-      activateDemo();
-      return;
-    }
-
-    setBusy(plan);
+  async function handleCheckout() {
+    setBusy(true);
     try {
       const res = await fetch("/api/premium/checkout", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, sessionId: getOrCreateSessionId() }),
+        body:    JSON.stringify({ priceId: SEASON_PRICE_ID, sessionId: getOrCreateSessionId() }),
       });
       const { url, error } = await res.json();
       if (error || !url) { activateDemo(); return; }
@@ -46,7 +45,7 @@ export default function PremiumPage() {
     } catch {
       activateDemo();
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
@@ -56,103 +55,124 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="min-h-screen pb-12" style={{ backgroundColor: "var(--color-surface)" }}>
-      <div className="px-5 pt-12 pb-5" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}>
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="text-xl font-extrabold" style={{ color: "var(--color-text)" }}>🌷 TulipDay Premium</h1>
+    <div className="min-h-screen pb-24" style={{ backgroundColor: "var(--color-surface)" }}>
+
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 pt-14 pb-4"
+           style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
+        <button
+          onClick={() => router.back()}
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 className="text-[17px] font-bold leading-tight" style={{ color: "var(--color-text)" }}>
+            🌷 TulipDay Seizoenspas
+          </h1>
+          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
+            Alles uit het tulpenseizoen halen
+          </p>
         </div>
-        <p className="text-sm ml-12" style={{ color: "var(--color-text-3)" }}>Alles uit het tulpenseizoen halen</p>
       </div>
 
-      <div className="px-4 pt-6 space-y-6">
-        {/* Feature comparison */}
-        <div className="rounded-2xl shadow-card overflow-hidden" style={{ backgroundColor: "var(--color-surface-2)" }}>
-          <div className="grid grid-cols-3" style={{ backgroundColor: "var(--color-surface-3)", borderBottom: "1px solid var(--color-border)" }}>
-            <div className="py-3 px-4 text-xs font-bold uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>Feature</div>
-            <div className="py-3 px-2 text-center text-xs font-bold uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>Gratis</div>
-            <div className="py-3 px-2 text-center text-xs font-bold uppercase tracking-wide text-tulip-600">Premium</div>
+      <div className="px-4 pt-4 space-y-3">
+
+        {/* Feature vergelijkingstabel */}
+        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
+          {/* Kolomheader */}
+          <div className="grid grid-cols-3 px-4 py-2.5" style={{ backgroundColor: "var(--color-surface-3)", borderBottom: "1px solid var(--color-border)" }}>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest" style={{ color: "var(--color-text-3)" }}>Feature</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center" style={{ color: "var(--color-text-3)" }}>Gratis</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center text-tulip-500">Seizoen</span>
           </div>
-          <div style={{ borderTop: "1px solid var(--color-border)" }}>
-            {ALL_FEATURES.map((f, i) => (
-              <div key={f.label} className="grid grid-cols-3 items-center px-1 py-2.5"
-                   style={i > 0 ? { borderTop: "1px solid var(--color-border)" } : {}}>
-                <span className="px-3 text-sm" style={{ color: "var(--color-text-2)" }}>{f.label}</span>
-                <div className="flex justify-center">
-                  {f.free ? <Check size={16} className="text-green-500" strokeWidth={3} />
-                           : <span className="font-bold text-base" style={{ color: "var(--color-text-3)" }}>–</span>}
-                </div>
-                <div className="flex justify-center">
-                  <Check size={16} className="text-tulip-500" strokeWidth={3} />
-                </div>
+          {/* Rijen */}
+          {FEATURES_TABLE.map((f, i) => (
+            <div
+              key={f.label}
+              className="grid grid-cols-3 items-center px-4 py-3"
+              style={i > 0 ? { borderTop: "1px solid var(--color-border)" } : {}}
+            >
+              <span className="text-sm" style={{ color: "var(--color-text-2)" }}>{f.label}</span>
+              <div className="flex justify-center">
+                {f.free
+                  ? <Check size={15} className="text-green-500" strokeWidth={3} />
+                  : <span className="text-sm font-bold" style={{ color: "var(--color-text-3)", opacity: 0.35 }}>—</span>
+                }
+              </div>
+              <div className="flex justify-center">
+                <Check size={15} className="text-tulip-500" strokeWidth={3} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Seizoenspas kaart */}
+        <div className="rounded-[22px] p-5 relative overflow-hidden" style={{ backgroundColor: "#E8102A", boxShadow: "0 16px 48px rgba(232,16,42,0.28)" }}>
+          {/* Achtergrond tulp */}
+          <div className="absolute right-[-4px] top-[-8px] text-[90px] opacity-10 rotate-12 select-none pointer-events-none">🌷</div>
+
+          {/* Prijs */}
+          <div className="flex items-start justify-between mb-4 gap-3">
+            <div>
+              <p className="text-[9.5px] font-bold uppercase tracking-widest text-white/60 mb-1">Seizoenspas 2026</p>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[42px] font-extrabold text-white leading-none tracking-tight">€4,99</span>
+              </div>
+              <p className="text-xs text-white/60 mt-0.5">heel tulpenseizoen</p>
+            </div>
+            <div className="shrink-0 mt-1 px-3 py-1.5 rounded-full text-[10.5px] font-medium text-white/85"
+                 style={{ backgroundColor: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.2)" }}>
+              ⏳ t/m 31 mei 2026
+            </div>
+          </div>
+
+          {/* Features grid */}
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {CARD_FEATURES.map((f) => (
+              <div key={f.label} className="flex items-center gap-2 text-[12px] text-white/85">
+                <span className="text-[13px]">{f.emoji}</span>
+                {f.label}
               </div>
             ))}
           </div>
+
+          {/* CTA knop */}
+          <button
+            onClick={handleCheckout}
+            disabled={busy}
+            className="w-full py-4 rounded-[13px] bg-white text-[14.5px] font-bold tracking-[-0.2px] active:scale-[0.97] transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
+            style={{ color: "#E8102A" }}
+          >
+            {busy && <Loader2 size={15} className="animate-spin" />}
+            Activeer seizoenspas
+          </button>
         </div>
 
-        {/* Pricing */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Monthly */}
-          <div className="rounded-2xl shadow-card p-5 flex flex-col" style={{ backgroundColor: "var(--color-surface-2)" }}>
-            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-3)" }}>Maandelijks</p>
-            <p className="text-2xl font-extrabold mb-0.5" style={{ color: "var(--color-text)" }}>€2,99</p>
-            <p className="text-xs mb-4" style={{ color: "var(--color-text-3)" }}>per maand</p>
-            <ul className="space-y-2 flex-1 mb-4">
-              {PREMIUM_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--color-text-2)" }}>
-                  <Check size={11} className="text-tulip-500 flex-shrink-0" strokeWidth={3} /> {f}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => handleCheckout("monthly")} disabled={!!busy}
-              className="w-full py-2.5 rounded-xl border-2 border-tulip-500 text-tulip-600 text-sm font-bold hover:bg-tulip-50 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-              {busy === "monthly" ? <Loader2 size={14} className="animate-spin" /> : null}
-              Kies maandelijks
-            </button>
-          </div>
-
-          {/* Season — best value */}
-          <div className="bg-tulip-500 rounded-2xl shadow-card p-5 flex flex-col relative overflow-hidden">
-            <div className="absolute top-3 right-3">
-              <span className="flex items-center gap-1 text-[10px] font-extrabold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">
-                <Star size={9} fill="currentColor" /> Beste deal
-              </span>
-            </div>
-            <p className="text-xs font-bold text-white/70 uppercase tracking-wide mb-1">Seizoen</p>
-            <p className="text-2xl font-extrabold text-white mb-0.5">€9,99</p>
-            <p className="text-xs text-white/60 mb-4">heel tulpenseizoen</p>
-            <ul className="space-y-2 flex-1 mb-4">
-              {PREMIUM_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-1.5 text-xs text-white/90">
-                  <Check size={11} className="text-white flex-shrink-0" strokeWidth={3} /> {f}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => handleCheckout("season")} disabled={!!busy}
-              className="w-full py-2.5 rounded-xl bg-white text-tulip-600 text-sm font-bold hover:bg-tulip-50 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-              {busy === "season" ? <Loader2 size={14} className="animate-spin" /> : null}
-              Kies seizoen
-            </button>
-          </div>
+        {/* Vroegboekers-banner */}
+        <div className="flex items-start gap-3 px-4 py-3.5 rounded-2xl"
+             style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
+          <span className="text-[17px] flex-shrink-0 mt-0.5">🌱</span>
+          <p className="text-[11.5px] leading-relaxed" style={{ color: "var(--color-text-3)" }}>
+            <span className="font-semibold" style={{ color: "var(--color-text-2)" }}>Volgend seizoen vroegboekersprijs:</span>{" "}
+            Als bestaande gebruiker krijg je in februari 2027 toegang voor €2,99.
+          </p>
         </div>
 
-        {!stripeConfigured && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-            <p className="text-xs text-amber-700 font-semibold mb-3">Demo mode — activeer premium gratis</p>
-            <button onClick={activateDemo}
-              className="px-6 py-3 rounded-xl bg-tulip-500 text-white text-sm font-bold hover:bg-tulip-600 active:scale-95 transition-all shadow-sm">
-              Activeer Premium (Demo)
-            </button>
-          </div>
-        )}
+        {/* Overslaan */}
+        <button
+          onClick={() => router.back()}
+          className="w-full text-center text-[12.5px] py-3 underline underline-offset-2"
+          style={{ color: "var(--color-text-3)" }}
+        >
+          Doorgaan met gratis versie
+        </button>
 
-        <p className="text-center text-xs pb-4" style={{ color: "var(--color-text-3)" }}>
-          iDEAL & creditcard · Eenvoudig opzegbaar · Tulpenseizoen april–mei
+        <p className="text-center text-[11px] pb-2" style={{ color: "var(--color-text-3)" }}>
+          iDEAL & creditcard · Tulpenseizoen april–mei 2026
         </p>
+
       </div>
     </div>
   );
