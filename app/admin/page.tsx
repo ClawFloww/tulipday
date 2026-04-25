@@ -22,7 +22,7 @@ type Tab = "locations" | "routes" | "home" | "photos" | "bloom" | "analytics";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Rec = Record<string, any>;
 
-const CATEGORIES  = ["flower_field","photo_spot","attraction","food","parking"];
+const CATEGORIES  = ["flower_field","photo_spot","attraction","food","parking","bike_rental"];
 const BLOOM_OPTS  = ["early","blooming","peak","ending"];
 const ACCESS_OPTS = ["roadside_only","public_access","private_view_only"];
 const ROUTE_TYPES = ["car","bike","walk","family","photo"];
@@ -238,13 +238,14 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
   }
 
   const CAT_META: Record<string, { emoji: string; label: string; color: string }> = {
-    flower_field: { emoji: "🌷", label: "Bollenvelden",  color: "bg-rose-50 text-rose-700 border-rose-200"   },
-    food:         { emoji: "🍴", label: "Horeca",        color: "bg-orange-50 text-orange-700 border-orange-200" },
-    attraction:   { emoji: "🏛",  label: "Attracties",   color: "bg-amber-50 text-amber-700 border-amber-200"  },
-    photo_spot:   { emoji: "📷", label: "Fotoplekken",   color: "bg-blue-50 text-blue-700 border-blue-200"    },
-    parking:      { emoji: "🅿️",  label: "Parkeren",     color: "bg-gray-50 text-gray-600 border-gray-200"    },
+    flower_field: { emoji: "🌷", label: "Bollenvelden",    color: "bg-rose-50 text-rose-700 border-rose-200"     },
+    food:         { emoji: "🍴", label: "Horeca",          color: "bg-orange-50 text-orange-700 border-orange-200" },
+    attraction:   { emoji: "🏛",  label: "Attracties",     color: "bg-amber-50 text-amber-700 border-amber-200"   },
+    photo_spot:   { emoji: "📷", label: "Fotoplekken",     color: "bg-blue-50 text-blue-700 border-blue-200"     },
+    parking:      { emoji: "🅿️",  label: "Parkeren",       color: "bg-gray-50 text-gray-600 border-gray-200"     },
+    bike_rental:  { emoji: "🚲", label: "Fietsverhuur",    color: "bg-violet-50 text-violet-700 border-violet-200" },
   };
-  const CAT_ORDER = ["flower_field", "food", "attraction", "photo_spot", "parking"];
+  const CAT_ORDER = ["flower_field", "food", "attraction", "photo_spot", "parking", "bike_rental"];
 
   const filtered = locations.filter((l) =>
     l.title?.toLowerCase().includes(search.toLowerCase()) ||

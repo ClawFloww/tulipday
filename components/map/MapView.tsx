@@ -34,6 +34,7 @@ const CATEGORY_COLOR: Record<Category, string> = {
   attraction:   "#22c55e",
   food:         "#f97316",
   parking:      "#94a3b8",
+  bike_rental:  "#8b5cf6",
 };
 
 const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score,opening_hours";

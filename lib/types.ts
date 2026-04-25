@@ -1,5 +1,5 @@
 export type BloomStatus = "early" | "blooming" | "peak" | "ending";
-export type Category = "flower_field" | "photo_spot" | "attraction" | "food" | "parking";
+export type Category = "flower_field" | "photo_spot" | "attraction" | "food" | "parking" | "bike_rental";
 export type RouteType = "car" | "bike" | "walk" | "family" | "photo";
 export type AccessType = "roadside_only" | "public_access" | "private_view_only";
 

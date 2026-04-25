@@ -21,11 +21,12 @@ import LocationPhotoGallery, { PendingPhoto } from "@/components/ui/LocationPhot
 import UnsplashPhotoFeed from "@/components/UnsplashPhotoFeed";
 
 const CATEGORY_STYLE: Record<Category, { bg: string; color: string }> = {
-  flower_field: { bg: "bg-tulip-50 dark:bg-tulip-900/25",   color: "text-tulip-600 dark:text-tulip-400"   },
-  photo_spot:   { bg: "bg-blue-50 dark:bg-blue-900/25",     color: "text-blue-600 dark:text-blue-400"     },
-  attraction:   { bg: "bg-amber-50 dark:bg-amber-900/25",   color: "text-amber-700 dark:text-amber-400"   },
-  food:         { bg: "bg-orange-50 dark:bg-orange-900/25", color: "text-orange-700 dark:text-orange-400" },
-  parking:      { bg: "bg-gray-100 dark:bg-gray-800",       color: "text-gray-600 dark:text-gray-400"     },
+  flower_field: { bg: "bg-tulip-50 dark:bg-tulip-900/25",     color: "text-tulip-600 dark:text-tulip-400"     },
+  photo_spot:   { bg: "bg-blue-50 dark:bg-blue-900/25",       color: "text-blue-600 dark:text-blue-400"       },
+  attraction:   { bg: "bg-amber-50 dark:bg-amber-900/25",     color: "text-amber-700 dark:text-amber-400"     },
+  food:         { bg: "bg-orange-50 dark:bg-orange-900/25",   color: "text-orange-700 dark:text-orange-400"   },
+  parking:      { bg: "bg-gray-100 dark:bg-gray-800",         color: "text-gray-600 dark:text-gray-400"       },
+  bike_rental:  { bg: "bg-violet-50 dark:bg-violet-900/25",   color: "text-violet-700 dark:text-violet-400"   },
 };
 
 const CROWD_KEYS = ["crowd_very_quiet", "crowd_quiet", "crowd_moderate", "crowd_busy", "crowd_very_busy"];
