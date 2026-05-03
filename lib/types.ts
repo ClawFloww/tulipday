@@ -61,6 +61,8 @@ export interface Route {
   theme?: string;
   bloom_peak?: string[];
   photo_spots?: PhotoSpot[];
+  // GPX-route geometrie: array van [lat, lng] punten
+  geometry_points?: [number, number][] | null;
 }
 
 export interface RouteStop {

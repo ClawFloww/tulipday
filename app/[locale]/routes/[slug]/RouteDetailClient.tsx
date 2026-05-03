@@ -9,104 +9,56 @@ import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
 
-// ── SVG-kaartpreview op basis van stop-coördinaten ────────────────────────────
+// ── SVG-kaartpreview (gedeelde hulpfuncties) ──────────────────────────────────
 
 const SVG_W = 400;
 const SVG_H = 220;
 const SVG_PAD = 28;
 
-function RouteStopMap({ stops }: { stops: RouteStop[] }) {
-  const pts = useMemo(() => {
-    const valid = stops.filter(
-      (s) => s.locations.latitude != null && s.locations.longitude != null,
-    );
-    if (valid.length < 1) return [];
+function projectPoints(
+  coords: { lat: number; lng: number }[],
+): { x: number; y: number }[] {
+  if (coords.length === 0) return [];
+  const lngs = coords.map((c) => c.lng);
+  const lats  = coords.map((c) => c.lat);
+  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const minLat  = Math.min(...lats),  maxLat  = Math.max(...lats);
+  const lngSpan = maxLng - minLng || 0.005;
+  const latSpan  = maxLat  - minLat  || 0.005;
+  const innerW = SVG_W - 2 * SVG_PAD;
+  const innerH = SVG_H - 2 * SVG_PAD;
+  const scale  = Math.min(innerW / lngSpan, innerH / latSpan);
+  const offX   = SVG_PAD + (innerW - lngSpan * scale) / 2;
+  const offY   = SVG_PAD + (innerH - latSpan  * scale) / 2;
+  return coords.map(({ lat, lng }) => ({
+    x: offX + (lng - minLng) * scale,
+    y: SVG_H - offY - (lat - minLat) * scale,
+  }));
+}
 
-    const lngs = valid.map((s) => s.locations.longitude as number);
-    const lats  = valid.map((s) => s.locations.latitude  as number);
-    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-    const minLat  = Math.min(...lats),  maxLat  = Math.max(...lats);
-
-    const lngSpan = maxLng - minLng || 0.005;
-    const latSpan  = maxLat  - minLat  || 0.005;
-    const innerW   = SVG_W - 2 * SVG_PAD;
-    const innerH   = SVG_H - 2 * SVG_PAD;
-    const scale    = Math.min(innerW / lngSpan, innerH / latSpan);
-    const offX     = SVG_PAD + (innerW - lngSpan * scale) / 2;
-    const offY     = SVG_PAD + (innerH - latSpan  * scale) / 2;
-
-    return valid.map((s, i) => ({
-      x:     offX + ((s.locations.longitude as number) - minLng) * scale,
-      y:     SVG_H - offY - ((s.locations.latitude as number) - minLat) * scale,
-      label: i + 1,
-      isFirst: i === 0,
-      isLast:  i === valid.length - 1,
-    }));
-  }, [stops]);
-
-  if (pts.length < 1) return null;
-
+function RouteMapSVG({
+  pts,
+  markers,
+}: {
+  pts:     { x: number; y: number }[];
+  markers: { x: number; y: number; label: number; isFirst: boolean; isLast: boolean }[];
+}) {
   const polyline = pts.map((p) => `${p.x},${p.y}`).join(" ");
-
   return (
     <div className="rounded-2xl overflow-hidden w-full" style={{ backgroundColor: "#EEF2E8" }}>
-      <svg
-        width="100%"
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        aria-hidden="true"
-        style={{ display: "block" }}
-      >
-        {/* Achtergrond */}
+      <svg width="100%" viewBox={`0 0 ${SVG_W} ${SVG_H}`} aria-hidden="true" style={{ display: "block" }}>
         <rect width={SVG_W} height={SVG_H} fill="#EEF2E8" />
-
-        {/* Routelijn — schaduw */}
         {pts.length > 1 && (
-          <polyline
-            points={polyline}
-            fill="none"
-            stroke="white"
-            strokeWidth={6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={0.7}
-          />
+          <polyline points={polyline} fill="none" stroke="white"   strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
         )}
-
-        {/* Routelijn — gestippeld tulip-rood */}
         {pts.length > 1 && (
-          <polyline
-            points={polyline}
-            fill="none"
-            stroke="#E8527A"
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray="8 5"
-          />
+          <polyline points={polyline} fill="none" stroke="#E8527A" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="8 5" />
         )}
-
-        {/* Stop-markers */}
-        {pts.map((pt) => (
+        {markers.map((pt) => (
           <g key={pt.label}>
-            {/* Witte halo */}
             <circle cx={pt.x} cy={pt.y} r={12} fill="white" />
-            {/* Gekleurde cirkel */}
-            <circle
-              cx={pt.x}
-              cy={pt.y}
-              r={9}
-              fill={pt.isFirst ? "#2D7D46" : pt.isLast ? "#E8102A" : "#E8527A"}
-            />
-            {/* Nummer */}
-            <text
-              x={pt.x}
-              y={pt.y + 3.5}
-              textAnchor="middle"
-              fill="white"
-              fontSize={8.5}
-              fontWeight="bold"
-              fontFamily="system-ui, sans-serif"
-            >
+            <circle cx={pt.x} cy={pt.y} r={9}  fill={pt.isFirst ? "#2D7D46" : pt.isLast ? "#E8102A" : "#E8527A"} />
+            <text x={pt.x} y={pt.y + 3.5} textAnchor="middle" fill="white" fontSize={8.5} fontWeight="bold" fontFamily="system-ui, sans-serif">
               {pt.label}
             </text>
           </g>
@@ -114,6 +66,46 @@ function RouteStopMap({ stops }: { stops: RouteStop[] }) {
       </svg>
     </div>
   );
+}
+
+// Kaart op basis van route_stops (database-locaties)
+function RouteStopMap({ stops }: { stops: RouteStop[] }) {
+  const { pts, markers } = useMemo(() => {
+    const valid = stops.filter((s) => s.locations.latitude != null && s.locations.longitude != null);
+    if (valid.length < 1) return { pts: [], markers: [] };
+    const coords = valid.map((s) => ({ lat: s.locations.latitude as number, lng: s.locations.longitude as number }));
+    const projected = projectPoints(coords);
+    return {
+      pts: projected,
+      markers: projected.map((p, i) => ({ ...p, label: i + 1, isFirst: i === 0, isLast: i === valid.length - 1 })),
+    };
+  }, [stops]);
+
+  if (pts.length < 1) return null;
+  return <RouteMapSVG pts={pts} markers={markers} />;
+}
+
+// Kaart op basis van geometry_points (GPX-routes)
+function RouteGeometryMap({ points }: { points: [number, number][] }) {
+  const { pts, markers } = useMemo(() => {
+    if (points.length < 2) return { pts: [], markers: [] };
+    const coords = points.map(([lat, lng]) => ({ lat, lng }));
+    const projected = projectPoints(coords);
+    // Markers alleen op start, midden en eind voor overzichtelijkheid
+    const markerIndices = [0, Math.floor(points.length / 2), points.length - 1];
+    return {
+      pts: projected,
+      markers: markerIndices.map((i, mi) => ({
+        ...projected[i],
+        label: mi + 1,
+        isFirst: mi === 0,
+        isLast:  mi === 2,
+      })),
+    };
+  }, [points]);
+
+  if (pts.length < 2) return null;
+  return <RouteMapSVG pts={pts} markers={markers} />;
 }
 
 const ROUTE_ICON: Record<RouteType, React.ReactNode> = {
@@ -284,10 +276,13 @@ export default function RouteDetailClient() {
           </p>
         )}
 
-        {/* Kaartpreview */}
-        {stops.length > 0 && (
-          <RouteStopMap stops={stops} />
-        )}
+        {/* Kaartpreview — stops hebben prioriteit, anders geometry_points */}
+        {stops.length > 0
+          ? <RouteStopMap stops={stops} />
+          : route.geometry_points && route.geometry_points.length > 1
+            ? <RouteGeometryMap points={route.geometry_points} />
+            : null
+        }
 
         {stops.length > 0 && (
           <div>
