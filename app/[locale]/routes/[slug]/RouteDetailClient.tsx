@@ -160,16 +160,19 @@ function RouteInteractiveMap({
           const color = CATEGORY_COLOR[loc.category as string] ?? "#6b7280";
           const el    = document.createElement("div");
           el.style.cssText = [
-            "width:14px", "height:14px", "border-radius:50%",
+            "width:18px", "height:18px", "border-radius:50%",
             `background:${color}`,
-            "border:2px solid white",
-            "box-shadow:0 1px 4px rgba(0,0,0,.35)",
+            "border:2.5px solid white",
+            "box-shadow:0 1px 6px rgba(0,0,0,.4)",
             "cursor:pointer",
             "transition:transform 0.15s",
+            "pointer-events:auto",
+            "position:relative", "z-index:1",
           ].join(";");
-          el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.4)"; });
+          el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.5)"; });
           el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
-          el.addEventListener("click", (e) => {
+          // Gebruik pointerdown i.p.v. click — werkt betrouwbaarder in MapLibre op desktop
+          el.addEventListener("pointerdown", (e) => {
             e.stopPropagation();
             onSelectRef.current(loc as MapLocation);
           });
