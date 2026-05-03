@@ -1,112 +1,201 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
 
-// ── SVG-kaartpreview (gedeelde hulpfuncties) ──────────────────────────────────
+const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
-const SVG_W = 400;
-const SVG_H = 220;
-const SVG_PAD = 28;
+const CATEGORY_COLOR: Record<string, string> = {
+  flower_field: "#E8102A",
+  photo_spot:   "#8b5cf6",
+  attraction:   "#f59e0b",
+  food:         "#10b981",
+  parking:      "#6b7280",
+  bike_rental:  "#a855f7",
+};
 
-function projectPoints(
-  coords: { lat: number; lng: number }[],
-): { x: number; y: number }[] {
-  if (coords.length === 0) return [];
-  const lngs = coords.map((c) => c.lng);
-  const lats  = coords.map((c) => c.lat);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-  const minLat  = Math.min(...lats),  maxLat  = Math.max(...lats);
-  const lngSpan = maxLng - minLng || 0.005;
-  const latSpan  = maxLat  - minLat  || 0.005;
-  const innerW = SVG_W - 2 * SVG_PAD;
-  const innerH = SVG_H - 2 * SVG_PAD;
-  const scale  = Math.min(innerW / lngSpan, innerH / latSpan);
-  const offX   = SVG_PAD + (innerW - lngSpan * scale) / 2;
-  const offY   = SVG_PAD + (innerH - latSpan  * scale) / 2;
-  return coords.map(({ lat, lng }) => ({
-    x: offX + (lng - minLng) * scale,
-    y: SVG_H - offY - (lat - minLat) * scale,
-  }));
-}
+// ── Interactieve MapLibre-kaart ───────────────────────────────────────────────
 
-function RouteMapSVG({
-  pts,
-  markers,
+function RouteInteractiveMap({
+  points,
+  stops,
+  routeType,
 }: {
-  pts:     { x: number; y: number }[];
-  markers: { x: number; y: number; label: number; isFirst: boolean; isLast: boolean }[];
+  points?:    [number, number][] | null;
+  stops:      RouteStop[];
+  routeType?: string | null;
 }) {
-  const polyline = pts.map((p) => `${p.x},${p.y}`).join(" ");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef       = useRef<maplibregl.Map | null>(null);
+
+  // Bouw [lng, lat]-coördinaten voor MapLibre (stops hebben voorrang)
+  const routeCoords: [number, number][] =
+    stops.length > 0
+      ? stops
+          .filter((s) => s.locations.latitude != null && s.locations.longitude != null)
+          .map((s) => [s.locations.longitude as number, s.locations.latitude as number])
+      : (points ?? []).map(([lat, lng]) => [lng, lat]);
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current || routeCoords.length === 0) return;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style:     MAP_STYLE,
+      center:    routeCoords[0],
+      zoom:      12,
+      interactive: true,
+    });
+
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false }),
+      "top-right",
+    );
+
+    map.on("load", async () => {
+      // Routelijn
+      if (routeCoords.length > 1) {
+        map.addSource("route", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: routeCoords },
+            properties: {},
+          },
+        });
+        map.addLayer({
+          id: "route-casing",
+          type: "line",
+          source: "route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.85 },
+        });
+        map.addLayer({
+          id: "route-line",
+          type: "line",
+          source: "route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#E8102A", "line-width": 4 },
+        });
+      }
+
+      // Markers: genummerde stops of alleen start/eind
+      const markerDefs =
+        stops.length > 0
+          ? stops
+              .filter((s) => s.locations.latitude)
+              .map((s, i) => ({
+                lngLat: [s.locations.longitude as number, s.locations.latitude as number] as [number, number],
+                label:  String(i + 1),
+                color:  i === 0 ? "#2D7D46" : i === stops.length - 1 ? "#E8102A" : "#E8527A",
+              }))
+          : routeCoords.length > 1
+          ? [
+              { lngLat: routeCoords[0],                      label: "S", color: "#2D7D46" },
+              { lngLat: routeCoords[routeCoords.length - 1], label: "E", color: "#E8102A" },
+            ]
+          : [];
+
+      markerDefs.forEach(({ lngLat, label, color }) => {
+        const el = document.createElement("div");
+        el.style.cssText = [
+          "width:28px", "height:28px", "border-radius:50%",
+          `background:${color}`, "color:white", "font-size:11px", "font-weight:800",
+          "display:flex", "align-items:center", "justify-content:center",
+          "border:2.5px solid white", "box-shadow:0 2px 8px rgba(0,0,0,.35)",
+          "font-family:system-ui,sans-serif",
+        ].join(";");
+        el.textContent = label;
+        new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+      });
+
+      // Locaties ophalen binnen de bounding box van de route
+      if (routeCoords.length > 0) {
+        const lngs   = routeCoords.map((c) => c[0]);
+        const lats   = routeCoords.map((c) => c[1]);
+        const buf    = 0.04; // ~3 km buffer
+        const { data: locations } = await supabase
+          .from("locations")
+          .select("id, title, category, latitude, longitude")
+          .eq("is_active", true)
+          .gte("latitude",  Math.min(...lats)  - buf)
+          .lte("latitude",  Math.max(...lats)  + buf)
+          .gte("longitude", Math.min(...lngs) - buf)
+          .lte("longitude", Math.max(...lngs) + buf);
+
+        (locations ?? []).forEach((loc) => {
+          if (!loc.latitude || !loc.longitude) return;
+          const color = CATEGORY_COLOR[loc.category as string] ?? "#6b7280";
+          const el    = document.createElement("div");
+          el.style.cssText = [
+            "width:10px", "height:10px", "border-radius:50%",
+            `background:${color}`,
+            "border:1.5px solid white",
+            "box-shadow:0 1px 4px rgba(0,0,0,.28)",
+            "cursor:pointer",
+          ].join(";");
+          el.title = loc.title;
+          new maplibregl.Marker({ element: el })
+            .setLngLat([loc.longitude, loc.latitude])
+            .addTo(map);
+        });
+      }
+
+      // Pas bounds aan op de route
+      if (routeCoords.length > 1) {
+        const bounds = routeCoords.reduce(
+          (b, c) => b.extend(c),
+          new maplibregl.LngLatBounds(routeCoords[0], routeCoords[0]),
+        );
+        map.fitBounds(bounds, { padding: 52, maxZoom: 14, duration: 600 });
+      }
+    });
+
+    // Huidige locatie als blauwe stip
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (!mapRef.current) return;
+          const el = document.createElement("div");
+          el.style.cssText = [
+            "width:16px", "height:16px", "border-radius:50%",
+            "background:#2563eb", "border:3px solid white",
+            "box-shadow:0 0 0 4px rgba(37,99,235,0.25)",
+          ].join(";");
+          new maplibregl.Marker({ element: el })
+            .setLngLat([pos.coords.longitude, pos.coords.latitude])
+            .addTo(mapRef.current);
+        },
+        undefined,
+        { timeout: 8000, maximumAge: 60000 },
+      );
+    }
+
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (routeCoords.length === 0) return null;
+
   return (
-    <div className="rounded-2xl overflow-hidden w-full" style={{ backgroundColor: "#EEF2E8" }}>
-      <svg width="100%" viewBox={`0 0 ${SVG_W} ${SVG_H}`} aria-hidden="true" style={{ display: "block" }}>
-        <rect width={SVG_W} height={SVG_H} fill="#EEF2E8" />
-        {pts.length > 1 && (
-          <polyline points={polyline} fill="none" stroke="white"   strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
-        )}
-        {pts.length > 1 && (
-          <polyline points={polyline} fill="none" stroke="#E8527A" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="8 5" />
-        )}
-        {markers.map((pt) => (
-          <g key={pt.label}>
-            <circle cx={pt.x} cy={pt.y} r={12} fill="white" />
-            <circle cx={pt.x} cy={pt.y} r={9}  fill={pt.isFirst ? "#2D7D46" : pt.isLast ? "#E8102A" : "#E8527A"} />
-            <text x={pt.x} y={pt.y + 3.5} textAnchor="middle" fill="white" fontSize={8.5} fontWeight="bold" fontFamily="system-ui, sans-serif">
-              {pt.label}
-            </text>
-          </g>
-        ))}
-      </svg>
-    </div>
+    <div
+      ref={containerRef}
+      className="rounded-2xl overflow-hidden w-full"
+      style={{ height: 300 }}
+    />
   );
 }
 
-// Kaart op basis van route_stops (database-locaties)
-function RouteStopMap({ stops }: { stops: RouteStop[] }) {
-  const { pts, markers } = useMemo(() => {
-    const valid = stops.filter((s) => s.locations.latitude != null && s.locations.longitude != null);
-    if (valid.length < 1) return { pts: [], markers: [] };
-    const coords = valid.map((s) => ({ lat: s.locations.latitude as number, lng: s.locations.longitude as number }));
-    const projected = projectPoints(coords);
-    return {
-      pts: projected,
-      markers: projected.map((p, i) => ({ ...p, label: i + 1, isFirst: i === 0, isLast: i === valid.length - 1 })),
-    };
-  }, [stops]);
-
-  if (pts.length < 1) return null;
-  return <RouteMapSVG pts={pts} markers={markers} />;
-}
-
-// Kaart op basis van geometry_points (GPX-routes)
-function RouteGeometryMap({ points }: { points: [number, number][] }) {
-  const { pts, markers } = useMemo(() => {
-    if (points.length < 2) return { pts: [], markers: [] };
-    const coords = points.map(([lat, lng]) => ({ lat, lng }));
-    const projected = projectPoints(coords);
-    // Markers alleen op start, midden en eind voor overzichtelijkheid
-    const markerIndices = [0, Math.floor(points.length / 2), points.length - 1];
-    return {
-      pts: projected,
-      markers: markerIndices.map((i, mi) => ({
-        ...projected[i],
-        label: mi + 1,
-        isFirst: mi === 0,
-        isLast:  mi === 2,
-      })),
-    };
-  }, [points]);
-
-  if (pts.length < 2) return null;
-  return <RouteMapSVG pts={pts} markers={markers} />;
-}
+// ── Route type helpers ────────────────────────────────────────────────────────
 
 const ROUTE_ICON: Record<RouteType, React.ReactNode> = {
   bike:   <Bike       size={14} />,
@@ -129,6 +218,8 @@ function formatDuration(min: number): string {
   if (h === 0) return `${m} min`;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
+
+// ── Hoofdcomponent ────────────────────────────────────────────────────────────
 
 export default function RouteDetailClient() {
   const { slug } = useParams<{ slug: string }>();
@@ -185,6 +276,31 @@ export default function RouteDetailClient() {
     setSaving(false);
   }
 
+  function handleNavigate() {
+    const travelMode = route?.route_type === "bike"
+      ? "bicycling"
+      : route?.route_type === "walk"
+      ? "walking"
+      : "driving";
+
+    const validStops = stops.filter((s) => s.locations.latitude && s.locations.longitude);
+    if (validStops.length > 0) {
+      const origin      = `${validStops[0].locations.latitude},${validStops[0].locations.longitude}`;
+      const destination = `${validStops[validStops.length - 1].locations.latitude},${validStops[validStops.length - 1].locations.longitude}`;
+      const waypoints   = validStops.slice(1, -1).map((s) => `${s.locations.latitude},${s.locations.longitude}`).join("|");
+      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""}&travelmode=${travelMode}`, "_blank");
+    } else if (route?.geometry_points && route.geometry_points.length > 1) {
+      const pts         = route.geometry_points;
+      const origin      = `${pts[0][0]},${pts[0][1]}`;
+      const destination = `${pts[pts.length - 1][0]},${pts[pts.length - 1][1]}`;
+      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${travelMode}`, "_blank");
+    }
+  }
+
+  const canNavigate =
+    stops.some((s) => s.locations.latitude) ||
+    (route?.geometry_points != null && route.geometry_points.length > 1);
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface)" }}>
@@ -213,6 +329,7 @@ export default function RouteDetailClient() {
   return (
     <div className="min-h-screen pb-44" style={{ backgroundColor: "var(--color-surface)" }}>
 
+      {/* Cover afbeelding */}
       <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-200">
         <Image
           src={imgError ? fallback : (route.cover_image_url ?? fallback)}
@@ -235,8 +352,9 @@ export default function RouteDetailClient() {
         )}
       </div>
 
-      <div className="px-5 py-5 space-y-6">
+      <div className="px-5 py-5 space-y-5">
 
+        {/* Titel + badges */}
         <div>
           <h1 className="text-2xl font-extrabold leading-tight mb-3" style={{ color: "var(--color-text)" }}>{route.title}</h1>
           <div className="flex flex-wrap gap-2">
@@ -269,21 +387,20 @@ export default function RouteDetailClient() {
           <p className="text-xs" style={{ color: "var(--color-text-3)", opacity: 0.7 }}>
             {route.attribution}
             {route.source_url && (
-              <> · <a href={route.source_url} target="_blank" rel="noopener noreferrer"
-                      className="underline underline-offset-2">bron</a></>
+              <> · <a href={route.source_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">bron</a></>
             )}
             {route.license && ` · ${route.license}`}
           </p>
         )}
 
-        {/* Kaartpreview — stops hebben prioriteit, anders geometry_points */}
-        {stops.length > 0
-          ? <RouteStopMap stops={stops} />
-          : route.geometry_points && route.geometry_points.length > 1
-            ? <RouteGeometryMap points={route.geometry_points} />
-            : null
-        }
+        {/* Interactieve kaart */}
+        <RouteInteractiveMap
+          points={route.geometry_points}
+          stops={stops}
+          routeType={route.route_type}
+        />
 
+        {/* Routestops */}
         {stops.length > 0 && (
           <div>
             <h2 className="text-base font-extrabold mb-3" style={{ color: "var(--color-text)" }}>{t("route_detail.route_stops")}</h2>
@@ -310,6 +427,7 @@ export default function RouteDetailClient() {
         )}
       </div>
 
+      {/* Actie-balk */}
       <div
         className="fixed left-0 right-0 z-40 px-4 py-3"
         style={{
@@ -319,19 +437,9 @@ export default function RouteDetailClient() {
         }}
       >
         <div className="flex gap-3 max-w-lg mx-auto">
-          {/* Start route → Google Maps with all stops as waypoints */}
           <button
-            onClick={() => {
-              const valid = stops.filter((s) => s.locations.latitude && s.locations.longitude);
-              if (valid.length === 0) return;
-              const origin      = `${valid[0].locations.latitude},${valid[0].locations.longitude}`;
-              const destination = `${valid[valid.length - 1].locations.latitude},${valid[valid.length - 1].locations.longitude}`;
-              const waypoints   = valid.slice(1, -1).map((s) => `${s.locations.latitude},${s.locations.longitude}`).join("|");
-              const travelMode  = route.route_type === "bike" || route.route_type === "walk" ? (route.route_type === "bike" ? "bicycling" : "walking") : "driving";
-              const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""}&travelmode=${travelMode}`;
-              window.open(url, "_blank");
-            }}
-            disabled={stops.filter((s) => s.locations.latitude).length === 0}
+            onClick={handleNavigate}
+            disabled={!canNavigate}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-tulip-500 text-white shadow-md shadow-tulip-200 hover:bg-tulip-600 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <MapPin size={17} /> {t("common.navigate")}
@@ -342,7 +450,7 @@ export default function RouteDetailClient() {
             disabled={saving}
             className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
                         ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "border-tulip-200 text-tulip-500 hover:border-tulip-400"}`}
-                     style={!saved ? { backgroundColor: "var(--color-surface)" } : {}}
+            style={!saved ? { backgroundColor: "var(--color-surface)" } : {}}
           >
             {saving ? <Loader2 size={17} className="animate-spin" /> : <Heart size={17} className={saved ? "fill-white" : ""} />}
             {saved ? t("common.saved") : t("common.save")}
