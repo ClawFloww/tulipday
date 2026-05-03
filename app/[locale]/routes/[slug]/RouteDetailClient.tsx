@@ -5,11 +5,23 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2 } from "lucide-react";
+import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { getOrCreateSessionId } from "@/lib/session";
+
+type MapLocation = {
+  id: string;
+  title: string;
+  category: string;
+  short_description: string | null;
+  image_url: string | null;
+  slug: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+};
 
 const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
@@ -22,18 +34,31 @@ const CATEGORY_COLOR: Record<string, string> = {
   bike_rental:  "#a855f7",
 };
 
+const CATEGORY_LABEL: Record<string, string> = {
+  flower_field: "Bollenveld",
+  photo_spot:   "Fotoplek",
+  attraction:   "Attractie",
+  food:         "Eten & Drinken",
+  parking:      "Parkeren",
+  bike_rental:  "Fietsverhuur",
+};
+
 // ── Interactieve MapLibre-kaart ───────────────────────────────────────────────
 
 function RouteInteractiveMap({
   points,
   stops,
+  onLocationSelect,
 }: {
-  points?:    [number, number][] | null;
-  stops:      RouteStop[];
-  routeType?: string | null;
+  points?:           [number, number][] | null;
+  stops:             RouteStop[];
+  routeType?:        string | null;
+  onLocationSelect:  (loc: MapLocation) => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<maplibregl.Map | null>(null);
+  const containerRef       = useRef<HTMLDivElement>(null);
+  const mapRef             = useRef<maplibregl.Map | null>(null);
+  const onSelectRef        = useRef(onLocationSelect);
+  useEffect(() => { onSelectRef.current = onLocationSelect; }, [onLocationSelect]);
 
   // Bouw [lng, lat]-coördinaten voor MapLibre (stops hebben voorrang)
   const routeCoords: [number, number][] =
@@ -123,7 +148,7 @@ function RouteInteractiveMap({
         const buf    = 0.04; // ~3 km buffer
         const { data: locations } = await supabase
           .from("locations")
-          .select("id, title, category, latitude, longitude")
+          .select("id, title, category, latitude, longitude, short_description, image_url, slug, address")
           .eq("is_active", true)
           .gte("latitude",  Math.min(...lats)  - buf)
           .lte("latitude",  Math.max(...lats)  + buf)
@@ -135,13 +160,19 @@ function RouteInteractiveMap({
           const color = CATEGORY_COLOR[loc.category as string] ?? "#6b7280";
           const el    = document.createElement("div");
           el.style.cssText = [
-            "width:10px", "height:10px", "border-radius:50%",
+            "width:14px", "height:14px", "border-radius:50%",
             `background:${color}`,
-            "border:1.5px solid white",
-            "box-shadow:0 1px 4px rgba(0,0,0,.28)",
+            "border:2px solid white",
+            "box-shadow:0 1px 4px rgba(0,0,0,.35)",
             "cursor:pointer",
+            "transition:transform 0.15s",
           ].join(";");
-          el.title = loc.title;
+          el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.4)"; });
+          el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            onSelectRef.current(loc as MapLocation);
+          });
           new maplibregl.Marker({ element: el })
             .setLngLat([loc.longitude, loc.latitude])
             .addTo(map);
@@ -221,17 +252,18 @@ function formatDuration(min: number): string {
 // ── Hoofdcomponent ────────────────────────────────────────────────────────────
 
 export default function RouteDetailClient() {
-  const { slug } = useParams<{ slug: string }>();
-  const router   = useRouter();
+  const { slug, locale } = useParams<{ slug: string; locale: string }>();
+  const router           = useRouter();
   const { t }    = useT();
 
-  const [route,    setRoute]    = useState<Route | null>(null);
-  const [stops,    setStops]    = useState<RouteStop[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [saved,    setSaved]    = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [imgError, setImgError] = useState(false);
+  const [route,            setRoute]           = useState<Route | null>(null);
+  const [stops,            setStops]           = useState<RouteStop[]>([]);
+  const [loading,          setLoading]         = useState(true);
+  const [notFound,         setNotFound]        = useState(false);
+  const [saved,            setSaved]           = useState(false);
+  const [saving,           setSaving]          = useState(false);
+  const [imgError,         setImgError]        = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null);
 
   const fallback = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200";
 
@@ -397,6 +429,7 @@ export default function RouteDetailClient() {
           points={route.geometry_points}
           stops={stops}
           routeType={route.route_type}
+          onLocationSelect={setSelectedLocation}
         />
 
         {/* Routestops */}
@@ -425,6 +458,68 @@ export default function RouteDetailClient() {
           </div>
         )}
       </div>
+
+      {/* Locatie info-sheet */}
+      {selectedLocation && (
+        <div
+          className="fixed inset-0 z-50"
+          onClick={() => setSelectedLocation(null)}
+        >
+          <div
+            className="absolute left-0 right-0 rounded-t-3xl shadow-2xl p-5 pb-8"
+            style={{
+              bottom: "calc(60px + env(safe-area-inset-bottom))",
+              backgroundColor: "var(--color-surface-2)",
+              border: "1px solid var(--color-border)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle */}
+            <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: "var(--color-border)" }} />
+
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex-1 min-w-0">
+                {/* Categorie badge */}
+                <span
+                  className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mb-2 text-white"
+                  style={{ backgroundColor: CATEGORY_COLOR[selectedLocation.category] ?? "#6b7280" }}
+                >
+                  {CATEGORY_LABEL[selectedLocation.category] ?? selectedLocation.category}
+                </span>
+                <h3 className="text-base font-extrabold leading-snug" style={{ color: "var(--color-text)" }}>
+                  {selectedLocation.title}
+                </h3>
+                {selectedLocation.address && (
+                  <p className="flex items-center gap-1 text-xs mt-1" style={{ color: "var(--color-text-3)" }}>
+                    <MapPin size={10} className="flex-shrink-0" />
+                    {selectedLocation.address}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setSelectedLocation(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "var(--color-surface)", color: "var(--color-text-3)" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {selectedLocation.short_description && (
+              <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--color-text-2)" }}>
+                {selectedLocation.short_description}
+              </p>
+            )}
+
+            <button
+              onClick={() => router.push(`/${locale}/locations/${selectedLocation.slug}`)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white bg-tulip-500 hover:bg-tulip-600 active:scale-[0.98] transition-all"
+            >
+              Bekijk locatie <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Actie-balk */}
       <div
