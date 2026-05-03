@@ -27,7 +27,6 @@ const CATEGORY_COLOR: Record<string, string> = {
 function RouteInteractiveMap({
   points,
   stops,
-  routeType,
 }: {
   points?:    [number, number][] | null;
   stops:      RouteStop[];
