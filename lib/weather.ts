@@ -145,18 +145,29 @@ function weathercodeScore(code: number): number {
   return 10;                                                         // Zware regen/sneeuw/onweer
 }
 
+// Max toegestane score op basis van weercode — voorkomt "Goed" bij neerslag
+function weathercodeCap(code: number): number {
+  if (code <= 48)                                        return 100; // Helder/bewolkt/mist
+  if (code === 51 || code === 53)                        return 55;  // Lichte/matige motregen → max "Redelijk"
+  if (code === 55 || code === 61 || code === 80 ||
+      code === 81)                                       return 45;  // Zware motregen / lichte regen / buien
+  if (code === 63 || code === 82)                        return 30;  // Matige regen / zware buien
+  return 15;                                                         // Zware regen / sneeuw / onweer
+}
+
 export function calcCyclingScore(
   temp: number,
   wind: number,
   rain: number,
   code: number,
 ): number {
-  return Math.round(
+  const raw = Math.round(
     tempScore(temp)          * 0.30 +
     windScore(wind)          * 0.35 +
     rainScore(rain)          * 0.25 +
     weathercodeScore(code)   * 0.10,
   );
+  return Math.min(raw, weathercodeCap(code));
 }
 
 export function cyclingScoreLabel(score: number): string {
@@ -174,12 +185,13 @@ export function calcWalkingScore(
   rain: number,
   code: number,
 ): number {
-  return Math.round(
+  const raw = Math.round(
     tempScore(temp)        * 0.35 +
     windScore(wind)        * 0.15 +
     rainScore(rain)        * 0.40 +
     weathercodeScore(code) * 0.10,
   );
+  return Math.min(raw, weathercodeCap(code));
 }
 
 export function walkingScoreLabel(score: number): string {
