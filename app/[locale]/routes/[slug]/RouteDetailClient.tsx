@@ -48,11 +48,13 @@ const CATEGORY_LABEL: Record<string, string> = {
 function RouteInteractiveMap({
   points,
   stops,
+  locations,
   onLocationSelect,
 }: {
   points?:           [number, number][] | null;
   stops:             RouteStop[];
   routeType?:        string | null;
+  locations:         MapLocation[];
   onLocationSelect:  (loc: MapLocation) => void;
 }) {
   const containerRef       = useRef<HTMLDivElement>(null);
@@ -84,7 +86,7 @@ function RouteInteractiveMap({
       "top-right",
     );
 
-    map.on("load", async () => {
+    map.on("load", () => {
       // Routelijn
       if (routeCoords.length > 1) {
         map.addSource("route", {
@@ -141,46 +143,32 @@ function RouteInteractiveMap({
         new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
       });
 
-      // Locaties ophalen binnen de bounding box van de route
-      if (routeCoords.length > 0) {
-        const lngs   = routeCoords.map((c) => c[0]);
-        const lats   = routeCoords.map((c) => c[1]);
-        const buf    = 0.04; // ~3 km buffer
-        const { data: locations } = await supabase
-          .from("locations")
-          .select("id, title, category, latitude, longitude, short_description, image_url, slug, address")
-          .eq("is_active", true)
-          .gte("latitude",  Math.min(...lats)  - buf)
-          .lte("latitude",  Math.max(...lats)  + buf)
-          .gte("longitude", Math.min(...lngs) - buf)
-          .lte("longitude", Math.max(...lngs) + buf);
-
-        (locations ?? []).forEach((loc) => {
-          if (!loc.latitude || !loc.longitude) return;
-          const color = CATEGORY_COLOR[loc.category as string] ?? "#6b7280";
-          const el    = document.createElement("div");
-          el.style.cssText = [
-            "width:18px", "height:18px", "border-radius:50%",
-            `background:${color}`,
-            "border:2.5px solid white",
-            "box-shadow:0 1px 6px rgba(0,0,0,.4)",
-            "cursor:pointer",
-            "transition:transform 0.15s",
-            "pointer-events:auto",
-            "position:relative", "z-index:1",
-          ].join(";");
-          el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.5)"; });
-          el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
-          // Gebruik pointerdown i.p.v. click — werkt betrouwbaarder in MapLibre op desktop
-          el.addEventListener("pointerdown", (e) => {
-            e.stopPropagation();
-            onSelectRef.current(loc as MapLocation);
-          });
-          new maplibregl.Marker({ element: el })
-            .setLngLat([loc.longitude, loc.latitude])
-            .addTo(map);
+      // Locatiemarkers (aangeleverd via prop)
+      locations.forEach((loc) => {
+        if (!loc.latitude || !loc.longitude) return;
+        const color = CATEGORY_COLOR[loc.category as string] ?? "#6b7280";
+        const el    = document.createElement("div");
+        el.style.cssText = [
+          "width:18px", "height:18px", "border-radius:50%",
+          `background:${color}`,
+          "border:2.5px solid white",
+          "box-shadow:0 1px 6px rgba(0,0,0,.4)",
+          "cursor:pointer",
+          "transition:transform 0.15s",
+          "pointer-events:auto",
+          "position:relative", "z-index:1",
+        ].join(";");
+        el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.5)"; });
+        el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
+        // Gebruik pointerdown i.p.v. click — werkt betrouwbaarder in MapLibre op desktop
+        el.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          onSelectRef.current(loc);
         });
-      }
+        new maplibregl.Marker({ element: el })
+          .setLngLat([loc.longitude, loc.latitude])
+          .addTo(map);
+      });
 
       // Pas bounds aan op de route
       if (routeCoords.length > 1) {
@@ -267,6 +255,7 @@ export default function RouteDetailClient() {
   const [saving,           setSaving]          = useState(false);
   const [imgError,         setImgError]        = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null);
+  const [nearbyLocations,  setNearbyLocations] = useState<MapLocation[]>([]);
 
   const fallback = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200";
 
@@ -281,8 +270,32 @@ export default function RouteDetailClient() {
       const { data: s } = await supabase
         .from("route_stops").select("id, sort_order, locations(*)")
         .eq("route_id", r.id).order("sort_order");
-      setStops((s as unknown as RouteStop[]) ?? []);
+      const fetchedStops = (s as unknown as RouteStop[]) ?? [];
+      setStops(fetchedStops);
       setLoading(false);
+
+      // Bezienswaardigheden ophalen binnen de bounding box van de route
+      const coords: [number, number][] =
+        fetchedStops.length > 0
+          ? fetchedStops
+              .filter((st) => st.locations.latitude && st.locations.longitude)
+              .map((st) => [st.locations.longitude as number, st.locations.latitude as number])
+          : (r.geometry_points ?? []).map(([lat, lng]: [number, number]) => [lng, lat]);
+
+      if (coords.length > 0) {
+        const lngs = coords.map((c) => c[0]);
+        const lats = coords.map((c) => c[1]);
+        const buf  = 0.009; // ~1 km buffer
+        const { data: locs } = await supabase
+          .from("locations")
+          .select("id, title, category, latitude, longitude, short_description, image_url, slug, address")
+          .eq("is_active", true)
+          .gte("latitude",  Math.min(...lats)  - buf)
+          .lte("latitude",  Math.max(...lats)  + buf)
+          .gte("longitude", Math.min(...lngs) - buf)
+          .lte("longitude", Math.max(...lngs) + buf);
+        setNearbyLocations((locs as MapLocation[]) ?? []);
+      }
     }
     fetchRoute();
   }, [slug]);
@@ -432,6 +445,7 @@ export default function RouteDetailClient() {
           points={route.geometry_points}
           stops={stops}
           routeType={route.route_type}
+          locations={nearbyLocations}
           onLocationSelect={setSelectedLocation}
         />
 
@@ -456,6 +470,74 @@ export default function RouteDetailClient() {
                     )}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bezienswaardigheden onderweg */}
+        {nearbyLocations.length > 0 && (
+          <div>
+            <h2 className="text-base font-extrabold mb-3" style={{ color: "var(--color-text)" }}>
+              Bezienswaardigheden onderweg
+            </h2>
+            <p className="text-xs mb-4 -mt-2" style={{ color: "var(--color-text-3)" }}>
+              {nearbyLocations.length} plekken langs deze route
+            </p>
+            <div className="space-y-3">
+              {nearbyLocations.map((loc) => (
+                <button
+                  key={loc.id}
+                  onClick={() => setSelectedLocation(loc)}
+                  className="w-full flex items-stretch gap-3 rounded-2xl overflow-hidden text-left shadow-sm active:scale-[0.98] transition-transform"
+                  style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+                >
+                  {/* Foto */}
+                  <div className="w-24 flex-shrink-0 relative bg-gray-100">
+                    {loc.image_url ? (
+                      <Image
+                        src={loc.image_url}
+                        alt={loc.title}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ backgroundColor: CATEGORY_COLOR[loc.category] ?? "#6b7280", opacity: 0.15 }}
+                      />
+                    )}
+                    {/* Categorie-kleurstreep links */}
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-1"
+                      style={{ backgroundColor: CATEGORY_COLOR[loc.category] ?? "#6b7280" }}
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 py-3 pr-3">
+                    <span
+                      className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-1.5 text-white"
+                      style={{ backgroundColor: CATEGORY_COLOR[loc.category] ?? "#6b7280" }}
+                    >
+                      {CATEGORY_LABEL[loc.category] ?? loc.category}
+                    </span>
+                    <p className="text-sm font-bold leading-snug line-clamp-1" style={{ color: "var(--color-text)" }}>
+                      {loc.title}
+                    </p>
+                    {loc.short_description && (
+                      <p className="text-xs leading-relaxed mt-0.5 line-clamp-2" style={{ color: "var(--color-text-3)" }}>
+                        {loc.short_description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Pijl */}
+                  <div className="flex items-center pr-3 flex-shrink-0" style={{ color: "var(--color-text-3)" }}>
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
               ))}
             </div>
           </div>
