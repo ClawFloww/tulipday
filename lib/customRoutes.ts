@@ -16,7 +16,9 @@ export interface CustomRoute {
 export function getCustomRoutes(): CustomRoute[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CustomRoute[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
