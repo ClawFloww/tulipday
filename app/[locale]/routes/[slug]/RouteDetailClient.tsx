@@ -87,7 +87,7 @@ export default function RouteDetailClient() {
         const buf  = 0.009; // ~1 km buffer
         const { data: locs } = await supabase
           .from("locations")
-          .select("id, title, category, latitude, longitude, short_description, image_url, slug, address")
+          .select("id, title, category, latitude, longitude, short_description, image_url, slug, address, bloom_status")
           .eq("is_active", true)
           .gte("latitude",  Math.min(...lats)  - buf)
           .lte("latitude",  Math.max(...lats)  + buf)
