@@ -1,86 +1,24 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, MapPin, Loader2, ChevronRight, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { Location, Route, OnboardingPrefs, Category, RouteType } from "@/lib/types";
+import { Location } from "@/lib/types";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { useT } from "@/lib/i18n-context";
-import { MAX_RECOMMENDED, SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT, EARTH_RADIUS_KM } from "@/lib/constants";
-import { getCachedCoords, setCachedCoords } from "@/lib/geolocation";
+import { SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT } from "@/lib/constants";
 import { isPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
 import { useWeather } from "@/hooks/useWeather";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { useHomeData } from "@/hooks/useHomeData";
 import WeatherCard from "@/components/weather/WeatherCard";
 import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
 import { CorsoLiveBanner } from "@/components/corso/CorsoLiveBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppTour } from "@/components/ui/AppTour";
-
-const INTENT_TO_CATEGORY: Record<string, Category> = {
-  blooming_fields: "flower_field",
-  photo_spots:     "photo_spot",
-  quiet_route:     "flower_field",
-  family_trip:     "attraction",
-  flowers_lunch:   "food",
-  flowers_beach:   "flower_field",
-};
-
-function getRecommended(all: Location[], prefs: OnboardingPrefs | null): Location[] {
-  if (!prefs) return all.slice(0, MAX_RECOMMENDED);
-  const targetCategory = INTENT_TO_CATEGORY[prefs.intent];
-  const matches = targetCategory ? all.filter((l) => l.category === targetCategory) : all;
-  if (prefs.transport === "walking" || prefs.transport === "bike") {
-    const accessible = matches.filter((l) => l.access_type === "public_access");
-    if (accessible.length > 0) return accessible.slice(0, MAX_RECOMMENDED);
-  }
-  return matches.slice(0, MAX_RECOMMENDED);
-}
-
-// Vervoermiddel uit onboarding → route_type in database
-const TRANSPORT_TO_ROUTE_TYPE: Record<string, RouteType> = {
-  bike:    "bike",
-  car:     "car",
-  walking: "walk",
-};
-
-// Intent kan ook een route-type suggereren
-const INTENT_TO_ROUTE_TYPE: Partial<Record<string, RouteType>> = {
-  photo_spots:  "photo",
-  family_trip:  "family",
-  quiet_route:  "walk",
-};
-
-function getRecommendedRoutes(all: Route[], prefs: OnboardingPrefs | null): Route[] {
-  if (!prefs) return all.filter((r) => r.is_featured).slice(0, 5);
-
-  // Bepaal gewenste route-types op basis van vervoer én intent
-  const byTransport = TRANSPORT_TO_ROUTE_TYPE[prefs.transport];
-  const byIntent    = INTENT_TO_ROUTE_TYPE[prefs.intent];
-  const wantedTypes = new Set<RouteType>([byTransport, byIntent].filter(Boolean) as RouteType[]);
-
-  let filtered = wantedTypes.size > 0
-    ? all.filter((r) => r.route_type && wantedTypes.has(r.route_type as RouteType))
-    : [...all];
-
-  // Filter op tijdsduur
-  if (prefs.time === "short") {
-    filtered = filtered.filter((r) => !r.duration_minutes || r.duration_minutes <= 90);
-  } else if (prefs.time === "half_day") {
-    filtered = filtered.filter((r) => !r.duration_minutes || r.duration_minutes <= 240);
-  }
-  // full_day: geen duurfilter
-
-  // Fallback als er niets overblijft
-  if (filtered.length === 0) filtered = all.filter((r) => r.is_featured);
-  if (filtered.length === 0) filtered = all;
-
-  return filtered.slice(0, 5);
-}
 
 // Leesbaar label voor de routes-sectietitel
 const TRANSPORT_LABEL: Record<string, string> = {
@@ -89,15 +27,6 @@ const TRANSPORT_LABEL: Record<string, string> = {
 const TIME_LABEL: Record<string, string> = {
   short: "kort", half_day: "halve dag", full_day: "hele dag",
 };
-
-function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 // ── Alles-zien overlay ────────────────────────────────────────────────────────
 
@@ -278,27 +207,23 @@ export default function HomePage() {
   const locale = (params?.locale as string) ?? "nl";
   const { t }  = useT();
 
-  const [prefs, setPrefs]               = useState<OnboardingPrefs | null>(null);
-  const [search, setSearch]             = useState("");
-  const [nearMeLoading, setNearMeLoading] = useState(false);
-  const [userCoords, setUserCoords]     = useState<{ lat: number; lon: number } | null>(null);
-  const [bestBlooms, setBestBlooms]     = useState<Location[]>([]);
-  const [recommended, setRecommended]   = useState<Location[]>([]);
-  const [allLocations, setAllLocations] = useState<Location[]>([]);
-  const [allRoutes, setAllRoutes] = useState<Route[]>([]);
-  const [photoSpots, setPhotoSpots]     = useState<Location[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [premium, setPremium]           = useState(true);
+  const [search,           setSearch]           = useState("");
+  const [debouncedSearch,  setDebouncedSearch]  = useState("");
+  const [premium,          setPremium]          = useState(true);
   const [showLocationCard, setShowLocationCard] = useState(false);
-  const [seeAll, setSeeAll] = useState<{ title: string; locations: Location[] } | null>(null);
-  const [showTour, setShowTour] = useState(false);
+  const [seeAll,           setSeeAll]           = useState<{ title: string; locations: Location[] } | null>(null);
+  const [showTour,         setShowTour]         = useState(false);
 
   // Locatiebepaling met GPS-fallback naar Lisse
   const location = useUserLocation();
   // Weerdata op basis van gebruikerslocatie
   const weather  = useWeather(location.coords);
+
+  // Data-fetching, filtering en near-me logica
+  const {
+    bestBlooms, recommended, recommendedRoutes, photoSpots,
+    prefs, loading, error, searchResults, nearMeLoading, userCoords, handleNearMe,
+  } = useHomeData({ searchQuery: debouncedSearch });
 
   useEffect(() => { setPremium(isPremium()); }, []);
 
@@ -314,84 +239,6 @@ export default function HomePage() {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 200);
     return () => clearTimeout(timer);
   }, [search]);
-
-  useEffect(() => {
-    const raw = localStorage.getItem("tulipday_onboarding");
-    if (raw) { try { setPrefs(JSON.parse(raw)); } catch {} }
-  }, []);
-
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const [{ data: allLocs, error: locsError }, { data: routes, error: routesError }] =
-        await Promise.all([
-          supabase.from("locations").select("*").eq("is_active", true),
-          supabase.from("routes").select("*").eq("is_active", true).order("is_featured", { ascending: false }),
-        ]);
-
-      if (locsError || routesError) {
-        console.error("Fout bij ophalen data:", locsError ?? routesError);
-        setError(true);
-        setLoading(false);
-        return;
-      }
-
-      const locs = allLocs ?? [];
-      // Toon featured peak/blooming velden; als geen featured beschikbaar, val terug op alle peak/blooming
-      const blooming = locs.filter((l) => l.bloom_status === "peak" || l.bloom_status === "blooming");
-      const featured = blooming.filter((l) => l.is_featured);
-      setBestBlooms((featured.length > 0 ? featured : blooming).slice(0, 12));
-      setAllLocations(locs);
-      setAllRoutes(routes ?? []);
-      setPhotoSpots(locs.filter((l) => l.category === "photo_spot"));
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (allLocations.length > 0) setRecommended(getRecommended(allLocations, prefs));
-  }, [allLocations, prefs]);
-
-  const applyNearMe = useCallback((coords: { lat: number; lon: number }) => {
-    setUserCoords(coords);
-    setNearMeLoading(false);
-    setRecommended(
-      [...allLocations]
-        .filter((l) => l.latitude != null && l.longitude != null)
-        .sort((a, b) =>
-          distanceKm(coords.lat, coords.lon, a.latitude!, a.longitude!) -
-          distanceKm(coords.lat, coords.lon, b.latitude!, b.longitude!)
-        )
-        .slice(0, MAX_RECOMMENDED)
-    );
-  }, [allLocations]);
-
-  const handleNearMe = useCallback(() => {
-    const cached = getCachedCoords();
-    if (cached) {
-      applyNearMe({ lat: cached.lat, lon: cached.lng });
-      return;
-    }
-    if (!navigator.geolocation) return;
-    setNearMeLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setCachedCoords(coords.lat, coords.lon);
-        applyNearMe(coords);
-      },
-      () => setNearMeLoading(false)
-    );
-  }, [applyNearMe]);
-
-  const searchResults = useMemo(() => {
-    if (!debouncedSearch) return null;
-    const q = debouncedSearch.toLowerCase();
-    return allLocations.filter(
-      (l) => l.title.toLowerCase().includes(q) || l.address?.toLowerCase().includes(q)
-    );
-  }, [debouncedSearch, allLocations]);
 
   const hour = new Date().getHours();
   const greetingKey = hour < 12 ? "greeting_morning" : hour < 18 ? "greeting_afternoon" : "greeting_evening";
@@ -532,9 +379,9 @@ export default function HomePage() {
           >
             {loading
               ? Array.from({ length: SKELETON_ROUTE_COUNT }).map((_, i) => <SkeletonCard key={i} wide />)
-              : getRecommendedRoutes(allRoutes, prefs).length === 0
+              : recommendedRoutes.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_routes")}</p>
-              : getRecommendedRoutes(allRoutes, prefs).map((route) => (
+              : recommendedRoutes.map((route) => (
                   <RouteCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
                 ))}
           </Section>
