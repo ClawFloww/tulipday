@@ -714,6 +714,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
   const [showPicker,    setShowPicker]    = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [loaded,        setLoaded]        = useState(false);
+  const [showRoutes,    setShowRoutes]    = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -961,28 +962,40 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
 
       {/* ── Featured routes ── */}
       <div>
-        <h3 className="text-sm font-extrabold text-gray-700 mb-3 uppercase tracking-wide">
-          🗺 Featured routes ({routes.filter((r) => r.is_featured).length})
-        </h3>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {routes.length === 0 && <p className="p-4 text-sm text-gray-400">Nog geen routes</p>}
-          {routes.map((route) => (
-            <label key={route.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <input
-                type="checkbox" checked={!!route.is_featured}
-                onChange={() => toggleFeatured(route.id, route.is_featured)}
-                className="w-4 h-4 accent-rose-600 rounded"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{route.title}</p>
-                <p className="text-xs text-gray-400">{route.route_type} · {route.distance_km ? `${route.distance_km} km` : "—"}</p>
-              </div>
-              {route.is_featured && (
-                <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">Featured</span>
-              )}
-            </label>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowRoutes((v) => !v)}
+          className="w-full flex items-center justify-between mb-3"
+        >
+          <h3 className="text-sm font-extrabold text-gray-700 uppercase tracking-wide">
+            🗺 Featured routes ({routes.filter((r) => r.is_featured).length})
+          </h3>
+          <ChevronDown
+            size={16}
+            className={`text-gray-400 transition-transform duration-200 ${showRoutes ? "rotate-180" : ""}`}
+          />
+        </button>
+        {showRoutes && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+            {routes.length === 0 && <p className="p-4 text-sm text-gray-400">Nog geen routes</p>}
+            {routes.map((route) => (
+              <label key={route.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox" checked={!!route.is_featured}
+                  onChange={() => toggleFeatured(route.id, route.is_featured)}
+                  className="w-4 h-4 accent-rose-600 rounded"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{route.title}</p>
+                  <p className="text-xs text-gray-400">{route.route_type} · {route.distance_km ? `${route.distance_km} km` : "—"}</p>
+                </div>
+                {route.is_featured && (
+                  <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">Featured</span>
+                )}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
