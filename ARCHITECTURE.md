@@ -29,9 +29,11 @@ tulipday/
 │   │   ├── bloom-demo/         # Bloemstatus demo
 │   │   ├── active-route/       # Route-navigatie in uitvoering
 │   │   ├── fietsroutes/        # Knooppuntenroutes
+│   │   ├── search/             # Zoekpagina (nieuw)
 │   │   └── error.tsx           # Error boundary
 │   ├── admin/                  # Admin panel (wachtwoord-beschermd, geen [locale])
 │   │   ├── page.tsx            # Volledig admin UI: CRUD + fotomodernisering
+│   │   ├── corso-fotos/        # Aparte admin pagina voor corsofoto-moderatie (nieuw)
 │   │   ├── actions.ts          # Next.js server actions voor database CRUD
 │   │   └── photo-actions.ts    # Fotomodernisering server actions
 │   └── api/                    # Next.js API routes
@@ -43,6 +45,7 @@ tulipday/
 │   ├── BottomNavigation.tsx    # 5-tabs navigatiebalk (globaal)
 │   ├── FilterChips.tsx         # Filterknoppen
 │   ├── SwipeCard.tsx           # Tinder-style swipe cards
+│   ├── UnsplashPhotoFeed.tsx   # Unsplash stockfoto-feed (nieuw)
 │   ├── ui/                     # Generieke UI-bouwstenen
 │   ├── bloom/                  # Bloemstatus-gerelateerde components
 │   ├── corso/                  # Bloemencorso components
@@ -54,10 +57,12 @@ tulipday/
 ├── messages/                   # i18n vertalingen (nl, en, de, fr, es, zh)
 ├── i18n/                       # next-intl configuratie
 ├── middleware.ts               # i18n routing middleware
-├── supabase/migrations/        # 35 incrementele database migrations
+├── supabase/migrations/        # 36 incrementele database migrations
+├── __tests__/                  # Vitest unit tests (9 bestanden) — nieuw
+├── vitest.config.ts            # Vitest configuratie — nieuw
 ├── public/                     # Statische bestanden
 ├── icons/                      # Custom SVG icons
-└── constants/                  # Gedeelde constanten
+└── constants/                  # Gedeelde constanten (legal.ts)
 ```
 
 ---
@@ -72,14 +77,17 @@ tulipday/
 | `components/ui/AppBar.tsx` | Header met terugknop en optionele acties | Diverse detailpagina's |
 | `components/ui/PageTransition.tsx` | Fade-in animatie bij pagina-overgang | `app/[locale]/layout.tsx` |
 | `components/ui/AppTour.tsx` | Onboarding tour (Joyride-stijl) | `app/[locale]/home/` |
+| `components/ui/ThemeToggle.tsx` | Toggle-knop tussen licht en donker thema, gebruikt `useTheme` | `settings/` |
 
 ### Home & Discovery
 
 | Component | Verantwoordelijkheid | Gebruikt in |
 |-----------|---------------------|-------------|
-| `app/[locale]/home/page.tsx` | Feed met aanbevolen locaties, routes, en weerskaart. Filtert op onboarding-voorkeuren. | Direct als pagina |
+| `app/[locale]/home/page.tsx` | Feed met aanbevolen locaties, routes, en weerskaart. Filtert op onboarding-voorkeuren. **587 regels** — zie hotspots. | Direct als pagina |
 | `app/[locale]/discover/page.tsx` | Swipe-kaarten (batch van 20). Gefilterd op bloemstatus, afstand, categorie. | Direct als pagina |
+| `app/[locale]/search/page.tsx` | Zoekpagina: realtime zoeken op naam over locaties en routes (219 regels). | Direct als pagina |
 | `components/SwipeCard.tsx` | Individuele swipe-kaart. Accepteer/afwijzen met drag-gesture. | `discover/page.tsx` |
+| `components/UnsplashPhotoFeed.tsx` | Toont Unsplash stockfoto's als galerij-fallback (89 regels). | Locatiedetail |
 
 ### Locaties
 
@@ -88,7 +96,7 @@ tulipday/
 | `app/[locale]/location/[slug]/` | Locatiedetail: foto-galerij, bloemstatus, openingstijden, routebeschrijving-link. | Directe navigatie |
 | `components/ui/LocationCard.tsx` | Kaartje voor een locatie in lijstweergave: foto, categorie-badge, bloemstatus. | `home/`, `discover/`, `map/` |
 | `components/ui/LocationPhotoGallery.tsx` | Foto-galerij met upload-mogelijkheid. Beheert upload-flow via Supabase Storage. | Locatiedetail |
-| `components/ui/PhotoUploadSheet.tsx` | Bottom sheet voor foto uploaden: camera/galerij keuze, bijsnijden, comprimeren, uploaden. | `LocationPhotoGallery` |
+| `components/ui/PhotoUploadSheet.tsx` | Bottom sheet voor foto uploaden: camera/galerij keuze, bijsnijden, comprimeren, uploaden. **451 regels** — zie hotspots. | `LocationPhotoGallery` |
 | `components/ui/PremiumGate.tsx` | Blokkeert premium features: toont upgrade-prompt. Gratis limiet: 10 locaties. | Diverse pagina's |
 
 ### Routes
@@ -96,7 +104,7 @@ tulipday/
 | Component | Verantwoordelijkheid | Gebruikt in |
 |-----------|---------------------|-------------|
 | `app/[locale]/routes/page.tsx` | Routeoverzicht met filters (type, featured). Premium gate na 2 routes. | Direct als pagina |
-| `app/[locale]/routes/[slug]/RouteDetailClient.tsx` | Routedetail: cover, kaart, stops, bezienswaardigheden onderweg. Haalt nabije locaties op (1 km buffer). | `routes/[slug]/page.tsx` |
+| `app/[locale]/routes/[slug]/RouteDetailClient.tsx` | Routedetail: cover, kaart, stops, bezienswaardigheden onderweg (1 km buffer). **642 regels** — zie hotspots. | `routes/[slug]/page.tsx` |
 | `components/routes/RouteListScreen.tsx` | Lijst-weergave van routes met filteropties. | `routes/page.tsx` |
 | `components/ui/RouteCard.tsx` | Kaartje voor een route: cover, afstand, duur, type-icoon. | `home/`, `routes/` |
 | `components/routes/RouteFilters.tsx` | Filter-UI voor routetype. | `routes/page.tsx` |
@@ -105,13 +113,16 @@ tulipday/
 | `components/routes/RouteMapPreview.tsx` | Statische kaartpreview voor een route. | `RouteCard` |
 | `components/map/RouteMiniMap.tsx` | Kleine kaart in RouteCard. | `RouteCard` |
 | `app/[locale]/route/custom/[shareId]/` | Gedeelde route (geen account vereist): toont waypoints + navigatieopties. | Directe navigatie via share-link |
+| `components/routes/GeneratedRouteCard.tsx` | Kaartje voor AI-gegenereerde routes met bloom-score en moeilijkheid (138 regels). | `fietsroutes/` |
+| `components/routes/BloomRouteComparison.tsx` | Vergelijkt bloom-scores van meerdere routes naast elkaar (83 regels). | `fietsroutes/` |
+| `components/routes/RouteAlternativeSuggestion.tsx` | Suggereert alternatieve routes op basis van huidige selectie (75 regels). | Routedetail |
 
 ### Kaart
 
 | Component | Verantwoordelijkheid | Gebruikt in |
 |-----------|---------------------|-------------|
-| `components/map/MapView.tsx` | Volledige kaartweergave (MapLibre GL). Markers voor alle locatiecategorieën. Geclusterd op zoom. Filterpaneel. | `map/page.tsx` (SSR disabled) |
-| `RouteInteractiveMap` (in `RouteDetailClient.tsx`) | Kaart met routelijn + genummerde stops + locatiemarkers. Klikbare markers openen info-sheet. | Geïntegreerd in `RouteDetailClient` |
+| `components/map/MapView.tsx` | Volledige kaartweergave (MapLibre GL). Markers voor alle locatiecategorieën. Geclusterd op zoom. Filterpaneel. **944 regels** — grootste component, zie hotspots. | `map/page.tsx` (SSR disabled) |
+| `RouteInteractiveMap` (in `RouteDetailClient.tsx`) | Kaart met routelijn + genummerde stops + locatiemarkers. Klikbare markers openen info-sheet. Ontvangt locaties als prop van parent. | Geïntegreerd in `RouteDetailClient` |
 
 ### Weer
 
@@ -139,16 +150,20 @@ tulipday/
 | Component | Verantwoordelijkheid | Gebruikt in |
 |-----------|---------------------|-------------|
 | `components/corso/CorsoLiveBanner.tsx` | Live timing banner: actief op 3e zaterdag april. | `home/`, `corso/` |
-| `components/corso/CorsoFeed.tsx` | Real-time feed van goedgekeurde corsofoto's. | `corso/page.tsx` |
+| `components/corso/CorsoFeed.tsx` | Real-time feed van goedgekeurde corsofoto's (329 regels). | `corso/page.tsx` |
 | `components/corso/CorsoPhotoUpload.tsx` | Upload-interface voor corsofoto's met stop-selectie. | `corso/page.tsx` |
 | `components/corso/CorsoMap.tsx` | Kaart met corsostops en livepositie. | `corso/page.tsx` |
 | `components/corso/CorsoPhotoModal.tsx` | Volledig scherm fotomodal voor corsofeed. | `CorsoFeed` |
+| `components/corso/CorsoPhotoFeed.tsx` | Gefilterde fotofeed per corsostop (123 regels). | `corso/page.tsx` |
+| `components/corso/CorsoUploadSheet.tsx` | Bottom sheet upload voor corsofoto's: stop-selectie, preview, upload (266 regels). | `corso/page.tsx` |
+| `components/corso/CorsoRouteMap.tsx` | Gedetailleerde kaart van de corsoroute met stoptijden en bezoekersinformatie (**336 regels**). | `corso/page.tsx` |
 
 ### Admin
 
 | Component | Verantwoordelijkheid | Gebruikt in |
 |-----------|---------------------|-------------|
-| `app/admin/page.tsx` | Monolitisch admin-paneel: locaties CRUD, routes CRUD, fotomodernisering (goedkeuren/afwijzen), bloom-statusbeheer, analytics. Wachtwoord-beschermd. | `/admin` |
+| `app/admin/page.tsx` | Monolitisch admin-paneel: locaties CRUD, routes CRUD, fotomodernisering, bloom-statusbeheer, analytics. Wachtwoord-beschermd. **1419 regels** — zie hotspots. | `/admin` |
+| `app/admin/corso-fotos/page.tsx` | Aparte pagina voor corsofoto-moderatie: goedkeuren/afwijzen per stop (190 regels). | `/admin/corso-fotos` |
 
 ---
 
@@ -157,11 +172,14 @@ tulipday/
 ### Primaire databronnen
 
 ```
-Open-Meteo API ──► useWeather hook ──► WeatherCard, WeatherForecast
-GPS/Browser   ──► useUserLocation hook ──► Home feed, MapView, weather
-Supabase DB   ──► supabase client ──► Alle pagina's (locations, routes)
-Supabase RT   ──► useLiveBloomSync ──► Real-time bloom updates
-tulipFields.ts ──► (in-memory) ──► Discover, bollenvelden kaart
+Open-Meteo API  ──► useWeather hook          ──► WeatherCard, WeatherForecast
+GPS/Browser     ──► useUserLocation hook     ──► Home feed, MapView, weather
+Supabase DB     ──► supabase client          ──► Alle pagina's (locations, routes)
+Supabase RT     ──► useLiveBloomSync         ──► Real-time bloom updates
+Supabase RT     ──► useCorsoPhotos           ──► Live corsofeed
+tulipFields.ts  ──► (in-memory)              ──► Discover, bollenvelden kaart
+OSRM API        ──► lib/routeGenerator       ──► Gegenereerde fietsroutes
+Unsplash API    ──► lib/unsplash             ──► Stockfoto-fallbacks
 ```
 
 ### Supabase data flow
@@ -175,11 +193,13 @@ Supabase (PostgreSQL + Storage + Realtime)
     │       │   └── .from("locations").select(...)
     │       │   └── .from("routes").select(...)
     │       │   └── .from("saved_items").insert/delete(...)
+    │       │   └── .from("shared_routes").insert/select(...)
     │       │
     │       └── hooks/
     │           ├── useWeather.ts (Open-Meteo, geen Supabase)
     │           ├── useLiveBloomSync.ts (Supabase Realtime channel)
-    │           └── useCorsoPhotos.ts (Supabase Realtime)
+    │           ├── useCorsoPhotos.ts (Supabase Realtime)
+    │           └── useCorsoUpload.ts (Supabase Storage upload)
     │
     └── supabase-admin-client.ts (service role, server-only)
             └── app/admin/actions.ts (server actions: CRUD, moderation)
@@ -220,7 +240,7 @@ useUserLocation() → coördinaten
     │
     ▼
 useWeather(lat, lng)
-    ├── Checkt localStorage cache (30 min TTL)
+    ├── Checkt localStorage cache (30 min TTL, key = tulipday_weather_{lat}_{lng})
     ├── GET Open-Meteo API (gratis, geen key)
     │   └── buildApiUrl(lat, lng) → Amsterdam timezone
     ├── parseOpenMeteo() → current + 7-day forecast
@@ -254,9 +274,46 @@ Upload foto via PhotoUploadSheet
     useLiveBloomSync() → Supabase Realtime → alle clients bijgewerkt
 ```
 
+### Route-generatie flow (nieuw)
+
+```
+Gebruiker kiest startpunt + straal + richting
+    │
+    ▼
+lib/routeGenerator.ts
+    ├── clusterFields(tulipFields, radiusKm) → clusters
+    ├── selectSpreadFields(clusters, max) → verspreide velden
+    ├── fetchOSRMRoute(start, waypoints) → geometry + afstand + duur
+    └── buildGeneratedRoute() → GeneratedRoute object
+            │
+            ▼
+    lib/bloomRoute.ts
+        ├── calcBloomScore(route, fieldStatuses) → 0-100
+        └── sortByBloomScore(routes) → gesorteerde lijst
+```
+
+### Custom routes flow (nieuw)
+
+```
+lib/customRoutes.ts (localStorage)
+    ├── getCustomRoutes() → CustomRoute[]
+    ├── saveCustomRoute(data) → CustomRoute
+    ├── updateCustomRoute(id, patch) → void
+    └── deleteCustomRoute(id) → void
+            │
+            ▼ (bij delen)
+    lib/sharedRoutes.ts
+        └── shareCustomRoute(route) → share_id (Supabase insert)
+                │
+                ▼
+        app/[locale]/route/custom/[shareId]/
+```
+
 ---
 
 ## 4. Externe dependencies
+
+### Runtime dependencies
 
 | Package | Versie | Doel |
 |---------|--------|------|
@@ -273,32 +330,49 @@ Upload foto via PhotoUploadSheet
 | `web-push` | ^3.6.7 | Web Push notificaties (server-side) |
 | `@capacitor/core` + plugins | ^8.3.0 | iOS/Android hybrid app build |
 | `tailwindcss` | ^3 | Utility-first CSS |
-| Open-Meteo API | — | Gratis weerdata, geen API key nodig |
-| Overpass API | — | OpenStreetMap queries voor routes |
-| OSRM | — | Routeberekening (duur, afstand) |
-| Unsplash API | — | Stockfoto's als fallback |
+
+### Externe APIs (geen package)
+
+| API | Doel |
+|-----|------|
+| Open-Meteo | Gratis weerdata, geen API key nodig |
+| Overpass API | OpenStreetMap queries voor routes |
+| OSRM | Routeberekening (duur, afstand) — gebruikt door `lib/routeGenerator.ts` |
+| Unsplash | Stockfoto's als fallback — gebruikt door `lib/unsplash.ts` |
+
+### Dev / test dependencies
+
+| Package | Versie | Doel |
+|---------|--------|------|
+| `vitest` | ^4.1.5 | Test runner |
+| `@testing-library/react` | ^16.3.2 | `renderHook` voor hook-tests |
+| `@vitejs/plugin-react` | ^6.0.1 | JSX-transform in Vitest |
+| `jsdom` | ^29.1.1 | DOM-simulatie voor localStorage/navigator |
 
 ---
 
 ## 5. Technische schuld & inconsistenties
 
 ### Dubbele navigatiecomponents
-`components/BottomNavigation.tsx` en `components/ui/BottomNav.tsx` bestaan naast elkaar. Beide implementeren een navigatiebalk. Onduidelijk welke de authoritative versie is; `app/[locale]/layout.tsx` importeert `BottomNavigation.tsx`.
+`components/BottomNavigation.tsx` en `components/ui/BottomNav.tsx` bestaan naast elkaar. Beide implementeren een navigatiebalk. `app/[locale]/layout.tsx` importeert `BottomNavigation.tsx`. `BottomNav.tsx` is vermoedelijk een ongebruikte kopie.
+
+### Dubbele corso hooks
+`hooks/useCorsoPhotos.ts` (Supabase Realtime feed lezen) en `hooks/useCorsoUpload.ts` (foto uploaden) bestaan naast elkaar. De grens is logisch, maar de naamgeving is inconsistent: de ene heet "Photos", de andere "Upload". Zowel `CorsoFeed.tsx` als `CorsoPhotoFeed.tsx` bestaan — relatie en verschil zijn onduidelijk uit de bestandsnamen alleen.
 
 ### Locatie-ophaling gedupliceerd in kaart
-`MapView.tsx` en `RouteDetailClient.tsx` bevatten allebei eigen Supabase-queries voor locaties met vergelijkbare bounding-box logica. Er is geen gedeelde hook of utility voor dit patroon.
+`MapView.tsx` en `RouteDetailClient.tsx` bevatten allebei eigen Supabase-queries voor locaties met bounding-box logica. Er is geen gedeelde hook of utility voor dit patroon.
 
 ### Admin zonder authenticatie
 Het admin-paneel (`/admin`) gebruikt een eenvoudig wachtwoord (env-var `ADMIN_PASSWORD`). Geen OAuth, geen sessietokens, geen CSRF-bescherming. Bij een gelekt wachtwoord is er geen tweede verdedigingslaag.
 
 ### tulipFields.ts als in-memory database
-`lib/tulipFields.ts` bevat 174 bollenvelden hardcoded in TypeScript. Deze data overlapt grotendeels met de `locations`-tabel in Supabase. Er zijn twee bronnen van waarheid voor bollenvelden: de hardcoded lijst (voor de Discover/swipe-functionaliteit) en de Supabase-tabel (voor de kaart en locatiedetails).
+`lib/tulipFields.ts` bevat 174 bollenvelden hardcoded in TypeScript. Deze data overlapt grotendeels met de `locations`-tabel in Supabase. Er zijn twee bronnen van waarheid voor bollenvelden: de hardcoded lijst (voor Discover/swipe en route-generatie) en de Supabase-tabel (voor kaart en locatiedetails). `lib/routeGenerator.ts` is volledig afhankelijk van `tulipFields.ts` — migratie naar Supabase zou ook de route-generator raken.
 
 ### Gemengde client/server-grens in admin
-`app/admin/page.tsx` is een client component (`"use client"`) van 1482 regels die rechtstreeks server actions aanroept. De combinatie van enorme componentomvang, gemixte data-fetching patterns, en directe mutaties maakt dit bestand moeilijk te onderhouden en testen.
+`app/admin/page.tsx` is een client component (`"use client"`) van 1419 regels die rechtstreeks server actions aanroept. Elke wijziging aan admin-functionaliteit vereist navigeren door dit monoliet.
 
 ### i18n voor admin ontbreekt
-Het admin-paneel is volledig in hard-coded Engels/Nederlands zonder gebruik van het i18n-systeem. Niet kritiek (alleen intern), maar inconsistent met de rest van de app.
+Het admin-paneel is volledig in hard-coded Nederlands zonder gebruik van het i18n-systeem. Niet kritiek (alleen intern), maar inconsistent met de rest van de app.
 
 ### Twee Supabase admin clients
 `lib/supabase-admin.ts` en `lib/supabase-admin-client.ts` bestaan naast elkaar. Beide exporteren een admin Supabase client met service role key. Onduidelijk welke wanneer gebruikt moet worden.
@@ -310,39 +384,54 @@ Er is één `error.tsx` op locale-niveau. Individuele pagina's hebben geen eigen
 `saved_items` zijn gekoppeld aan een random session ID in localStorage. Bij het wissen van browserdata verliest de gebruiker al zijn opgeslagen items permanent. Er is geen account-herstel mogelijkheid.
 
 ### geometry_points als JSON-array in plaats van PostGIS
-Route-geometrie is opgeslagen als een JSON-array van `[lat, lng]` pairs in een gewone `text`/`jsonb` kolom. PostGIS zou spatial queries, afstandsberekeningen en routing-queries mogelijk maken zonder client-side verwerking.
+Route-geometrie is opgeslagen als een JSON-array van `[lat, lng]` pairs in een gewone `jsonb` kolom. PostGIS zou spatial queries en afstandsberekeningen mogelijk maken zonder client-side verwerking.
 
-### Hardcoded API key in MapLibre style URL
-De MapTiler API key staat hardcoded in `RouteDetailClient.tsx` (en vermoedelijk ook in `MapView.tsx`): `key=SeaEiJkthxx3KNUCV0aI`. Dit is zichtbaar in de client-side bundle en zou via een environment variable moeten lopen.
+### Hardcoded MapTiler API key
+De MapTiler API key staat hardcoded in `RouteDetailClient.tsx` en vermoedelijk ook in `MapView.tsx`: zichtbaar in de client-side bundle. Zou via een environment variable moeten lopen.
+
+### home/page.tsx gegroeid naar 587 regels
+De homepagina is bijna verdubbeld ten opzichte van de oorspronkelijke ~300 regels. Combineert: locatie-ophaling, route-ophaling, weer-integratie, onboarding-check, corso-banner logica, en filtering/sortering. Groeit richting een tweede monoliet.
 
 ---
 
 ## 6. Complexiteitshotspots
 
-### `app/admin/page.tsx` — 1482 regels
-Het zwaarste bestand in de codebase. Bevat in één client component: wachtwoordverificatie, locaties CRUD, routes CRUD, fotomodernisering-workflow, bloom-status bulk-updates, en een analyticsoverzicht. Geen enkele logische sectie is gesplitst in subcomponents. Elke wijziging aan admin-functionaliteit vereist navigeren door dit monoliet.
+### `components/map/MapView.tsx` — 944 regels
+Het grootste component in de codebase. Bevat de volledige kaartlogica: marker-rendering voor alle categorieën, clustering, filterpaneel, categorie-selectie, en locatie-ophaling uit Supabase. MapLibre's imperatieve API in combinatie met React state maakt dit inherent complex en moeilijk te testen.
+
+**Suggestie**: Splitsen in `MapMarkerLayer.tsx` (markers + clustering), `MapFilterPanel.tsx` (filterpaneel), en een `useMapLocations` hook (data-fetching).
+
+### `app/admin/page.tsx` — 1419 regels
+Monolitisch admin-paneel. Bevat in één client component: wachtwoordverificatie, locaties CRUD, routes CRUD, fotomodernisering-workflow, bloom-status bulk-updates, en analyticsoverzicht. Iets kleiner geworden dan bij initiële inventarisatie (was 1482), maar nog steeds het zwaarste bestand na `MapView.tsx`.
 
 **Suggestie**: Splitsen in `AdminLocations.tsx`, `AdminRoutes.tsx`, `AdminPhotoModeration.tsx`, `AdminBloom.tsx`.
 
-### `app/[locale]/routes/[slug]/RouteDetailClient.tsx` — ~560 regels
-Bevat een ingebedde `RouteInteractiveMap`-component, de parent `RouteDetailClient`-component, de locatie-sheet, en alle data-fetching. De ingebedde MapLibre-hook met `useEffect` heeft een complexe levenscyclus die moeilijk te isoleren is.
+### `app/[locale]/routes/[slug]/RouteDetailClient.tsx` — 642 regels
+Gegroeid van ~560 naar 642 regels door toevoeging van de "Bezienswaardigheden onderweg"-sectie (Supabase-query + klikbare kaarten voor nabije locaties). Bevat een ingebedde `RouteInteractiveMap`-component, de parent `RouteDetailClient`, de locatie-sheet, en alle data-fetching.
 
 **Suggestie**: `RouteInteractiveMap` verplaatsen naar `components/map/RouteInteractiveMap.tsx`.
 
-### `lib/tulipFields.ts` — ~365 regels
-174 bollenvelden als hardcoded TypeScript-objecten. Bevat ook de Haversine-afstandsberekening, reliability-score logica, en filter-utilities. Mengeling van data en logica in één bestand. Elke update aan veldlocaties vereist een code-deploy.
+### `app/[locale]/home/page.tsx` — 587 regels
+Bijna verdubbeld ten opzichte van de oorspronkelijk gedocumenteerde ~300 regels. Combineert locatie-ophaling, route-ophaling, weer-integratie, onboarding-check, corso-banner logica en filtering/sortering. Bevat meerdere `useEffect`-chains en lokale state. Groeit richting een tweede admin-monoliet.
+
+**Suggestie**: Locatie-fetching naar een `useHomeLocations` hook; corso-logica naar een aparte `HomeCorsoSection`-component.
+
+### `components/ui/PhotoUploadSheet.tsx` — 451 regels
+Bottom sheet die de volledige foto-upload flow bevat: bron-selectie (camera/galerij), bijsnijden via `react-image-crop`, comprimeren via `browser-image-compression`, en Supabase Storage upload. Meerdere asynchrone stappen met foutafhandeling in één component.
+
+**Suggestie**: Upload-logica extraheren naar een `usePhotoUpload` hook.
+
+### `lib/tulipFields.ts` — 364 regels
+174 bollenvelden als hardcoded TypeScript-objecten, plus Haversine-afstandsberekening, reliability-score logica, en filter-utilities. Mengeling van data en logica. Elke update aan veldlocaties vereist een code-deploy.
 
 **Suggestie**: Data migreren naar Supabase `locations`-tabel; utility-functies apart houden.
 
-### `lib/weather.ts` — 305 regels
-Bevat WMO-weercode mapping, score-berekeningen (cycling + walking), caps per weercode, API-response parsing, en dag-naam-formattering. Goed gestructureerd maar groot genoeg dat het baat zou hebben bij splitsen in `weather-scoring.ts` en `weather-api.ts`.
+### `lib/weather.ts` — 304 regels
+Bevat WMO-weercode mapping, score-berekeningen (cycling + walking), caps per weercode, API-response parsing, en dag-naam-formattering. Goed gestructureerd maar zou baat hebben bij splitsen in `weather-scoring.ts` en `weather-api.ts`.
 
-### `app/[locale]/home/page.tsx` — ~300 regels
-Combineert: locatie-ophaling, route-ophaling, weer-integratie, onboarding-check, corso-banner logica, en filtering/sortering. Veel `useEffect`-chains en lokale state. Bij uitbreiding groeit dit snel naar een tweede monoliet.
-
-### `components/map/MapView.tsx`
-Bevat de volledige kaartlogica inclusief marker-rendering, clustering, filterpaneel, categorie-selectie, en locatie-ophaling. MapLibre's imperatieve API in combinatie met React state maakt dit inherent complex. Het bestand is moeilijk te testen en de grens tussen kaart-state en React-state is vaag.
+### `components/corso/CorsoRouteMap.tsx` — 336 regels
+Nieuwe complexiteitshotspot: kaartcomponent specifiek voor de corsoroute met stoptijden, bezoekersinformatie, en routeweergave. Bereikt al het niveau waarop splitsen overwogen moet worden.
 
 ---
 
-*Gegenereerd op 2026-05-04 op basis van volledige codebase-inspectie.*
+*Bijgewerkt op 2026-05-05. Vorige versie: 2026-05-04.*
