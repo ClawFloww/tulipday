@@ -810,6 +810,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
           {HOME_SECTIONS.map((s) => (
             <button
               key={s.key}
+              type="button"
               onClick={() => { setActiveSection(s.key); setShowPicker(false); setSearchQuery(""); }}
               className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
                 activeSection === s.key
@@ -850,6 +851,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
               {/* Reorder */}
               <div className="flex flex-col gap-0.5">
                 <button
+                  type="button"
                   onClick={() => movePick(loc.id, "up")}
                   disabled={idx === 0}
                   className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors"
@@ -857,6 +859,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
                   <ChevronUp size={14} />
                 </button>
                 <button
+                  type="button"
                   onClick={() => movePick(loc.id, "down")}
                   disabled={idx === currentPickLocs.length - 1}
                   className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors"
@@ -886,6 +889,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
 
               {/* Remove */}
               <button
+                type="button"
                 onClick={() => removePick(loc.id)}
                 className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
               >
@@ -898,6 +902,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
         {/* Add button / picker */}
         {!showPicker ? (
           <button
+            type="button"
             onClick={() => setShowPicker(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-rose-600 border-2 border-dashed border-rose-200 rounded-xl hover:border-rose-400 hover:bg-rose-50 transition-all w-full justify-center"
           >
@@ -915,7 +920,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
                 placeholder="Zoek locatie…"
                 className="flex-1 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300"
               />
-              <button onClick={() => { setShowPicker(false); setSearchQuery(""); }} className="text-gray-300 hover:text-gray-500">
+              <button type="button" onClick={() => { setShowPicker(false); setSearchQuery(""); }} className="text-gray-300 hover:text-gray-500">
                 <X size={15} />
               </button>
             </div>
