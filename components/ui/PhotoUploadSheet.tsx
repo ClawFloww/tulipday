@@ -3,12 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import imageCompression from "browser-image-compression";
 import { X, Camera, ImageIcon, Upload, Check, Loader2, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { getOrCreateSessionId } from "@/lib/session";
-import { track } from "@/lib/analytics";
 import { useT } from "@/lib/i18n-context";
+import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 
 interface Props {
   locationId: string;
@@ -48,6 +45,7 @@ async function getCroppedBlob(img: HTMLImageElement, crop: PixelCrop): Promise<B
 
 export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Props) {
   const { t } = useT();
+  const { upload, progress } = usePhotoUpload();
   const [step, setStep] = useState<Step>("pick");
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +61,6 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
   const [caption, setCaption] = useState("");
   const [bloomConfirmed, setBloomConfirmed] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [progress, setProgress] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Cleanup object URL on unmount
@@ -130,60 +127,20 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
     setError(null);
     setStep("uploading");
 
-    try {
-      setProgress(t("photos.compress_progress"));
-      const croppedFile = new File([croppedBlobRef.current], "photo.jpg", { type: "image/jpeg" });
+    const result = await upload({
+      croppedBlob:    croppedBlobRef.current,
+      locationId,
+      caption,
+      bloomConfirmed,
+    });
 
-      // 2. Comprimeer + strip EXIF
-      const compressed = await imageCompression(croppedFile, {
-        maxSizeMB: 2,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        initialQuality: 0.85,
-        exifOrientation: -1,
-      });
-
-      // 3. Upload naar Supabase Storage
-      const sessionId = getOrCreateSessionId();
-      const timestamp = Date.now();
-      const path = `${locationId}/${sessionId}/${timestamp}.jpg`;
-
-      const { error: storageError } = await supabase.storage
-        .from("location-photos")
-        .upload(path, compressed, { contentType: "image/jpeg", upsert: false });
-
-      if (storageError) throw new Error(storageError.message);
-
-      const { data: urlData } = supabase.storage.from("location-photos").getPublicUrl(path);
-      const publicUrl = urlData.publicUrl;
-
-      // 4. Sla record op in DB
-      const { data: record, error: dbError } = await supabase
-        .from("location_photos")
-        .insert({
-          location_id: locationId,
-          session_id: sessionId,
-          storage_path: path,
-          public_url: publicUrl,
-          caption: caption.trim() || null,
-          bloom_confirmed: bloomConfirmed,
-          status: "pending",
-        })
-        .select("id")
-        .single();
-
-      if (dbError) throw new Error(dbError.message);
-
-      setPreviewUrl(publicUrl);
-      setProgress(null);
+    if (result) {
+      setPreviewUrl(result.publicUrl);
       setStep("success");
-      track("photo_upload", { location_id: locationId, bloom_confirmed: bloomConfirmed });
-      onUploaded(record.id, publicUrl);
-    } catch (err) {
-      setProgress(null);
+      onUploaded(result.photoId, result.publicUrl);
+    } else {
       setError(t("photos.error_upload"));
       setStep("details");
-      console.error(err);
     }
   }
 
