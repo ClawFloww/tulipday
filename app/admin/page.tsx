@@ -734,10 +734,16 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
 
   async function save(section: SectionKey, ids: string[]) {
     setSaving(true);
-    const res = await adminSetHomepagePicks(section, ids);
-    setSaving(false);
-    if (res.error) toast("Opslaan mislukt", "err");
-    else toast("Opgeslagen ✓");
+    try {
+      const res = await adminSetHomepagePicks(section, ids);
+      if (res.error) toast("Opslaan mislukt: " + res.error, "err");
+      else toast("Opgeslagen ✓");
+    } catch (e) {
+      console.error("adminSetHomepagePicks fout:", e);
+      toast("Opslaan mislukt", "err");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function addPick(locationId: string) {
@@ -931,6 +937,7 @@ function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => v
                 const already = currentPickIds.includes(loc.id);
                 return (
                   <button
+                    type="button"
                     key={loc.id}
                     onClick={() => !already && addPick(loc.id)}
                     disabled={already}
