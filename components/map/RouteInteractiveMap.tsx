@@ -130,86 +130,24 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
         new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
       });
 
-      // Locatiemarkers — ballonetjes met afbeelding en hover-popup
-      const BLOOM_LABEL: Record<string, string> = {
-        peak:     "🌸 Top bloei",
-        blooming: "🌷 In bloei",
-        early:    "🌱 Vroeg",
-        ending:   "🍂 Voorbij",
-      };
-
+      // Locatiemarkers — gekleurde stippen, afbeelding verschijnt bij aantikken (bottom sheet)
       locations.forEach((loc) => {
         if (!loc.latitude || !loc.longitude) return;
         const color = CATEGORY_COLOR[loc.category] ?? "#6b7280";
 
-        // Marker-element: cirkel met foto of gekleurde stip
+        // Marker-element: gekleurde stip — afbeelding verschijnt alleen bij aantikken
         const el = document.createElement("div");
-        if (loc.image_url) {
-          el.style.cssText = [
-            "width:40px", "height:40px", "border-radius:50%",
-            "overflow:hidden", "cursor:pointer",
-            `border:2.5px solid ${color}`,
-            "box-shadow:0 2px 8px rgba(0,0,0,.45)",
-            "transition:transform 0.15s", "pointer-events:auto",
-            "flex-shrink:0",
-          ].join(";");
-          const img = document.createElement("img");
-          img.src = loc.image_url;
-          img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;";
-          el.appendChild(img);
-        } else {
-          el.style.cssText = [
-            "width:22px", "height:22px", "border-radius:50%",
-            `background:${color}`, "border:2.5px solid white",
-            "box-shadow:0 1px 6px rgba(0,0,0,.4)", "cursor:pointer",
-            "transition:transform 0.15s", "pointer-events:auto",
-          ].join(";");
-        }
+        el.style.cssText = [
+          "width:22px", "height:22px", "border-radius:50%",
+          `background:${color}`, "border:2.5px solid white",
+          "box-shadow:0 1px 6px rgba(0,0,0,.4)", "cursor:pointer",
+          "transition:transform 0.15s", "pointer-events:auto",
+        ].join(";");
 
-        // Popup-inhoud
-        const bloomLabel = BLOOM_LABEL[loc.bloom_status ?? ""] ?? "";
-        const popupHtml = `
-          <div style="min-width:160px;max-width:200px;border-radius:10px;overflow:hidden;font-family:system-ui,sans-serif;">
-            ${loc.image_url
-              ? `<img src="${loc.image_url}" style="width:100%;height:90px;object-fit:cover;display:block;" />`
-              : `<div style="height:6px;background:${color};"></div>`
-            }
-            <div style="padding:8px 10px 10px;">
-              <p style="font-weight:700;font-size:12px;color:#111;margin:0 0 5px;line-height:1.3;">${loc.title}</p>
-              <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
-                <span style="background:${color};color:white;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;">
-                  ${CATEGORY_LABEL[loc.category] ?? loc.category}
-                </span>
-                ${bloomLabel
-                  ? `<span style="background:#F0FDF4;color:#2D7D46;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;">${bloomLabel}</span>`
-                  : ""
-                }
-              </div>
-            </div>
-          </div>`;
-
-        // Hover-popup (desktop) — gebruik pointerdown voor selectie (werkt ook op touch)
-        let activePopup: maplibregl.Popup | null = null;
-
-        el.addEventListener("mouseenter", () => {
-          el.style.transform = "scale(1.15)";
-          activePopup = new maplibregl.Popup({
-            closeButton: false, closeOnClick: false, offset: loc.image_url ? 22 : 14,
-            maxWidth: "210px",
-          })
-            .setLngLat([loc.longitude, loc.latitude])
-            .setHTML(popupHtml)
-            .addTo(map);
-        });
-        el.addEventListener("mouseleave", () => {
-          el.style.transform = "scale(1)";
-          activePopup?.remove();
-          activePopup = null;
-        });
+        el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.2)"; });
+        el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
         el.addEventListener("pointerdown", (e) => {
           e.stopPropagation();
-          activePopup?.remove();
-          activePopup = null;
           onSelectRef.current(loc);
         });
 

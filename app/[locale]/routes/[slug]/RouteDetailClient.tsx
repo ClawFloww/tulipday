@@ -39,6 +39,35 @@ function formatDuration(min: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
+// Kortste afstand (km) van punt P tot lijnstuk AB (lat/lng in graden)
+function ptSegDistKm(
+  plat: number, plng: number,
+  alat: number, alng: number,
+  blat: number, blng: number,
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dy = blat - alat, dx = blng - alng;
+  const t = dy === 0 && dx === 0
+    ? 0
+    : Math.max(0, Math.min(1, ((plat - alat) * dy + (plng - alng) * dx) / (dy * dy + dx * dx)));
+  const clat = alat + t * dy, clng = alng + t * dx;
+  const dLat = toRad(plat - clat), dLng = toRad(plng - clng);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(clat)) * Math.cos(toRad(plat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Controleer of een locatie binnen maxKm van de routelijn ligt
+function isNearRoute(loc: MapLocation, routePts: [number, number][], maxKm: number): boolean {
+  for (let i = 0; i < routePts.length - 1; i++) {
+    // routePts zijn [lat, lng]
+    if (ptSegDistKm(loc.latitude, loc.longitude,
+        routePts[i][0], routePts[i][1],
+        routePts[i + 1][0], routePts[i + 1][1]) <= maxKm) return true;
+  }
+  return false;
+}
+
 // ── Hoofdcomponent ────────────────────────────────────────────────────────────
 
 export default function RouteDetailClient() {
@@ -72,18 +101,19 @@ export default function RouteDetailClient() {
       const fetchedStops = (s as unknown as RouteStop[]) ?? [];
       setStops(fetchedStops);
 
-      // Bezienswaardigheden ophalen binnen de bounding box van de route
-      const coords: [number, number][] =
-        fetchedStops.length > 0
-          ? fetchedStops
+      // Bezienswaardigheden ophalen: bounding box als pre-filter, daarna 50m-check langs routelijn
+      const routePts: [number, number][] = (r.geometry_points ?? []) as [number, number][];
+      const coordsForBbox: [number, number][] =
+        routePts.length > 0
+          ? routePts                                                              // [lat, lng]
+          : fetchedStops
               .filter((st) => st.locations.latitude && st.locations.longitude)
-              .map((st) => [st.locations.longitude as number, st.locations.latitude as number])
-          : (r.geometry_points ?? []).map(([lat, lng]: [number, number]) => [lng, lat]);
+              .map((st) => [st.locations.latitude as number, st.locations.longitude as number]);
 
-      if (coords.length > 0) {
-        const lngs = coords.map((c) => c[0]);
-        const lats = coords.map((c) => c[1]);
-        const buf  = 0.009; // ~1 km buffer
+      if (coordsForBbox.length > 0) {
+        const lats = coordsForBbox.map((c) => c[0]);
+        const lngs = coordsForBbox.map((c) => c[1]);
+        const buf  = 0.0006; // ~65 m — ruim genoeg als pre-filter voor de 50 m-check
         const { data: locs } = await supabase
           .from("locations")
           .select("id, title, category, latitude, longitude, short_description, image_url, slug, address, bloom_status")
@@ -92,7 +122,12 @@ export default function RouteDetailClient() {
           .lte("latitude",  Math.max(...lats)  + buf)
           .gte("longitude", Math.min(...lngs) - buf)
           .lte("longitude", Math.max(...lngs) + buf);
-        setNearbyLocations((locs as MapLocation[]) ?? []);
+
+        const candidates = (locs as MapLocation[]) ?? [];
+        const nearby = routePts.length > 1
+          ? candidates.filter((loc) => isNearRoute(loc, routePts, 0.05))
+          : candidates;
+        setNearbyLocations(nearby);
       }
 
       setLoading(false);
@@ -361,6 +396,18 @@ export default function RouteDetailClient() {
           >
             {/* Drag handle */}
             <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ backgroundColor: "var(--color-border)" }} />
+
+            {selectedLocation.image_url && (
+              <div className="relative h-36 rounded-xl overflow-hidden mb-4 -mx-1">
+                <Image
+                  src={selectedLocation.image_url}
+                  alt={selectedLocation.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 640px"
+                />
+              </div>
+            )}
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1 min-w-0">
