@@ -154,7 +154,6 @@ tulipday/
 | `components/corso/CorsoPhotoUpload.tsx` | Upload-interface voor corsofoto's met stop-selectie. | `corso/page.tsx` |
 | `components/corso/CorsoMap.tsx` | Kaart met corsostops en livepositie. | `corso/page.tsx` |
 | `components/corso/CorsoPhotoModal.tsx` | Volledig scherm fotomodal voor corsofeed. | `CorsoFeed` |
-| `components/corso/CorsoPhotoFeed.tsx` | Gefilterde fotofeed per corsostop (123 regels). | `corso/page.tsx` |
 | `components/corso/CorsoUploadSheet.tsx` | Bottom sheet upload voor corsofoto's: stop-selectie, preview, upload (266 regels). | `corso/page.tsx` |
 | `components/corso/CorsoRouteMap.tsx` | Gedetailleerde kaart van de corsoroute met stoptijden en bezoekersinformatie (**336 regels**). | `corso/page.tsx` |
 
@@ -356,8 +355,8 @@ lib/customRoutes.ts (localStorage)
 ### Dubbele navigatiecomponents
 `components/BottomNavigation.tsx` en `components/ui/BottomNav.tsx` bestaan naast elkaar. Beide implementeren een navigatiebalk. `app/[locale]/layout.tsx` importeert `BottomNavigation.tsx`. `BottomNav.tsx` is vermoedelijk een ongebruikte kopie.
 
-### Dubbele corso hooks
-`hooks/useCorsoPhotos.ts` (Supabase Realtime feed lezen) en `hooks/useCorsoUpload.ts` (foto uploaden) bestaan naast elkaar. De grens is logisch, maar de naamgeving is inconsistent: de ene heet "Photos", de andere "Upload". Zowel `CorsoFeed.tsx` als `CorsoPhotoFeed.tsx` bestaan — relatie en verschil zijn onduidelijk uit de bestandsnamen alleen.
+### Corso componenten — opgelost
+`useCorsoPhotos.ts` (lezen, Supabase Realtime) en `useCorsoUpload.ts` (schrijven, Storage) hebben bewust gescheiden verantwoordelijkheden. `CorsoPhotoFeed.tsx` was dode code (geen importers) en is verwijderd.
 
 ### Locatie-ophaling gedupliceerd in kaart
 `MapView.tsx` en `RouteDetailClient.tsx` bevatten allebei eigen Supabase-queries voor locaties met bounding-box logica. Er is geen gedeelde hook of utility voor dit patroon.
