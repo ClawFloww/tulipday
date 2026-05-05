@@ -1,0 +1,79 @@
+{
+  "_comments": {
+    "_over_dit_bestand": "Projectspecifieke permissies voor Claude Code. Deny-regels hebben altijd voorrang op allow-regels. Zie CLAUDE.md voor bredere projectafspraken.",
+
+    "allow_npm":      "npm en pnpm zijn de enige package managers in dit project. Alle subcommands toegestaan (run, install, ci, list, ...).",
+    "allow_git":      "git is nodig voor commit, push, status, diff, log. Claude mag zelfstandig committen en pushen (zie CLAUDE.md).",
+    "allow_next":     "next dev / next build / next start zijn de primaire runtime-commando's.",
+    "allow_tsc":      "TypeScript typecheck via 'npx tsc --noEmit' — vereist na elke code-wijziging.",
+    "allow_eslint":   "ESLint linting via 'npx eslint' of 'npm run lint'.",
+    "allow_prettier": "Prettier formatting indien aanwezig.",
+    "allow_vitest":   "Vitest is de testrunner mocht er ooit een testsuite komen (nog niet aanwezig).",
+    "allow_npx_cap":  "Capacitor CLI voor iOS/Android builds: npx cap sync, npx cap open.",
+    "allow_cat_pkg":  "Lees package.json/tsconfig via cat — voor oriëntatie zonder Read-tool overhead.",
+    "allow_mkdir":    "Aanmaken van mappen is veilig en nodig (migrations, .claude/, etc.).",
+    "allow_pbcopy":   "pbcopy is nodig om SQL-migrations naar klembord te kopiëren voor Supabase SQL Editor.",
+
+    "deny_env":       "Omgevingsvariabelen bevatten Supabase service-role keys, Stripe secret keys en VAPID private keys. Lezen of aanpassen is nooit nodig voor feature-werk.",
+    "deny_secret":    "Bestanden met 'secret' in de naam bevatten waarschijnlijk credentials. Broad catch-all als extra laag.",
+    "deny_key":       "Bestanden met 'key' in de naam (private.key, vapid-key.json, etc.) nooit aanraken.",
+    "deny_node_modules": "node_modules is read-only build-output. Wijzigingen daarin gaan verloren bij de volgende install.",
+    "deny_next_build":   ".next is gegenereerde build-output. Nooit handmatig bewerken; next build overschrijft alles.",
+    "deny_git_internals": ".git internals nooit direct bewerken — altijd via git-commando's."
+  },
+
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(pnpm *)",
+      "Bash(git *)",
+      "Bash(next *)",
+      "Bash(npx tsc*)",
+      "Bash(npx eslint*)",
+      "Bash(npx prettier*)",
+      "Bash(npx vitest*)",
+      "Bash(npx cap *)",
+      "Bash(npx capacitor*)",
+      "Bash(cat package.json*)",
+      "Bash(cat tsconfig*)",
+      "Bash(cat next.config*)",
+      "Bash(mkdir *)",
+      "Bash(pbcopy*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(chmod *)",
+      "Bash(chown *)",
+
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Write(**/.env)",
+      "Write(**/.env.*)",
+
+      "Read(**/*secret*)",
+      "Edit(**/*secret*)",
+      "Write(**/*secret*)",
+
+      "Read(**/*private*key*)",
+      "Edit(**/*private*key*)",
+      "Write(**/*private*key*)",
+
+      "Read(**/node_modules/**)",
+      "Edit(**/node_modules/**)",
+      "Write(**/node_modules/**)",
+
+      "Read(**/.next/**)",
+      "Edit(**/.next/**)",
+      "Write(**/.next/**)",
+
+      "Read(**/.git/objects/**)",
+      "Edit(**/.git/**)",
+      "Write(**/.git/**)"
+    ]
+  }
+}
