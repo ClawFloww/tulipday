@@ -71,7 +71,6 @@ export default function RouteDetailClient() {
         .eq("route_id", r.id).order("sort_order");
       const fetchedStops = (s as unknown as RouteStop[]) ?? [];
       setStops(fetchedStops);
-      setLoading(false);
 
       // Bezienswaardigheden ophalen binnen de bounding box van de route
       const coords: [number, number][] =
@@ -95,6 +94,8 @@ export default function RouteDetailClient() {
           .lte("longitude", Math.max(...lngs) + buf);
         setNearbyLocations((locs as MapLocation[]) ?? []);
       }
+
+      setLoading(false);
     }
     fetchRoute();
   }, [slug]);
