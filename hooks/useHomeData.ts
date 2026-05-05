@@ -96,16 +96,17 @@ interface UseHomeDataResult {
 }
 
 export function useHomeData({ searchQuery }: { searchQuery: string }): UseHomeDataResult {
-  const [prefs,         setPrefs]         = useState<OnboardingPrefs | null>(null);
-  const [allLocations,  setAllLocations]  = useState<Location[]>([]);
-  const [allRoutes,     setAllRoutes]     = useState<Route[]>([]);
-  const [bestBlooms,    setBestBlooms]    = useState<Location[]>([]);
-  const [recommended,   setRecommended]   = useState<Location[]>([]);
-  const [photoSpots,    setPhotoSpots]    = useState<Location[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState(false);
-  const [userCoords,    setUserCoords]    = useState<{ lat: number; lon: number } | null>(null);
-  const [nearMeLoading, setNearMeLoading] = useState(false);
+  const [prefs,          setPrefs]          = useState<OnboardingPrefs | null>(null);
+  const [allLocations,   setAllLocations]   = useState<Location[]>([]);
+  const [allRoutes,      setAllRoutes]      = useState<Route[]>([]);
+  const [bestBlooms,     setBestBlooms]     = useState<Location[]>([]);
+  const [recommended,    setRecommended]    = useState<Location[]>([]);
+  const [photoSpots,     setPhotoSpots]     = useState<Location[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(false);
+  const [userCoords,     setUserCoords]     = useState<{ lat: number; lon: number } | null>(null);
+  const [nearMeLoading,  setNearMeLoading]  = useState(false);
+  const [picksBySection, setPicksBySection] = useState<Record<string, string[]>>({});
 
   // Laad onboarding-voorkeur uit localStorage
   useEffect(() => {
@@ -113,20 +114,18 @@ export function useHomeData({ searchQuery }: { searchQuery: string }): UseHomeDa
     if (raw) { try { setPrefs(JSON.parse(raw)); } catch {} }
   }, []);
 
-  // Haal locaties en routes op uit Supabase
+  // Haal locaties, routes en homepage-picks op uit Supabase
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       const [
-        { data: allLocs, error: locsError },
-        { data: routes,  error: routesError },
+        { data: allLocs,  error: locsError },
+        { data: routes,   error: routesError },
+        { data: rawPicks, error: picksError },
       ] = await Promise.all([
         supabase.from("locations").select("*").eq("is_active", true),
-        supabase
-          .from("routes")
-          .select("*")
-          .eq("is_active", true)
-          .order("is_featured", { ascending: false }),
+        supabase.from("routes").select("*").eq("is_active", true).order("is_featured", { ascending: false }),
+        supabase.from("homepage_picks").select("section_key, location_id").order("sort_order"),
       ]);
 
       if (locsError || routesError) {
@@ -137,21 +136,52 @@ export function useHomeData({ searchQuery }: { searchQuery: string }): UseHomeDa
       }
 
       const locs = allLocs ?? [];
-      const blooming = locs.filter((l) => l.bloom_status === "peak" || l.bloom_status === "blooming");
-      const featured = blooming.filter((l) => l.is_featured);
-      setBestBlooms((featured.length > 0 ? featured : blooming).slice(0, 12));
+
+      // Bouw picks-map op per sectie
+      const picksMap: Record<string, string[]> = {};
+      if (!picksError) {
+        for (const p of rawPicks ?? []) {
+          if (!picksMap[p.section_key]) picksMap[p.section_key] = [];
+          picksMap[p.section_key].push(p.location_id);
+        }
+      }
+      setPicksBySection(picksMap);
+
+      // Beste bloei: picks hebben voorrang, anders automatisch op bloeistatus
+      const bloomPickIds = picksMap["best_blooms"];
+      if (bloomPickIds?.length) {
+        setBestBlooms(bloomPickIds.map((id) => locs.find((l) => l.id === id)!).filter(Boolean));
+      } else {
+        const blooming = locs.filter((l) => l.bloom_status === "peak" || l.bloom_status === "blooming");
+        const featured = blooming.filter((l) => l.is_featured);
+        setBestBlooms((featured.length > 0 ? featured : blooming).slice(0, 12));
+      }
+
+      // Fotoplekken: picks hebben voorrang, anders automatisch op categorie
+      const photoPickIds = picksMap["photo_spots"];
+      setPhotoSpots(
+        photoPickIds?.length
+          ? photoPickIds.map((id) => locs.find((l) => l.id === id)!).filter(Boolean)
+          : locs.filter((l) => l.category === "photo_spot"),
+      );
+
       setAllLocations(locs);
       setAllRoutes(routes ?? []);
-      setPhotoSpots(locs.filter((l) => l.category === "photo_spot"));
       setLoading(false);
     }
     fetchData();
   }, []);
 
-  // Herbereken aanbevolen locaties als data of prefs wijzigt
+  // Herbereken aanbevolen locaties als data, prefs of picks wijzigt
   useEffect(() => {
-    if (allLocations.length > 0) setRecommended(getRecommended(allLocations, prefs));
-  }, [allLocations, prefs]);
+    if (allLocations.length === 0) return;
+    const recPickIds = picksBySection["recommended"];
+    if (recPickIds?.length) {
+      setRecommended(recPickIds.map((id) => allLocations.find((l) => l.id === id)!).filter(Boolean));
+    } else {
+      setRecommended(getRecommended(allLocations, prefs));
+    }
+  }, [allLocations, prefs, picksBySection]);
 
   // Sorteer locaties op afstand en sla coördinaten op
   const applyNearMe = useCallback(

@@ -116,3 +116,29 @@ export async function adminSetFeatured(
   const { error } = await getAdminClient().from(table).update({ is_featured: featured }).eq("id", id);
   return { error: error?.message };
 }
+
+// ─── Homepage picks ───────────────────────────────────────────────────────────
+
+export async function adminGetAllHomepagePicks(): Promise<Record<string, string[]>> {
+  const { data, error } = await getAdminClient()
+    .from("homepage_picks")
+    .select("section_key, location_id")
+    .order("sort_order");
+  if (error) throw error;
+  const result: Record<string, string[]> = {};
+  for (const row of data ?? []) {
+    if (!result[row.section_key]) result[row.section_key] = [];
+    result[row.section_key].push(row.location_id);
+  }
+  return result;
+}
+
+export async function adminSetHomepagePicks(section: string, orderedLocationIds: string[]): Promise<Res> {
+  const sb = getAdminClient();
+  const { error: delError } = await sb.from("homepage_picks").delete().eq("section_key", section);
+  if (delError) return { error: delError.message };
+  if (orderedLocationIds.length === 0) return {};
+  const rows = orderedLocationIds.map((location_id, i) => ({ section_key: section, location_id, sort_order: i }));
+  const { error } = await sb.from("homepage_picks").insert(rows);
+  return { error: error?.message };
+}

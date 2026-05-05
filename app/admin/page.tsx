@@ -11,6 +11,7 @@ import {
   adminGetRoutes, adminCreateRoute, adminUpdateRoute, adminDeleteRoute,
   adminGetRouteStops, adminAddRouteStop, adminRemoveRouteStop, adminReorderStops,
   adminSetFeatured, adminUpdateBloomStatus, adminBulkUpdateBloomStatus,
+  adminGetAllHomepagePicks, adminSetHomepagePicks,
 } from "./actions";
 import { adminGetPhotos, adminGetPendingCount, adminApprovePhoto, adminRejectPhoto, adminEnsurePhotoBucket } from "./photo-actions";
 import { LocationPhoto, PhotoStatus } from "@/lib/types";
@@ -695,72 +696,278 @@ function RoutesSection({ toast }: { toast: (msg: string, type?: "ok" | "err") =>
 
 // ─── Home / Featured section ──────────────────────────────────────────────────
 
-function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => void }) {
-  const [locations, setLocations] = useState<Rec[]>([]);
-  const [routes, setRoutes]       = useState<Rec[]>([]);
-  const [isPending, startT]       = useTransition();
+const HOME_SECTIONS = [
+  { key: "best_blooms",  label: "🌸 Beste bloei",  hint: "Automatisch: locaties met bloom_status peak of blooming" },
+  { key: "recommended",  label: "⭐ Aanbevolen",    hint: "Automatisch: op basis van onboarding-voorkeuren" },
+  { key: "photo_spots",  label: "📸 Fotoplekken",   hint: "Automatisch: locaties met categorie photo_spot" },
+] as const;
+type SectionKey = typeof HOME_SECTIONS[number]["key"];
 
-  const load = useCallback(() => {
-    startT(async () => {
-      const [l, r] = await Promise.all([adminGetLocations(), adminGetRoutes()]);
-      setLocations(l); setRoutes(r);
-    });
+function HomeSection({ toast }: { toast: (msg: string, type?: "ok" | "err") => void }) {
+  const [allLocations, setAllLocations] = useState<Rec[]>([]);
+  const [routes,       setRoutes]       = useState<Rec[]>([]);
+  const [picks,        setPicks]        = useState<Record<SectionKey, string[]>>({
+    best_blooms: [], recommended: [], photo_spots: [],
+  });
+  const [activeSection, setActiveSection] = useState<SectionKey>("best_blooms");
+  const [searchQuery,   setSearchQuery]   = useState("");
+  const [showPicker,    setShowPicker]    = useState(false);
+  const [saving,        setSaving]        = useState(false);
+  const [loaded,        setLoaded]        = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [locs, rts, pickMap] = await Promise.all([
+        adminGetLocations(), adminGetRoutes(), adminGetAllHomepagePicks(),
+      ]);
+      setAllLocations(locs);
+      setRoutes(rts);
+      setPicks({
+        best_blooms: pickMap["best_blooms"] ?? [],
+        recommended: pickMap["recommended"] ?? [],
+        photo_spots: pickMap["photo_spots"] ?? [],
+      });
+      setLoaded(true);
+    })();
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  async function save(section: SectionKey, ids: string[]) {
+    setSaving(true);
+    const res = await adminSetHomepagePicks(section, ids);
+    setSaving(false);
+    if (res.error) toast("Opslaan mislukt", "err");
+    else toast("Opgeslagen ✓");
+  }
 
-  async function toggleFeatured(table: "locations" | "routes", id: string, current: boolean) {
-    await adminSetFeatured(table, id, !current);
-    toast(!current ? "Marked as featured" : "Removed from featured");
-    load();
+  function addPick(locationId: string) {
+    if (picks[activeSection].includes(locationId)) return;
+    const newIds = [...picks[activeSection], locationId];
+    const next = { ...picks, [activeSection]: newIds };
+    setPicks(next);
+    save(activeSection, newIds);
+    setShowPicker(false);
+    setSearchQuery("");
+  }
+
+  function removePick(locationId: string) {
+    const newIds = picks[activeSection].filter((id) => id !== locationId);
+    const next = { ...picks, [activeSection]: newIds };
+    setPicks(next);
+    save(activeSection, newIds);
+  }
+
+  function movePick(locationId: string, dir: "up" | "down") {
+    const arr = [...picks[activeSection]];
+    const idx = arr.indexOf(locationId);
+    if (dir === "up"   && idx > 0)              [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
+    if (dir === "down" && idx < arr.length - 1) [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+    const next = { ...picks, [activeSection]: arr };
+    setPicks(next);
+    save(activeSection, arr);
+  }
+
+  async function toggleFeatured(id: string, current: boolean) {
+    await adminSetFeatured("routes", id, !current);
+    toast(!current ? "Featured" : "Niet meer featured");
+    const rts = await adminGetRoutes();
+    setRoutes(rts);
+  }
+
+  // Helpers
+  const currentPickIds   = picks[activeSection];
+  const currentPickLocs  = currentPickIds
+    .map((id) => allLocations.find((l) => l.id === id))
+    .filter(Boolean) as Rec[];
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return allLocations.slice(0, 30);
+    return allLocations.filter(
+      (l) => l.title.toLowerCase().includes(q) || l.address?.toLowerCase().includes(q)
+    ).slice(0, 40);
+  }, [searchQuery, allLocations]);
+
+  const section = HOME_SECTIONS.find((s) => s.key === activeSection)!;
+
+  if (!loaded) {
+    return <p className="text-xs text-gray-400 flex items-center gap-1.5 py-6"><Loader2 size={13} className="animate-spin" /> Laden…</p>;
   }
 
   return (
-    <div className="space-y-6">
-      {isPending && <p className="text-xs text-gray-400 flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Loading…</p>}
+    <div className="space-y-8">
 
-      {/* Featured locations */}
+      {/* ── Locaties per sectie ── */}
       <div>
-        <h3 className="text-sm font-extrabold text-gray-700 mb-3 uppercase tracking-wide">
-          📍 Featured locations ({locations.filter((l) => l.is_featured).length})
-        </h3>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {locations.length === 0 && (
-            <p className="p-4 text-sm text-gray-400">No locations yet</p>
-          )}
-          {locations.map((loc) => (
-            <label key={loc.id}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <input type="checkbox" checked={!!loc.is_featured}
-                onChange={() => toggleFeatured("locations", loc.id, loc.is_featured)}
-                className="w-4 h-4 accent-rose-600 rounded" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{loc.title}</p>
-                <p className="text-xs text-gray-400">{loc.category} · {loc.bloom_status ?? "no bloom"}</p>
-              </div>
-              {loc.is_featured && (
-                <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">Featured</span>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-extrabold text-gray-700 uppercase tracking-wide">
+            🏠 Locaties per sectie
+          </h3>
+          {saving && <p className="text-xs text-gray-400 flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Opslaan…</p>}
+        </div>
+
+        {/* Section tabs */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {HOME_SECTIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => { setActiveSection(s.key); setShowPicker(false); setSearchQuery(""); }}
+              className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
+                activeSection === s.key
+                  ? "bg-rose-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {s.label}
+              {picks[s.key].length > 0 && (
+                <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  activeSection === s.key ? "bg-white/25 text-white" : "bg-rose-100 text-rose-600"
+                }`}>
+                  {picks[s.key].length}
+                </span>
               )}
-            </label>
+            </button>
           ))}
         </div>
+
+        {/* Fallback hint */}
+        <p className="text-xs text-gray-400 mb-3 flex items-center gap-1.5">
+          <span className="text-gray-300">ℹ</span>
+          {currentPickIds.length === 0
+            ? <span><strong className="text-gray-500">Automatisch</strong> — {section.hint}</span>
+            : <span>{currentPickIds.length} locatie{currentPickIds.length !== 1 ? "s" : ""} handmatig geselecteerd</span>
+          }
+        </p>
+
+        {/* Picked locations */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100 mb-3">
+          {currentPickLocs.length === 0 && (
+            <p className="px-4 py-5 text-sm text-gray-400 text-center">
+              Geen handmatige selectie — homepage gebruikt automatische filtering
+            </p>
+          )}
+          {currentPickLocs.map((loc, idx) => (
+            <div key={loc.id} className="flex items-center gap-3 px-4 py-3">
+              {/* Reorder */}
+              <div className="flex flex-col gap-0.5">
+                <button
+                  onClick={() => movePick(loc.id, "up")}
+                  disabled={idx === 0}
+                  className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors"
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button
+                  onClick={() => movePick(loc.id, "down")}
+                  disabled={idx === currentPickLocs.length - 1}
+                  className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors"
+                >
+                  <ChevronDown size={14} />
+                </button>
+              </div>
+
+              {/* Order number */}
+              <span className="w-5 text-[11px] font-bold text-gray-300 text-right flex-shrink-0">{idx + 1}</span>
+
+              {/* Thumbnail */}
+              {loc.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={loc.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-lg">🌷</div>
+              )}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{loc.title}</p>
+                <p className="text-xs text-gray-400 truncate">
+                  {loc.category} · {loc.bloom_status ?? "geen bloei"} · {loc.address ?? "—"}
+                </p>
+              </div>
+
+              {/* Remove */}
+              <button
+                onClick={() => removePick(loc.id)}
+                className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add button / picker */}
+        {!showPicker ? (
+          <button
+            onClick={() => setShowPicker(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-rose-600 border-2 border-dashed border-rose-200 rounded-xl hover:border-rose-400 hover:bg-rose-50 transition-all w-full justify-center"
+          >
+            <Plus size={15} /> Locatie toevoegen
+          </button>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Search header */}
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Zoek locatie…"
+                className="flex-1 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300"
+              />
+              <button onClick={() => { setShowPicker(false); setSearchQuery(""); }} className="text-gray-300 hover:text-gray-500">
+                <X size={15} />
+              </button>
+            </div>
+            {/* Results */}
+            <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+              {searchResults.map((loc) => {
+                const already = currentPickIds.includes(loc.id);
+                return (
+                  <button
+                    key={loc.id}
+                    onClick={() => !already && addPick(loc.id)}
+                    disabled={already}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                      already ? "opacity-40 cursor-default" : "hover:bg-rose-50"
+                    }`}
+                  >
+                    {loc.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={loc.image_url} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-base">🌷</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{loc.title}</p>
+                      <p className="text-xs text-gray-400">{loc.category} · {loc.bloom_status ?? "—"}</p>
+                    </div>
+                    {already
+                      ? <Check size={13} className="text-gray-300 flex-shrink-0" />
+                      : <Plus size={13} className="text-rose-400 flex-shrink-0" />
+                    }
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Featured routes */}
+      {/* ── Featured routes ── */}
       <div>
         <h3 className="text-sm font-extrabold text-gray-700 mb-3 uppercase tracking-wide">
           🗺 Featured routes ({routes.filter((r) => r.is_featured).length})
         </h3>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {routes.length === 0 && (
-            <p className="p-4 text-sm text-gray-400">No routes yet</p>
-          )}
+          {routes.length === 0 && <p className="p-4 text-sm text-gray-400">Nog geen routes</p>}
           {routes.map((route) => (
-            <label key={route.id}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <input type="checkbox" checked={!!route.is_featured}
-                onChange={() => toggleFeatured("routes", route.id, route.is_featured)}
-                className="w-4 h-4 accent-rose-600 rounded" />
+            <label key={route.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+              <input
+                type="checkbox" checked={!!route.is_featured}
+                onChange={() => toggleFeatured(route.id, route.is_featured)}
+                className="w-4 h-4 accent-rose-600 rounded"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{route.title}</p>
                 <p className="text-xs text-gray-400">{route.route_type} · {route.distance_km ? `${route.distance_km} km` : "—"}</p>
