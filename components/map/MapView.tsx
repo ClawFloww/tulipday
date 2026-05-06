@@ -546,7 +546,13 @@ export default function MapView() {
         filter: ["has", "point_count"],
         paint: {
           "circle-color": ["step", ["get", "point_count"], "#f43f5e", 10, "#e11d48", 30, "#9f1239"],
-          "circle-radius": ["step", ["get", "point_count"], 20, 10, 26, 30, 32],
+          "circle-radius": [
+            "step", ["zoom"],
+            ["step", ["get", "point_count"], 20, 10, 26, 30, 32],
+            11, ["step", ["get", "point_count"], 16, 10, 21, 30, 26],
+            12, ["step", ["get", "point_count"], 13, 10, 17, 30, 21],
+            13, ["step", ["get", "point_count"], 10, 10, 13, 30, 16],
+          ],
           "circle-stroke-width": 2,
           "circle-stroke-color": "#fff",
           "circle-opacity": 0.9,
@@ -561,7 +567,7 @@ export default function MapView() {
         layout: {
           "text-field": "{point_count_abbreviated}",
           "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
-          "text-size": 13,
+          "text-size": ["step", ["zoom"], 13, 11, 11, 12, 10, 13, 9],
         },
         paint: { "text-color": "#ffffff" },
       });
@@ -573,7 +579,7 @@ export default function MapView() {
         filter: ["!", ["has", "point_count"]],
         paint: {
           "circle-color": ["get", "color"],
-          "circle-radius": 9,
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 9, 13, 7, 16, 5],
           "circle-stroke-width": 2,
           "circle-stroke-color": "#ffffff",
         },
