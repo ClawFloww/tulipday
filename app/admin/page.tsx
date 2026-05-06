@@ -15,7 +15,7 @@ import {
 } from "./actions";
 import { adminGetPhotos, adminGetPendingCount, adminApprovePhoto, adminRejectPhoto, adminEnsurePhotoBucket } from "./photo-actions";
 import { LocationPhoto, PhotoStatus } from "@/lib/types";
-import { isCurrentlyOpen } from "@/lib/openingHours";
+import { getOpeningStatus } from "@/lib/openingHours";
 import { getAdminClient } from "@/lib/supabase-admin-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -280,11 +280,11 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
             {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
         ) : (() => {
-          const open = isCurrentlyOpen(loc.opening_hours);
-          if (open === null) return <span className="text-xs text-gray-300">–</span>;
-          return open
-            ? <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Geopend</span>
-            : <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">Gesloten</span>;
+          const s = getOpeningStatus(loc.opening_hours);
+          if (s.type === "unknown") return <span className="text-xs text-gray-300">–</span>;
+          if (s.type === "open")    return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Geopend</span>;
+          if (s.type === "opens_at") return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Gaat open om {s.time}</span>;
+          return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">Gesloten</span>;
         })()}
       </td>
       <td className="px-4 py-3 text-center">

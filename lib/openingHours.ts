@@ -19,6 +19,35 @@ export function isCurrentlyOpen(hours: OpeningHours | null | undefined): boolean
   return cur >= toMin(openStr) && cur < toMin(closeStr);
 }
 
+export type OpeningStatus =
+  | { type: "open" }
+  | { type: "opens_at"; time: string }
+  | { type: "closed" }
+  | { type: "unknown" };
+
+/**
+ * Geeft de openingsstatus voor nu:
+ * - "open"      → nu geopend
+ * - "opens_at"  → vandaag nog gesloten maar gaat later open (time = "HH:MM")
+ * - "closed"    → gesloten voor vandaag (voorbij sluitingstijd of bewust gesloten)
+ * - "unknown"   → geen openingstijden beschikbaar
+ */
+export function getOpeningStatus(hours: OpeningHours | null | undefined): OpeningStatus {
+  if (!hours) return { type: "unknown" };
+  const now  = new Date();
+  const key  = DAY_ORDER[now.getDay()];
+  const sched = hours[key];
+  if (sched === undefined) return { type: "unknown" };
+  if (sched === null)      return { type: "closed" };
+  const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const cur      = now.getHours() * 60 + now.getMinutes();
+  const openMin  = toMin(sched[0]);
+  const closeMin = toMin(sched[1]);
+  if (cur >= openMin && cur < closeMin) return { type: "open" };
+  if (cur < openMin)                    return { type: "opens_at", time: sched[0] };
+  return { type: "closed" };
+}
+
 /** Geordende rij met alle dagschemas voor weergave */
 export function getWeekSchedule(hours: OpeningHours): { key: DayKey; schedule: DaySchedule }[] {
   const keys: DayKey[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
