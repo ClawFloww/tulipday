@@ -15,6 +15,7 @@ import {
 } from "./actions";
 import { adminGetPhotos, adminGetPendingCount, adminApprovePhoto, adminRejectPhoto, adminEnsurePhotoBucket } from "./photo-actions";
 import { LocationPhoto, PhotoStatus } from "@/lib/types";
+import { isCurrentlyOpen } from "@/lib/openingHours";
 import { getAdminClient } from "@/lib/supabase-admin-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -269,14 +270,22 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
         <p className="text-[11px] text-gray-400 truncate">{loc.slug}</p>
       </td>
       <td className="px-4 py-3">
-        <select
-          value={loc.bloom_status ?? ""}
-          onChange={(e) => handleBloom(loc.id, e.target.value)}
-          className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
-        >
-          <option value="">—</option>
-          {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        {loc.category === "flower_field" ? (
+          <select
+            value={loc.bloom_status ?? ""}
+            onChange={(e) => handleBloom(loc.id, e.target.value)}
+            className="text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-rose-300"
+          >
+            <option value="">—</option>
+            {BLOOM_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ) : (() => {
+          const open = isCurrentlyOpen(loc.opening_hours);
+          if (open === null) return <span className="text-xs text-gray-300">–</span>;
+          return open
+            ? <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Geopend</span>
+            : <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">Gesloten</span>;
+        })()}
       </td>
       <td className="px-4 py-3 text-center">
         <button onClick={async () => {
@@ -342,7 +351,7 @@ function LocationsSection({ toast }: { toast: (msg: string, type?: "ok" | "err")
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-gray-400 border-b border-gray-100">
                   <th className="px-4 py-2 text-left font-semibold">Naam</th>
-                  <th className="px-4 py-2 text-left font-semibold">Bloei</th>
+                  <th className="px-4 py-2 text-left font-semibold">{cat === "flower_field" ? "Bloei" : "Status"}</th>
                   <th className="px-4 py-2 text-center font-semibold">Featured</th>
                   <th className="px-4 py-2 text-center font-semibold">Actief</th>
                   <th className="px-4 py-2 text-right font-semibold">Acties</th>
