@@ -137,7 +137,7 @@ function locationsToGeoJSON(
   const features: GeoJSON.Feature[] = [];
   for (const loc of locations) {
     if (loc.latitude == null || loc.longitude == null) continue;
-    if (activeFilter && !matchesFilter(loc, activeFilter, userCoords)) continue;
+    if (activeFilter && loc.category !== "food" && !matchesFilter(loc, activeFilter, userCoords)) continue;
     features.push({
       type: "Feature",
       geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
