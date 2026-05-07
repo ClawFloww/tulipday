@@ -6,15 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-
-// Corso-venster: start op 19 april 09:00 en eindigt op 21 april 22:00 (lokaal NL)
-const CORSO_START = new Date("2026-04-19T09:00:00+02:00");
-const CORSO_END   = new Date("2026-04-21T22:00:00+02:00");
-
-function isCorsoActive(): boolean {
-  const now = new Date();
-  return now >= CORSO_START && now <= CORSO_END;
-}
+import { isCorsoVisible } from "@/lib/corsoData";
 
 export function CorsoLiveBanner() {
   const router = useRouter();
@@ -22,7 +14,7 @@ export function CorsoLiveBanner() {
 
   // Haal actueel aantal foto's op
   useEffect(() => {
-    if (!isCorsoActive()) return;
+    if (!isCorsoVisible()) return;
 
     async function fetchCount() {
       const { count } = await supabase
@@ -48,7 +40,7 @@ export function CorsoLiveBanner() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  if (!isCorsoActive()) return null;
+  if (!isCorsoVisible()) return null;
 
   return (
     <div className="mx-4 mb-6">
@@ -65,7 +57,7 @@ export function CorsoLiveBanner() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
             <span className="text-[10px] font-bold uppercase tracking-widest opacity-90">
-              Live · 19–21 april 2026
+              Live · {new Date().getFullYear()}
             </span>
           </div>
 

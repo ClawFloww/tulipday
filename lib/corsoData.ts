@@ -34,15 +34,33 @@ export const LICHTJES_CORSO = {
   info: "Vrijdagavond verlicht corso — duizenden lampjes op de praalwagens",
 };
 
-// ─── Annual dates (third Saturday of April) ──────────────────────────────────
+// ─── Annual dates & visibility periods ───────────────────────────────────────
 
 const KNOWN_DATES: Record<number, string> = {
   2026: "2026-04-18",
   2027: "2027-04-17",
-  2028: "2028-04-15",
+  2028: "2028-04-22",
   2029: "2029-04-21",
-  2030: "2030-04-20",
+  2030: "2030-04-13",
 };
+
+// Totale evenementperiode: corso-functie is zichtbaar van start t/m end (inclusief)
+const CORSO_PERIODS: Record<number, { start: string; end: string }> = {
+  2026: { start: "2026-04-15", end: "2026-04-19" },
+  2027: { start: "2027-04-14", end: "2027-04-18" },
+  2028: { start: "2028-04-19", end: "2028-04-23" },
+  2029: { start: "2029-04-18", end: "2029-04-22" },
+  2030: { start: "2030-04-10", end: "2030-04-14" },
+};
+
+/** Geeft true als nu binnen de corso-evenementperiode valt */
+export function isCorsoVisible(now = new Date()): boolean {
+  const period = CORSO_PERIODS[now.getFullYear()];
+  if (!period) return false;
+  const start = new Date(period.start + "T00:00:00");
+  const end   = new Date(period.end   + "T23:59:59");
+  return now >= start && now <= end;
+}
 
 export function getCorsoDate(year: number): Date {
   if (KNOWN_DATES[year]) return new Date(KNOWN_DATES[year] + "T00:00:00");
