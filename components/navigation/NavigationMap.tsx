@@ -155,7 +155,7 @@ export default function NavigationMap({
       mapRef.current = null;
       initDone.current = false;
     };
-  }, []); // intentionally empty — initialiseer één keer
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — kaart init één keer, props worden intern bijgehouden via markers
 
   // ── Update GPS-positie ────────────────────────────────────────────────────
   useEffect(() => {

@@ -126,7 +126,16 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         if (activeStop) {
           const d = haversineDistance(lat, lng, activeStop.lat, activeStop.lng);
           setDistToStop(Math.round(d));
-          if (d <= ARRIVAL_RADIUS) handleMarkArrived(currentStop);
+          if (d <= ARRIVAL_RADIUS) {
+            // Inline arrival — vermijdt circulaire useCallback-afhankelijkheid
+            setVisited((prev) => {
+              const next = new Set([...Array.from(prev), currentStop]);
+              const nextIdx = navRoute.stops.findIndex((_, i) => !next.has(i));
+              if (nextIdx === -1) setFinished(true);
+              else { setCurrentStop(nextIdx); setCurrentStep(0); setDistToStop(null); }
+              return next;
+            });
+          }
         }
 
         // Stap-tracking: zoek dichtstbijzijnde niet-gepasseerde step

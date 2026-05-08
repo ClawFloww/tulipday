@@ -170,16 +170,17 @@ export default function NavigateClient() {
         : route.route_type === "car" ? "car"
         : "bike";
 
-      const stops = (routeStops ?? [])
-        .filter((s: any) => s.locations?.latitude && s.locations?.longitude)
-        .map((s: any) => ({
-          id:           s.locations.id as string,
-          name:         s.locations.title as string,
-          lat:          s.locations.latitude as number,
-          lng:          s.locations.longitude as number,
-          category:     (s.locations.category ?? "food") as string,
-          bloom_status: s.locations.bloom_status as string | null,
-          location_id:  s.locations.id as string,
+      type RawStop = { locations: { id: string; title: string; latitude: number; longitude: number; category: string | null; bloom_status: string | null } };
+      const stops = ((routeStops ?? []) as unknown as RawStop[])
+        .filter((s) => s.locations?.latitude && s.locations?.longitude)
+        .map((s) => ({
+          id:           s.locations.id,
+          name:         s.locations.title,
+          lat:          s.locations.latitude,
+          lng:          s.locations.longitude,
+          category:     s.locations.category ?? "food",
+          bloom_status: s.locations.bloom_status,
+          location_id:  s.locations.id,
         }));
 
       // geometry_points is opgeslagen als [lat, lng] → omzetten naar [lng, lat] voor MapLibre
