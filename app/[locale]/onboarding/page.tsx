@@ -488,7 +488,7 @@ export default function OnboardingPage() {
         }));
         localStorage.removeItem("tulipday_route_progress");
       } catch {}
-      router.push(`/${locale}/active-route`);
+      router.push(`/${locale}/navigate?generated=true`);
     } else {
       router.push(`/${locale}/home`);
     }

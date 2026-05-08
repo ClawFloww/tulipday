@@ -159,24 +159,7 @@ export default function RouteDetailClient() {
   }
 
   function handleNavigate() {
-    const travelMode = route?.route_type === "bike"
-      ? "bicycling"
-      : route?.route_type === "walk"
-      ? "walking"
-      : "driving";
-
-    const validStops = stops.filter((s) => s.locations.latitude && s.locations.longitude);
-    if (validStops.length > 0) {
-      const origin      = `${validStops[0].locations.latitude},${validStops[0].locations.longitude}`;
-      const destination = `${validStops[validStops.length - 1].locations.latitude},${validStops[validStops.length - 1].locations.longitude}`;
-      const waypoints   = validStops.slice(1, -1).map((s) => `${s.locations.latitude},${s.locations.longitude}`).join("|");
-      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""}&travelmode=${travelMode}`, "_blank");
-    } else if (route?.geometry_points && route.geometry_points.length > 1) {
-      const pts         = route.geometry_points;
-      const origin      = `${pts[0][0]},${pts[0][1]}`;
-      const destination = `${pts[pts.length - 1][0]},${pts[pts.length - 1][1]}`;
-      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${travelMode}`, "_blank");
-    }
+    router.push(`/${locale}/navigate?slug=${route?.slug}`);
   }
 
   const canNavigate =
