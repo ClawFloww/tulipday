@@ -346,7 +346,7 @@ export default function LocationDetailPage() {
           </button>
         </div>
 
-        {(location.category === "flower_field" || location.category === "attraction") && (
+        {(location.category === "flower_field" || location.category === "attraction" || location.category === "photo_spot") && (
           <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--color-primary-subtle)" }}>
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={16} className="text-tulip-500" />
