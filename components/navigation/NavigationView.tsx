@@ -46,6 +46,10 @@ export interface NavRoute {
   distanceKm:      number;
   durationMinutes: number;
   steps?:          NavStep[];
+  // Aanrijdroute: van huidige locatie naar start van de route
+  approachGeometry?:  [number, number][] | null;
+  approachSteps?:     NavStep[];
+  approachDistanceM?: number | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,22 +98,33 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   const [gpsStatus,   setGpsStatus]   = useState<"waiting" | "active" | "denied">("waiting");
   const [locked,      setLocked]      = useState(true); // kaart vergrendeld op gebruikerslocatie
 
+  // Aanrijdroute-staat
+  const hasApproach = (navRoute.approachGeometry?.length ?? 0) > 0;
+  const [approachPhase,        setApproachPhase]        = useState(hasApproach);
+  const [distToStart,          setDistToStart]          = useState<number | null>(null);
+  const [currentApproachStep,  setCurrentApproachStep]  = useState(0);
+
   // UI-staat
   const [showList,  setShowList]  = useState(false);
   const [showBloom, setShowBloom] = useState(false);
   const [bloomLocal, setBloomLocal] = useState<Record<string, string>>({});
 
   // Refs voor gebruik binnen watchPosition (vermijdt opnieuw aanmaken)
-  const currentStopRef  = useRef(currentStop);
-  const visitedRef      = useRef(visited);
-  const stepsRef        = useRef(navRoute.steps ?? []);
-  const currentStepRef  = useRef(currentStep);
-  const stopsRef        = useRef(navRoute.stops);
+  const currentStopRef         = useRef(currentStop);
+  const visitedRef             = useRef(visited);
+  const stepsRef               = useRef(navRoute.steps ?? []);
+  const currentStepRef         = useRef(currentStep);
+  const stopsRef               = useRef(navRoute.stops);
+  const approachPhaseRef       = useRef(hasApproach);
+  const currentApproachStepRef = useRef(0);
+  const approachStepsRef       = useRef(navRoute.approachSteps ?? []);
 
   // Synchroniseer refs met state
-  useEffect(() => { currentStopRef.current = currentStop; },  [currentStop]);
-  useEffect(() => { visitedRef.current     = visited; },      [visited]);
-  useEffect(() => { currentStepRef.current = currentStep; },  [currentStep]);
+  useEffect(() => { currentStopRef.current        = currentStop; },       [currentStop]);
+  useEffect(() => { visitedRef.current             = visited; },           [visited]);
+  useEffect(() => { currentStepRef.current         = currentStep; },       [currentStep]);
+  useEffect(() => { approachPhaseRef.current       = approachPhase; },     [approachPhase]);
+  useEffect(() => { currentApproachStepRef.current = currentApproachStep; }, [currentApproachStep]);
 
   const activeStop = navRoute.stops[currentStop] ?? null;
   const isFlower   = activeStop?.category === "flower_field";
@@ -119,6 +134,10 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   const distRemaining = Math.round(navRoute.distanceKm * (1 - doneFraction) * 1000);
   const etaMinutes    = Math.max(1, Math.round(navRoute.durationMinutes * (1 - doneFraction)));
   const activeStep    = steps[currentStep] ?? null;
+
+  // Aanrijdroute
+  const approachSteps    = navRoute.approachSteps ?? [];
+  const activeApproachStep = approachSteps[currentApproachStep] ?? null;
 
   // ── GPS via watchPosition (één keer gestart, refs voor mutable waarden) ──
 
@@ -137,6 +156,40 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         setGpsStatus("active");
         setUserPos([lat, lng]);
         if (hdg !== null && !isNaN(hdg)) setHeading(hdg);
+
+        // ── Aanrijdroute-fase: navigeer naar het startpunt ─────────────────
+        if (approachPhaseRef.current) {
+          const [startLng, startLat] = navRoute.geometry[0] ?? [0, 0];
+          const dToStart = haversineDistance(lat, lng, startLat, startLng);
+          setDistToStart(Math.round(dToStart));
+
+          if (dToStart <= 100) {
+            // Gebruiker heeft het startpunt bereikt → overschakelen naar hoofdroute
+            setApproachPhase(false);
+            approachPhaseRef.current = false;
+            setDistToStart(null);
+            // Doorvallen naar de normale stop-detectie hieronder
+          } else {
+            // Stap-tracking voor aanrijdroute
+            const aSteps = approachStepsRef.current;
+            if (aSteps.length > 0) {
+              let nearestA = currentApproachStepRef.current;
+              let nearestDistA = Infinity;
+              for (let i = currentApproachStepRef.current; i < aSteps.length; i++) {
+                const [sLng, sLat] = aSteps[i].location;
+                const d = haversineDistance(lat, lng, sLat, sLng);
+                if (d < nearestDistA) { nearestDistA = d; nearestA = i; }
+                if (nearestDistA < 25) break;
+              }
+              if (nearestA !== currentApproachStepRef.current && nearestDistA < 50) {
+                const next = Math.min(nearestA + 1, aSteps.length - 1);
+                setCurrentApproachStep(next);
+                currentApproachStepRef.current = next;
+              }
+            }
+            return; // Niet de hoofd-stoproutine uitvoeren tijdens aanrijden
+          }
+        }
 
         // Aankomstdetectie huidige stop
         const stop = stopsRef.current[currentStopRef.current];
@@ -281,26 +334,38 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
            style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
         <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                     className="rounded-2xl shadow-2xl overflow-hidden"
-                    style={{ backgroundColor: "#E8102A" }}>
+                    style={{ backgroundColor: approachPhase ? "#1F2937" : "#E8102A" }}>
           <div className="flex items-center gap-3 px-4 pt-3 pb-2">
             {/* Maneuver-icoon */}
             <div className="w-12 h-12 rounded-xl bg-white/25 flex items-center justify-center flex-shrink-0 text-white">
-              {activeStep
-                ? <ManeuverIcon type={activeStep.type} modifier={activeStep.modifier} size={22} />
-                : <Navigation size={22} />}
+              {approachPhase
+                ? (activeApproachStep
+                    ? <ManeuverIcon type={activeApproachStep.type} modifier={activeApproachStep.modifier} size={22} />
+                    : <Navigation size={22} />)
+                : (activeStep
+                    ? <ManeuverIcon type={activeStep.type} modifier={activeStep.modifier} size={22} />
+                    : <Navigation size={22} />)}
             </div>
 
             {/* Instructie */}
             <div className="flex-1 min-w-0">
               <p className="text-white font-extrabold text-lg leading-tight truncate">
-                {activeStep?.streetName || activeStop?.name || navRoute.name}
+                {approachPhase
+                  ? (activeApproachStep?.streetName || "Naar startpunt")
+                  : (activeStep?.streetName || activeStop?.name || navRoute.name)}
               </p>
               <p className="text-white/80 text-sm font-semibold mt-0.5">
-                {distToStop !== null
-                  ? formatDist(distToStop)
-                  : activeStep
-                    ? formatDist(activeStep.distance)
-                    : gpsStatus === "waiting" ? "Locatie bepalen…" : ""}
+                {approachPhase
+                  ? (distToStart !== null
+                      ? formatDist(distToStart)
+                      : activeApproachStep
+                        ? formatDist(activeApproachStep.distance)
+                        : "Aanrijdroute berekend")
+                  : (distToStop !== null
+                      ? formatDist(distToStop)
+                      : activeStep
+                        ? formatDist(activeStep.distance)
+                        : gpsStatus === "waiting" ? "Locatie bepalen…" : "")}
               </p>
             </div>
 
@@ -311,15 +376,20 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
             </button>
           </div>
 
-          {/* Volgende stop preview */}
-          {navRoute.stops[currentStop + 1] && (
+          {/* Onderbalk: aanrijdroute → routenaam / hoofdroute → volgende stop */}
+          {approachPhase ? (
+            <div className="px-4 pb-2.5 flex items-center gap-1.5">
+              <span className="text-white/60 text-[11px] font-medium">Dan begint →</span>
+              <span className="text-white/90 text-[11px] font-bold truncate">{navRoute.name}</span>
+            </div>
+          ) : navRoute.stops[currentStop + 1] ? (
             <div className="px-4 pb-2.5 flex items-center gap-1.5">
               <span className="text-white/60 text-[11px] font-medium">Daarna →</span>
               <span className="text-white/90 text-[11px] font-bold truncate">
                 {navRoute.stops[currentStop + 1].name}
               </span>
             </div>
-          )}
+          ) : null}
         </motion.div>
       </div>
 
@@ -327,6 +397,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
       <div className="flex-1 relative">
         <NavigationMap
           geometry={navRoute.geometry}
+          approachGeometry={approachPhase ? (navRoute.approachGeometry ?? null) : null}
           stops={navRoute.stops}
           activeStopIdx={currentStop}
           visitedStops={visited}
@@ -423,20 +494,26 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
           <div className="flex items-center px-4 py-3 gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                  style={{ backgroundColor: "var(--color-surface-3)" }}>
-              <ModeIcon size={18} className="text-tulip-500" />
+              <ModeIcon size={18} className={approachPhase ? "text-gray-400" : "text-tulip-500"} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-base font-extrabold leading-tight" style={{ color: "var(--color-text)" }}>
-                {formatDist(distRemaining)}
+                {approachPhase
+                  ? (distToStart !== null ? formatDist(distToStart) : "Naar startpunt")
+                  : formatDist(distRemaining)}
               </p>
               <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
-                ~{formatETA(etaMinutes)} · stop {currentStop + 1} van {navRoute.stops.length}
+                {approachPhase
+                  ? `Dan begint ${navRoute.name}`
+                  : `~${formatETA(etaMinutes)} · stop ${currentStop + 1} van ${navRoute.stops.length}`}
               </p>
             </div>
-            <button type="button" onClick={() => handleMarkArrived(currentStop)}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-sm font-bold active:scale-95 transition-transform bg-tulip-500">
-              <Check size={15} /> Aftekenen
-            </button>
+            {!approachPhase && (
+              <button type="button" onClick={() => handleMarkArrived(currentStop)}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-sm font-bold active:scale-95 transition-transform bg-tulip-500">
+                <Check size={15} /> Aftekenen
+              </button>
+            )}
           </div>
         </motion.div>
       </div>

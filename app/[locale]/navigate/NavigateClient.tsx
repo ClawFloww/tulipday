@@ -50,6 +50,53 @@ function buildInstruction(step: {
   }
 }
 
+async function getUserPosition(): Promise<{ lat: number; lng: number } | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      ()    => resolve(null),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  });
+}
+
+async function fetchOSRMApproach(
+  from: { lat: number; lng: number },
+  to:   { lat: number; lng: number },
+  mode: "bike" | "car" | "walk",
+): Promise<{ geometry: [number, number][]; steps: NavStep[]; distanceM: number } | null> {
+  try {
+    const profile = OSRM_PROFILES[mode];
+    const coords  = `${from.lng},${from.lat};${to.lng},${to.lat}`;
+    const url     = `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?steps=true&overview=full&geometries=geojson`;
+    const res     = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.routes?.[0]) return null;
+
+    const r         = data.routes[0];
+    const geometry  = r.geometry.coordinates as [number, number][];
+    const distanceM = Math.round(r.distance);
+    const steps: NavStep[] = [];
+    for (const leg of r.legs) {
+      for (const step of leg.steps) {
+        steps.push({
+          instruction: buildInstruction(step),
+          streetName:  step.name ?? "",
+          distance:    Math.round(step.distance),
+          location:    step.maneuver.location as [number, number],
+          type:        step.maneuver.type,
+          modifier:    step.maneuver.modifier,
+        });
+      }
+    }
+    return { geometry, steps, distanceM };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOSRMSteps(
   waypoints: Array<{ lat: number; lng: number }>,
   mode: "bike" | "car" | "walk",
@@ -130,16 +177,41 @@ export default function NavigateClient() {
             location_id: undefined,
           }));
 
-          const steps = await fetchOSRMSteps(stops, mode);
+          const routeStart = route.geometry.coordinates[0] as [number, number] | undefined;
+
+          const [steps, userPos] = await Promise.all([
+            fetchOSRMSteps(stops, mode),
+            getUserPosition(),
+          ]);
+
+          let approachGeometry: [number, number][] | null = null;
+          let approachSteps: NavStep[] = [];
+          let approachDistanceM: number | null = null;
+
+          if (userPos && routeStart) {
+            const approach = await fetchOSRMApproach(
+              { lat: userPos.lat, lng: userPos.lng },
+              { lat: routeStart[1], lng: routeStart[0] }, // routeStart is [lng, lat]
+              mode,
+            );
+            if (approach) {
+              approachGeometry  = approach.geometry;
+              approachSteps     = approach.steps;
+              approachDistanceM = approach.distanceM;
+            }
+          }
 
           setNavRoute({
-            name:            route.name,
+            name:             route.name,
             mode,
             stops,
-            geometry:        route.geometry.coordinates, // al [lng, lat]
-            distanceKm:      route.distanceKm,
-            durationMinutes: route.estimatedMinutes,
+            geometry:         route.geometry.coordinates, // al [lng, lat]
+            distanceKm:       route.distanceKm,
+            durationMinutes:  route.estimatedMinutes,
             steps,
+            approachGeometry,
+            approachSteps,
+            approachDistanceM,
           });
         } catch {
           router.replace(`/${locale}/home`);
@@ -189,16 +261,42 @@ export default function NavigateClient() {
           ? (route.geometry_points as [number, number][]).map(([lat, lng]) => [lng, lat])
           : stops.map((s) => [s.lng, s.lat]);
 
-      const steps = await fetchOSRMSteps(stops, mode);
+      const routeStart = geometry[0]; // [lng, lat]
+
+      // Parallel: OSRM-stappen voor de hoofdroute + gebruikerslocatie
+      const [steps, userPos] = await Promise.all([
+        fetchOSRMSteps(stops, mode),
+        getUserPosition(),
+      ]);
+
+      let approachGeometry: [number, number][] | null = null;
+      let approachSteps: NavStep[] = [];
+      let approachDistanceM: number | null = null;
+
+      if (userPos && routeStart) {
+        const approach = await fetchOSRMApproach(
+          { lat: userPos.lat, lng: userPos.lng },
+          { lat: routeStart[1], lng: routeStart[0] }, // routeStart is [lng, lat]
+          mode,
+        );
+        if (approach) {
+          approachGeometry  = approach.geometry;
+          approachSteps     = approach.steps;
+          approachDistanceM = approach.distanceM;
+        }
+      }
 
       setNavRoute({
-        name:            route.title,
+        name:             route.title,
         mode,
         stops,
         geometry,
-        distanceKm:      route.distance_km ?? 0,
-        durationMinutes: route.duration_minutes ?? 0,
+        distanceKm:       route.distance_km ?? 0,
+        durationMinutes:  route.duration_minutes ?? 0,
         steps,
+        approachGeometry,
+        approachSteps,
+        approachDistanceM,
       });
     }
 

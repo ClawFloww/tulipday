@@ -19,18 +19,20 @@ export interface NavStop {
 }
 
 interface Props {
-  geometry:     [number, number][]; // [lng, lat] paren
-  stops:        NavStop[];
-  activeStopIdx: number;
-  visitedStops: Set<number>;
-  userPos:      [number, number] | null; // [lat, lng]
-  heading:      number;
-  locked:       boolean;  // kaart vergrendeld op gebruikerslocatie
-  onUserPan:    () => void;
+  geometry:         [number, number][]; // [lng, lat] paren
+  approachGeometry: [number, number][] | null; // grijze aanrijdlijn [lng, lat]
+  stops:            NavStop[];
+  activeStopIdx:    number;
+  visitedStops:     Set<number>;
+  userPos:          [number, number] | null; // [lat, lng]
+  heading:          number;
+  locked:           boolean;  // kaart vergrendeld op gebruikerslocatie
+  onUserPan:        () => void;
 }
 
 export default function NavigationMap({
   geometry,
+  approachGeometry,
   stops,
   activeStopIdx,
   visitedStops,
@@ -82,7 +84,27 @@ export default function NavigationMap({
     });
 
     map.on("load", () => {
-      // ── Route-lijn ────────────────────────────────────────────────────
+      // ── Aanrijdlijn (grijs) — van huidige locatie naar startpunt ──────
+      map.addSource("nav-approach", {
+        type: "geojson",
+        data: approachGeometry && approachGeometry.length >= 2
+          ? { type: "Feature", geometry: { type: "LineString", coordinates: approachGeometry }, properties: {} } as GeoJSON.Feature
+          : { type: "FeatureCollection", features: [] },
+      });
+
+      map.addLayer({
+        id: "nav-approach-casing", type: "line", source: "nav-approach",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint:  { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.55 },
+      });
+
+      map.addLayer({
+        id: "nav-approach-line", type: "line", source: "nav-approach",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint:  { "line-color": "#6B7280", "line-width": 6 },
+      });
+
+      // ── Route-lijn (rood) ─────────────────────────────────────────────
       map.addSource("nav-route", {
         type: "geojson",
         data: {
@@ -171,6 +193,27 @@ export default function NavigationMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // kaart initialiseer één keer; stop-markers worden via DOM aangemaakt
+
+  // ── Aanrijdlijn tonen/verbergen op basis van approachGeometry ────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const update = () => {
+      const src = map.getSource("nav-approach") as maplibregl.GeoJSONSource | undefined;
+      if (!src) return;
+      if (approachGeometry && approachGeometry.length >= 2) {
+        src.setData({
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: approachGeometry },
+          properties: {},
+        } as GeoJSON.Feature);
+      } else {
+        src.setData({ type: "FeatureCollection", features: [] });
+      }
+    };
+    if (map.isStyleLoaded()) update();
+    else map.once("load", update);
+  }, [approachGeometry]);
 
   // ── GPS-positie bijwerken ─────────────────────────────────────────────────
   useEffect(() => {
