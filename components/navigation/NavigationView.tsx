@@ -189,7 +189,8 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — watchPosition één keer starten
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // watchPosition één keer starten; refs zorgen voor actuele waarden
 
   // ── Acties ─────────────────────────────────────────────────────────────────
 

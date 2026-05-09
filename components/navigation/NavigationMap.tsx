@@ -169,7 +169,8 @@ export default function NavigationMap({
       mapRef.current = null;
       initDone.current = false;
     };
-  }, []); // initialiseer één keer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // kaart initialiseer één keer; stop-markers worden via DOM aangemaakt
 
   // ── GPS-positie bijwerken ─────────────────────────────────────────────────
   useEffect(() => {
