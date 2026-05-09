@@ -10,7 +10,7 @@ import type { Location, Category } from "@/lib/types";
 import { isCurrentlyOpen } from "@/lib/openingHours";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
+import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { saveCustomRoute } from "@/lib/customRoutes";
 
@@ -33,6 +33,18 @@ type MapRoute = {
   cover_image_url: string | null;
   geometry_points: [number, number][] | null;
 };
+
+type FullRouteDetail = {
+  description: string | null;
+  duration_minutes: number | null;
+  environment: string[] | null;
+  themes: string[] | null;
+  target_audience: string[] | null;
+  bloom_peak: string[] | null;
+};
+
+type StopLocation = { id: string; title: string; slug: string; category: Category; image_url: string | null };
+type FetchedStop  = { id: string; sort_order: number; locations: StopLocation };
 
 const SLOT_COLORS   = ["#E8102A", "#3b82f6", "#f59e0b"] as const;
 const ROUTE_SOURCES = ["map-route-0", "map-route-1", "map-route-2"] as const;
@@ -274,6 +286,7 @@ function RoutesBrowserPanel({
   onActivityChange,
   routeSlots,
   onToggle,
+  onSelect,
   onClose,
 }: {
   routes: MapRoute[];
@@ -281,6 +294,7 @@ function RoutesBrowserPanel({
   onActivityChange: (a: string) => void;
   routeSlots: Record<string, number>;
   onToggle: (route: MapRoute) => void;
+  onSelect: (route: MapRoute) => void;
   onClose: () => void;
 }) {
   const [showThumbs, setShowThumbs] = useState(true);
@@ -346,14 +360,12 @@ function RoutesBrowserPanel({
           const canAdd = !isOnMap && activeCount < 3;
 
           return (
-            <button
+            <div
               key={route.id}
-              onClick={() => { if (isOnMap || canAdd) onToggle(route); }}
-              disabled={!isOnMap && !canAdd}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-50
-                          transition-colors text-left
-                          ${isOnMap ? "bg-gray-50" : "bg-white"}
-                          ${!isOnMap && !canAdd ? "opacity-40" : "active:bg-gray-100"}`}
+              onClick={() => onSelect(route)}
+              className={`flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-50
+                          transition-colors cursor-pointer
+                          ${isOnMap ? "bg-gray-50" : "bg-white"} active:bg-gray-100`}
             >
               {showThumbs && (
                 <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100">
@@ -377,17 +389,16 @@ function RoutesBrowserPanel({
                   )}
                 </div>
               </div>
-              {isOnMap ? (
-                <div
-                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: slotColor! }}
-                >
-                  <X size={10} className="text-white" />
-                </div>
-              ) : (
-                <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-gray-200" />
-              )}
-            </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); if (isOnMap || canAdd) onToggle(route); }}
+                disabled={!isOnMap && !canAdd}
+                className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all disabled:opacity-30
+                  ${isOnMap ? "" : "border-2 border-gray-200"}`}
+                style={isOnMap ? { backgroundColor: slotColor! } : {}}
+              >
+                {isOnMap && <X size={10} className="text-white" />}
+              </button>
+            </div>
           );
         })}
         {filtered.length === 0 && (
@@ -395,6 +406,212 @@ function RoutesBrowserPanel({
             <p className="text-xs text-gray-400">Geen routes gevonden</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── RouteDetailSheet ─────────────────────────────────────────────────────────
+
+function RouteDetailSheet({
+  route,
+  detail,
+  stops,
+  loading,
+  isOnMap,
+  slotColor,
+  canAddToMap,
+  onToggleMap,
+  onClose,
+  onNavigate,
+}: {
+  route: MapRoute;
+  detail: FullRouteDetail | null;
+  stops: FetchedStop[];
+  loading: boolean;
+  isOnMap: boolean;
+  slotColor: string | null;
+  canAddToMap: boolean;
+  onToggleMap: () => void;
+  onClose: () => void;
+  onNavigate: () => void;
+}) {
+  const [descExpanded, setDescExpanded] = useState(false);
+  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=800";
+
+  return (
+    <div
+      className="absolute bottom-0 left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl shadow-black/30 animate-slide-up flex flex-col"
+      style={{ maxHeight: "88vh" }}
+    >
+      {/* Drag handle */}
+      <div className="flex-shrink-0 flex justify-center pt-3 pb-1">
+        <div className="w-10 h-1 bg-gray-200 rounded-full" />
+      </div>
+
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto">
+
+        {/* Cover image */}
+        <div className="relative w-full h-44 flex-shrink-0">
+          <Image
+            src={route.cover_image_url ?? fallback}
+            alt={route.title}
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          >
+            <X size={14} className="text-white" />
+          </button>
+        </div>
+
+        {/* Title + stats */}
+        <div className="px-4 pt-3 pb-3">
+          {route.activity && (
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 mb-2">
+              {route.activity}
+            </span>
+          )}
+          <h2 className="text-base font-extrabold text-gray-900 leading-tight mb-3">{route.title}</h2>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {route.distance_km && (
+              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                <span className="text-sm">📏</span>
+                <span className="text-xs font-bold text-gray-800">{route.distance_km} km</span>
+              </div>
+            )}
+            {detail?.duration_minutes && (
+              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                <span className="text-sm">🕐</span>
+                <span className="text-xs font-bold text-gray-800">{fmtDuration(detail.duration_minutes * 60)}</span>
+              </div>
+            )}
+            {route.difficulty && (
+              <div className="bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                <span className="text-xs font-bold text-gray-600">{route.difficulty}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-100 mx-4" />
+
+        {loading ? (
+          <div className="p-4 space-y-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-4 bg-gray-100 rounded-lg animate-pulse" style={{ width: i % 2 === 0 ? "100%" : "75%" }} />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Tags */}
+            {((detail?.environment?.length ?? 0) > 0 || (detail?.themes?.length ?? 0) > 0) && (
+              <div className="px-4 pt-3 pb-1 flex flex-wrap gap-1.5">
+                {detail?.environment?.map((e) => (
+                  <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">{e}</span>
+                ))}
+                {detail?.themes?.map((t) => (
+                  <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">{t}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Description */}
+            {detail?.description && (
+              <div className="px-4 py-3">
+                <p className={`text-xs text-gray-600 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
+                  {detail.description}
+                </p>
+                {detail.description.length > 150 && (
+                  <button
+                    onClick={() => setDescExpanded((p) => !p)}
+                    className="text-xs font-bold text-rose-600 mt-1.5"
+                  >
+                    {descExpanded ? "Minder" : "Lees meer"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Stops */}
+            {stops.length > 0 && (
+              <div className="px-4 pt-1 pb-4">
+                <div className="h-px bg-gray-100 mb-3" />
+                <h3 className="text-xs font-extrabold text-gray-900 mb-3">Routestops</h3>
+                <div className="relative">
+                  {/* Vertical connector line */}
+                  <div className="absolute left-[13px] top-6 bottom-6 w-px bg-gray-200" />
+
+                  {/* Start */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-extrabold z-10">
+                      A
+                    </div>
+                    <span className="text-xs font-bold text-gray-600">Startpunt</span>
+                  </div>
+
+                  {/* Numbered stops */}
+                  {stops.map((stop, idx) => (
+                    <div key={stop.id} className="flex items-center gap-3 mb-3">
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white border-2 border-gray-300 text-gray-700 flex items-center justify-center text-[10px] font-bold z-10">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
+                        <p className="flex-1 text-xs font-semibold text-gray-800 line-clamp-1">{stop.locations.title}</p>
+                        {stop.locations.image_url && (
+                          <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                            <Image src={stop.locations.image_url} alt={stop.locations.title} fill className="object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* End */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-extrabold z-10">
+                      B
+                    </div>
+                    <span className="text-xs font-bold text-gray-600">Eindpunt</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Spacer so content doesn't hide behind bottom bar */}
+        <div className="h-24" />
+      </div>
+
+      {/* Bottom action bar */}
+      <div
+        className="flex-shrink-0 px-4 pt-3 border-t border-gray-100 flex gap-2"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      >
+        <button
+          onClick={onToggleMap}
+          disabled={!isOnMap && !canAddToMap}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95 disabled:opacity-40"
+          style={isOnMap
+            ? { backgroundColor: slotColor!, color: "#fff" }
+            : { backgroundColor: "#f3f4f6", color: "#374151" }}
+        >
+          <MapPin size={14} />
+          {isOnMap ? "Van kaart" : "Op kaart"}
+        </button>
+        <button
+          onClick={onNavigate}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-rose-600 text-white text-sm font-bold transition-all active:scale-95"
+        >
+          Bekijk route
+          <ChevronRight size={14} />
+        </button>
       </div>
     </div>
   );
@@ -513,11 +730,17 @@ export default function MapView() {
   const [saveConfirmed, setSaveConfirmed] = useState(false);
 
   // Route browser state
-  const [mapRoutes,      setMapRoutes]      = useState<MapRoute[]>([]);
-  const [routePanelOpen, setRoutePanelOpen] = useState(false);
-  const [routeSlots,     setRouteSlots]     = useState<Record<string, number>>({});
-  const [routesPanelAct, setRoutesPanelAct] = useState("all");
-  const [showRouteHint,  setShowRouteHint]  = useState(false);
+  const [mapRoutes,        setMapRoutes]        = useState<MapRoute[]>([]);
+  const [routePanelOpen,   setRoutePanelOpen]   = useState(false);
+  const [routeSlots,       setRouteSlots]        = useState<Record<string, number>>({});
+  const [routesPanelAct,   setRoutesPanelAct]   = useState("all");
+  const [showRouteHint,    setShowRouteHint]    = useState(false);
+
+  // Route detail sheet state
+  const [selectedMapRoute,    setSelectedMapRoute]    = useState<MapRoute | null>(null);
+  const [routeDetail,         setRouteDetail]         = useState<FullRouteDetail | null>(null);
+  const [routeStops,          setRouteStops]          = useState<FetchedStop[]>([]);
+  const [routeDetailLoading,  setRouteDetailLoading]  = useState(false);
 
   // Refs so MapLibre event handlers always see current values
   const locationsRef          = useRef<MapLocation[]>([]);
@@ -564,6 +787,31 @@ export default function MapView() {
     const id = setTimeout(() => setShowRouteHint(true), 2000);
     return () => clearTimeout(id);
   }, []);
+
+  // ── Fetch route detail when a route is selected ──
+  useEffect(() => {
+    if (!selectedMapRoute) return;
+    setRouteDetailLoading(true);
+    setRouteDetail(null);
+    setRouteStops([]);
+
+    Promise.all([
+      supabase
+        .from("routes")
+        .select("description,duration_minutes,environment,themes,target_audience,bloom_peak")
+        .eq("id", selectedMapRoute.id)
+        .single(),
+      supabase
+        .from("route_stops")
+        .select("id,sort_order,locations(id,title,slug,category,image_url)")
+        .eq("route_id", selectedMapRoute.id)
+        .order("sort_order", { ascending: true }),
+    ]).then(([{ data: detail }, { data: stops }]) => {
+      if (detail) setRouteDetail(detail as FullRouteDetail);
+      if (stops)  setRouteStops(stops as unknown as FetchedStop[]);
+      setRouteDetailLoading(false);
+    });
+  }, [selectedMapRoute]);
 
   // ── Update GeoJSON source ──
   const updateSource = useCallback(() => {
@@ -1133,6 +1381,7 @@ export default function MapView() {
           onActivityChange={setRoutesPanelAct}
           routeSlots={routeSlots}
           onToggle={toggleRouteOnMap}
+          onSelect={setSelectedMapRoute}
           onClose={() => setRoutePanelOpen(false)}
         />
       </div>
@@ -1249,6 +1498,22 @@ export default function MapView() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Route detail sheet ── */}
+      {selectedMapRoute && (
+        <RouteDetailSheet
+          route={selectedMapRoute}
+          detail={routeDetail}
+          stops={routeStops}
+          loading={routeDetailLoading}
+          isOnMap={routeSlots[selectedMapRoute.id] !== undefined}
+          slotColor={routeSlots[selectedMapRoute.id] !== undefined ? SLOT_COLORS[routeSlots[selectedMapRoute.id]] : null}
+          canAddToMap={Object.keys(routeSlots).length < 3}
+          onToggleMap={() => toggleRouteOnMap(selectedMapRoute)}
+          onClose={() => setSelectedMapRoute(null)}
+          onNavigate={() => router.push(`/routes/${selectedMapRoute.slug}`)}
+        />
       )}
 
       {/* ── Location preview card (hidden in draw mode) ── */}
