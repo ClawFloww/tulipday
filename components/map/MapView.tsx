@@ -10,7 +10,7 @@ import type { Location, Category } from "@/lib/types";
 import { isCurrentlyOpen } from "@/lib/openingHours";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2 } from "lucide-react";
+import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { saveCustomRoute } from "@/lib/customRoutes";
 
@@ -20,6 +20,31 @@ const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
 const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 const SOURCE_ID      = "locations";
 const DRAW_SOURCE_ID = "draw-route";
+
+// ─── Route browser constants ──────────────────────────────────────────────────
+
+type MapRoute = {
+  id: string;
+  title: string;
+  slug: string;
+  activity: string | null;
+  distance_km: number | null;
+  difficulty: string | null;
+  cover_image_url: string | null;
+  geometry_points: [number, number][] | null;
+};
+
+const SLOT_COLORS   = ["#E8102A", "#3b82f6", "#f59e0b"] as const;
+const ROUTE_SOURCES = ["map-route-0", "map-route-1", "map-route-2"] as const;
+
+type PanelActivity = { id: string; label: string; Icon?: typeof Bike };
+const PANEL_ACTIVITIES: PanelActivity[] = [
+  { id: "all",               label: "Alle" },
+  { id: "Fietsroute",        label: "Fietsen",  Icon: Bike },
+  { id: "Wandelroute",       label: "Wandelen", Icon: Footprints },
+  { id: "Mountainbikeroute", label: "MTB",      Icon: Mountain },
+  { id: "E-Step Route",      label: "E-Step",   Icon: Zap },
+];
 
 // Aparte OSRM-instanties per modus (routing.openstreetmap.de)
 const OSRM_BACKENDS: Record<string, string> = {
@@ -241,6 +266,140 @@ function RoutesPanel({
   );
 }
 
+// ─── RoutesBrowserPanel ───────────────────────────────────────────────────────
+
+function RoutesBrowserPanel({
+  routes,
+  activeActivity,
+  onActivityChange,
+  routeSlots,
+  onToggle,
+  onClose,
+}: {
+  routes: MapRoute[];
+  activeActivity: string;
+  onActivityChange: (a: string) => void;
+  routeSlots: Record<string, number>;
+  onToggle: (route: MapRoute) => void;
+  onClose: () => void;
+}) {
+  const [showThumbs, setShowThumbs] = useState(true);
+
+  const filtered = activeActivity === "all"
+    ? routes
+    : routes.filter((r) => r.activity === activeActivity);
+
+  const activeCount = Object.keys(routeSlots).length;
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-12 pb-2 border-b border-gray-100">
+        <div>
+          <p className="text-sm font-extrabold text-gray-900">Routes</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{filtered.length} routes · max 3 tegelijk</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowThumbs((p) => !p)}
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+          >
+            <List size={14} />
+          </button>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Activity filter pills */}
+      <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-hide border-b border-gray-50">
+        {PANEL_ACTIVITIES.map((act) => {
+          const isActive = activeActivity === act.id;
+          const Icon = act.Icon;
+          return (
+            <button
+              key={act.id}
+              onClick={() => onActivityChange(act.id)}
+              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all
+                ${isActive
+                  ? "bg-rose-600 border-rose-600 text-white"
+                  : "bg-white border-gray-200 text-gray-600"
+                }`}
+            >
+              {Icon && <Icon size={10} />}
+              {act.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Route list */}
+      <div className="flex-1 overflow-y-auto">
+        {filtered.map((route) => {
+          const slotIdx = routeSlots[route.id];
+          const isOnMap = slotIdx !== undefined;
+          const slotColor = isOnMap ? SLOT_COLORS[slotIdx] : null;
+          const canAdd = !isOnMap && activeCount < 3;
+
+          return (
+            <button
+              key={route.id}
+              onClick={() => { if (isOnMap || canAdd) onToggle(route); }}
+              disabled={!isOnMap && !canAdd}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-50
+                          transition-colors text-left
+                          ${isOnMap ? "bg-gray-50" : "bg-white"}
+                          ${!isOnMap && !canAdd ? "opacity-40" : "active:bg-gray-100"}`}
+            >
+              {showThumbs && (
+                <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100">
+                  {route.cover_image_url ? (
+                    <Image src={route.cover_image_url} alt={route.title} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <MapPin size={18} />
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-gray-900 leading-tight line-clamp-2">{route.title}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  {route.distance_km && (
+                    <span className="text-[10px] text-gray-400">{route.distance_km} km</span>
+                  )}
+                  {route.difficulty && (
+                    <span className="text-[10px] text-gray-400">· {route.difficulty}</span>
+                  )}
+                </div>
+              </div>
+              {isOnMap ? (
+                <div
+                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: slotColor! }}
+                >
+                  <X size={10} className="text-white" />
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-gray-200" />
+              )}
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+            <p className="text-xs text-gray-400">Geen routes gevonden</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── PreviewCard ──────────────────────────────────────────────────────────────
 
 function PreviewCard({
@@ -353,6 +512,13 @@ export default function MapView() {
   const [saveName,      setSaveName]      = useState("");
   const [saveConfirmed, setSaveConfirmed] = useState(false);
 
+  // Route browser state
+  const [mapRoutes,      setMapRoutes]      = useState<MapRoute[]>([]);
+  const [routePanelOpen, setRoutePanelOpen] = useState(false);
+  const [routeSlots,     setRouteSlots]     = useState<Record<string, number>>({});
+  const [routesPanelAct, setRoutesPanelAct] = useState("all");
+  const [showRouteHint,  setShowRouteHint]  = useState(false);
+
   // Refs so MapLibre event handlers always see current values
   const locationsRef          = useRef<MapLocation[]>([]);
   const activeFilterRef       = useRef<FilterId | null>(null);
@@ -361,12 +527,16 @@ export default function MapView() {
   const waypointsRef          = useRef<[number, number][]>([]);
   const waypointMarkersRef    = useRef<maplibregl.Marker[]>([]);
   const userMarkerRef         = useRef<maplibregl.Marker | null>(null);
+  const mapRoutesRef          = useRef<MapRoute[]>([]);
+  const routeSlotsRef         = useRef<Record<string, number>>({});
 
   locationsRef.current    = locations;
   activeFilterRef.current = activeFilter;
   userCoordsRef.current   = userCoords;
   drawModeRef.current     = drawMode;
   waypointsRef.current    = waypoints;
+  mapRoutesRef.current    = mapRoutes;
+  routeSlotsRef.current   = routeSlots;
 
   // ── Fetch locations ──
   useEffect(() => {
@@ -375,6 +545,24 @@ export default function MapView() {
       .select(MAP_SELECT)
       .eq("is_active", true)
       .then(({ data }) => { if (data) setLocations(data as MapLocation[]); });
+  }, []);
+
+  // ── Fetch routes for map browser ──
+  useEffect(() => {
+    supabase
+      .from("routes")
+      .select("id,title,slug,activity,distance_km,difficulty,cover_image_url,geometry_points")
+      .eq("is_active", true)
+      .not("geometry_points", "is", null)
+      .then(({ data }) => { if (data) setMapRoutes(data as MapRoute[]); });
+  }, []);
+
+  // ── Onboarding hint ──
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("tulipday_routes_hint_seen")) return;
+    const id = setTimeout(() => setShowRouteHint(true), 2000);
+    return () => clearTimeout(id);
   }, []);
 
   // ── Update GeoJSON source ──
@@ -492,6 +680,43 @@ export default function MapView() {
     }
   }, [clearDrawing]);
 
+  // ── Route browser ──
+  const dismissHint = useCallback(() => {
+    setShowRouteHint(false);
+    if (typeof window !== "undefined") localStorage.setItem("tulipday_routes_hint_seen", "1");
+  }, []);
+
+  const toggleRouteOnMap = useCallback((route: MapRoute) => {
+    const prev = routeSlotsRef.current;
+
+    if (prev[route.id] !== undefined) {
+      setRouteSlots((s) => {
+        const next = { ...s };
+        delete next[route.id];
+        return next;
+      });
+      return;
+    }
+
+    const usedSlots = new Set(Object.values(prev));
+    const freeSlot  = [0, 1, 2].find((s) => !usedSlots.has(s));
+    if (freeSlot === undefined) return;
+
+    setRouteSlots((s) => ({ ...s, [route.id]: freeSlot }));
+
+    if (route.geometry_points && route.geometry_points.length > 0) {
+      const lnglats = route.geometry_points.map(([lat, lng]) => [lng, lat] as [number, number]);
+      const minLng  = Math.min(...lnglats.map(([lng]) => lng));
+      const maxLng  = Math.max(...lnglats.map(([lng]) => lng));
+      const minLat  = Math.min(...lnglats.map(([, lat]) => lat));
+      const maxLat  = Math.max(...lnglats.map(([, lat]) => lat));
+      mapRef.current?.fitBounds(
+        [[minLng, minLat], [maxLng, maxLat]],
+        { padding: { top: 80, bottom: 160, left: 300, right: 40 }, duration: 600 },
+      );
+    }
+  }, []);
+
   // ── Save drawn route ──
   const openSaveSheet = useCallback(() => {
     const d = new Date();
@@ -513,6 +738,35 @@ export default function MapView() {
     setSaveConfirmed(true);
     setTimeout(() => setShowSaveSheet(false), 1200);
   }, [routeResult, saveName, waypoints]);
+
+  // ── Sync route slots → MapLibre sources ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+
+    const slotToRoute: Record<number, MapRoute | undefined> = {};
+    for (const [routeId, slotIdx] of Object.entries(routeSlots)) {
+      slotToRoute[slotIdx] = mapRoutesRef.current.find((r) => r.id === routeId);
+    }
+
+    for (let i = 0; i < 3; i++) {
+      const src = map.getSource(ROUTE_SOURCES[i]) as maplibregl.GeoJSONSource | undefined;
+      if (!src) continue;
+
+      const route = slotToRoute[i];
+      if (!route?.geometry_points || route.geometry_points.length < 2) {
+        src.setData({ type: "FeatureCollection", features: [] });
+        continue;
+      }
+
+      const coords = route.geometry_points.map(([lat, lng]) => [lng, lat]);
+      src.setData({
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: coords },
+        properties: {},
+      } as GeoJSON.Feature);
+    }
+  }, [routeSlots]);
 
   // ── Init map ──
   useEffect(() => {
@@ -640,6 +894,33 @@ export default function MapView() {
         layout: { "line-join": "round", "line-cap": "round" },
         paint: { "line-color": "#E8102A", "line-width": 4, "line-opacity": 0.9 },
       });
+
+      // ── Route browser sources + layers (3 slots) ──
+      for (let i = 0; i < 3; i++) {
+        const srcId = ROUTE_SOURCES[i];
+        const color = SLOT_COLORS[i];
+
+        map.addSource(srcId, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+
+        map.addLayer({
+          id: `${srcId}-casing`,
+          type: "line",
+          source: srcId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.85 },
+        });
+
+        map.addLayer({
+          id: `${srcId}-line`,
+          type: "line",
+          source: srcId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": color, "line-width": 4, "line-opacity": 0.9 },
+        });
+      }
 
       // ── Cluster click → zoom in ──
       map.on("click", "clusters", (e) => {
@@ -803,6 +1084,58 @@ export default function MapView() {
           </div>
         </div>
       )}
+
+      {/* ── Routes browser handle ── */}
+      <button
+        onClick={() => {
+          setRoutePanelOpen((p) => {
+            if (!p) dismissHint();
+            return !p;
+          });
+        }}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-30
+                   flex items-center gap-1.5 pl-2.5 pr-3 py-2.5
+                   bg-white rounded-r-full shadow-lg border border-l-0 border-gray-100
+                   transition-all active:scale-95"
+      >
+        <List size={16} className={routePanelOpen ? "text-rose-600" : "text-gray-600"} />
+        <span className="text-xs font-bold text-gray-700">Routes</span>
+        {Object.keys(routeSlots).length > 0 && (
+          <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center">
+            {Object.keys(routeSlots).length}
+          </span>
+        )}
+      </button>
+
+      {/* ── Onboarding tooltip ── */}
+      {showRouteHint && !routePanelOpen && (
+        <div className="absolute left-20 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+          <div className="relative bg-gray-900/90 backdrop-blur-sm text-white text-xs font-semibold
+                          px-3 py-2 rounded-xl shadow-lg whitespace-nowrap">
+            <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-0 h-0
+                            border-t-[6px] border-t-transparent
+                            border-b-[6px] border-b-transparent
+                            border-r-[7px] border-r-gray-900/90" />
+            Bekijk en vergelijk routes op de kaart!
+          </div>
+        </div>
+      )}
+
+      {/* ── Routes browser slide-in panel ── */}
+      <div
+        className={`absolute left-0 top-0 bottom-0 z-30 w-72 shadow-2xl
+                    transition-transform duration-300
+                    ${routePanelOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <RoutesBrowserPanel
+          routes={mapRoutes}
+          activeActivity={routesPanelAct}
+          onActivityChange={setRoutesPanelAct}
+          routeSlots={routeSlots}
+          onToggle={toggleRouteOnMap}
+          onClose={() => setRoutePanelOpen(false)}
+        />
+      </div>
 
       {/* ── Map ── */}
       <div ref={mapDivRef} className="flex-1 w-full" />
