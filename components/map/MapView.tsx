@@ -10,7 +10,7 @@ import type { Location, Category } from "@/lib/types";
 import { isCurrentlyOpen } from "@/lib/openingHours";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
+import { X, ChevronUp, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { saveCustomRoute } from "@/lib/customRoutes";
 
