@@ -63,6 +63,13 @@ export interface Route {
   photo_spots?: PhotoSpot[];
   // GPX-route geometrie: array van [lat, lng] punten
   geometry_points?: [number, number][] | null;
+  // Route categorisatie (20260509)
+  activity?: string | null;
+  distance_category?: string[] | null;
+  difficulty?: string | null;
+  target_audience?: string[] | null;
+  environment?: string[] | null;
+  themes?: string[] | null;
 }
 
 export interface RouteStop {
