@@ -353,7 +353,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
 
         {/* Bloom-status widget (alleen bollenvelden) */}
         {isFlower && (
-          <div className="absolute bottom-4 left-3 z-30">
+          <div className="absolute bottom-28 left-3 z-30">
             <AnimatePresence mode="wait">
               {showBloom ? (
                 <motion.div key="picker"
@@ -406,7 +406,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
 
         {/* Stop-teller */}
         <button type="button" onClick={() => setShowList(true)}
-                className="absolute bottom-4 right-3 z-30 flex items-center gap-2 px-3 py-2 rounded-full shadow-lg text-sm font-semibold active:scale-95 transition-transform"
+                className="absolute bottom-28 right-3 z-30 flex items-center gap-2 px-3 py-2 rounded-full shadow-lg text-sm font-semibold active:scale-95 transition-transform"
                 style={{ backgroundColor: "var(--color-surface-2)", color: "var(--color-text)", border: "1px solid var(--color-border)" }}>
           <List size={14} style={{ color: "var(--color-text-3)" }} />
           <span className="font-extrabold text-tulip-500">{currentStop + 1}</span>
@@ -416,7 +416,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
 
       {/* ── Onderste balk ───────────────────────────────────────────────── */}
       <div className="absolute bottom-0 left-0 right-0 z-20 px-3"
-           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}>
+           style={{ paddingBottom: "calc(max(env(safe-area-inset-bottom), 0px) + 80px)" }}>
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                     className="rounded-2xl shadow-2xl overflow-hidden"
                     style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
