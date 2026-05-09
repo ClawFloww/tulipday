@@ -156,7 +156,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
       () => {},
       { timeout: 8000, maximumAge: 15_000, enableHighAccuracy: true },
     );
-  }, [activeStop, currentStop, steps, currentStep]);
+  }, [activeStop, currentStop, steps, currentStep, navRoute.stops]);
 
   useEffect(() => {
     checkGPS();
