@@ -245,7 +245,7 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
 
   return (
     <div
-      className={`fixed inset-0 z-50 transition-all duration-300
+      className={`fixed inset-0 z-[200] transition-all duration-300
         ${show ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
     >
       {/* Backdrop */}
@@ -311,8 +311,9 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
           </div>
         </div>
 
-        {/* Sticky apply button */}
-        <div className="px-5 py-4 flex-shrink-0 border-t border-[var(--color-border)]">
+        {/* Sticky apply button — extra padding voor tabbar */}
+        <div className="px-5 pt-4 pb-8 flex-shrink-0 border-t border-[var(--color-border)]"
+             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}>
           <button
             onClick={onClose}
             className="w-full py-3.5 bg-tulip-500 text-white font-bold rounded-2xl text-sm
