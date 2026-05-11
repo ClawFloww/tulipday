@@ -50,6 +50,35 @@ function buildInstruction(step: {
   }
 }
 
+function subsamplePoints<T>(arr: T[], max: number): T[] {
+  if (arr.length <= max) return arr;
+  const out: T[] = [arr[0]];
+  const step = (arr.length - 1) / (max - 1);
+  for (let i = 1; i < max - 1; i++) out.push(arr[Math.round(i * step)]);
+  out.push(arr[arr.length - 1]);
+  return out;
+}
+
+async function fetchSnappedGeometry(
+  lnglats: [number, number][], // [lng, lat]
+  profile: string,
+): Promise<[number, number][] | null> {
+  if (lnglats.length < 2) return null;
+  const waypoints = subsamplePoints(lnglats, 25);
+  const coords = waypoints.map(([lng, lat]) => `${lng},${lat}`).join(";");
+  try {
+    const res = await fetch(
+      `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.routes?.[0]?.geometry?.coordinates as [number, number][]) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function getUserPosition(): Promise<{ lat: number; lng: number } | null> {
   if (typeof navigator === "undefined" || !navigator.geolocation) return null;
   return new Promise((resolve) => {
@@ -178,11 +207,15 @@ export default function NavigateClient() {
           }));
 
           const routeStart = route.geometry.coordinates[0] as [number, number] | undefined;
+          const rawGeometry = route.geometry.coordinates as [number, number][];
 
-          const [steps, userPos] = await Promise.all([
+          const [steps, userPos, snappedGeo] = await Promise.all([
             fetchOSRMSteps(stops, mode),
             getUserPosition(),
+            fetchSnappedGeometry(rawGeometry, OSRM_PROFILES[mode]),
           ]);
+
+          const displayGeometry = snappedGeo ?? rawGeometry;
 
           let approachGeometry: [number, number][] | null = null;
           let approachSteps: NavStep[] = [];
@@ -205,7 +238,7 @@ export default function NavigateClient() {
             name:             route.name,
             mode,
             stops,
-            geometry:         route.geometry.coordinates, // al [lng, lat]
+            geometry:         displayGeometry,
             distanceKm:       route.distanceKm,
             durationMinutes:  route.estimatedMinutes,
             steps,
@@ -263,11 +296,14 @@ export default function NavigateClient() {
 
       const routeStart = geometry[0]; // [lng, lat]
 
-      // Parallel: OSRM-stappen voor de hoofdroute + gebruikerslocatie
-      const [steps, userPos] = await Promise.all([
+      // Parallel: OSRM-stappen + GPS-locatie + geometrie snappen aan wegennetwerk
+      const [steps, userPos, snappedGeo] = await Promise.all([
         fetchOSRMSteps(stops, mode),
         getUserPosition(),
+        fetchSnappedGeometry(geometry, OSRM_PROFILES[mode]),
       ]);
+
+      const displayGeometry = snappedGeo ?? geometry;
 
       let approachGeometry: [number, number][] | null = null;
       let approachSteps: NavStep[] = [];
@@ -290,7 +326,7 @@ export default function NavigateClient() {
         name:             route.title,
         mode,
         stops,
-        geometry,
+        geometry:         displayGeometry,
         distanceKm:       route.distance_km ?? 0,
         durationMinutes:  route.duration_minutes ?? 0,
         steps,
