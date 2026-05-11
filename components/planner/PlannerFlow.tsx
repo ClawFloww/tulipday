@@ -257,7 +257,7 @@ export default function PlannerFlow() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.22, ease: "easeInOut" }}
-            className="absolute inset-0 px-5 pt-6 pb-4 flex flex-col"
+            className="absolute inset-0 px-5 pt-6 pb-20 flex flex-col"
           >
             {step === 0 && (
               <StepCard
