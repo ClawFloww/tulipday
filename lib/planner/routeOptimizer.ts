@@ -69,6 +69,40 @@ function sortByNearestNeighbor(stops: ScoredLocation[]): ScoredLocation[] {
   return ordered;
 }
 
+// ── Totale routelengte in km ──────────────────────────────────────────────
+function routeDistanceKm(route: ScoredLocation[]): number {
+  let d = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    d += haversineKm(route[i].latitude, route[i].longitude, route[i + 1].latitude, route[i + 1].longitude);
+  }
+  return d;
+}
+
+// ── 2-opt verbetering: keer segmenten om zolang de route korter wordt ─────
+function twoOpt(route: ScoredLocation[]): ScoredLocation[] {
+  if (route.length <= 3) return route;
+  let best = [...route];
+  let improved = true;
+
+  while (improved) {
+    improved = false;
+    for (let i = 1; i < best.length - 1; i++) {
+      for (let j = i + 1; j < best.length; j++) {
+        const candidate = [
+          ...best.slice(0, i),
+          ...best.slice(i, j + 1).reverse(),
+          ...best.slice(j + 1),
+        ];
+        if (routeDistanceKm(candidate) < routeDistanceKm(best)) {
+          best = candidate;
+          improved = true;
+        }
+      }
+    }
+  }
+  return best;
+}
+
 // ── Reistijd schatten (minuten) tussen twee punten ────────────────────────
 function travelMinutes(
   from: { lat: number; lng: number },
@@ -107,7 +141,7 @@ export function buildOptimalRoute(
   }
 
   // 4. Vul tijdsbudget met nearest-neighbor TSP
-  const sorted = sortByNearestNeighbor(candidates);
+  const sorted = twoOpt(sortByNearestNeighbor(candidates));
   const selected: ScoredLocation[] = [];
   let usedMin = 0;
   let prevPos: { lat: number; lng: number } | null = null;
