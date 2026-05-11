@@ -1,17 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Home, Map, RouteIcon, Heart, Settings } from "lucide-react";
+import { Home, Map, CalendarDays, Heart, Settings } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 
-type Tab = "home" | "map" | "routes" | "saved" | "settings";
+type Tab = "home" | "map" | "plan" | "saved" | "settings";
 
 const TABS: { id: Tab; icon: React.ReactNode; href: string }[] = [
-  { id: "home",     icon: <Home      size={22} />, href: "/home"     },
-  { id: "map",      icon: <Map       size={22} />, href: "/map"      },
-  { id: "routes",   icon: <RouteIcon size={22} />, href: "/routes"   },
-  { id: "saved",    icon: <Heart     size={22} />, href: "/saved"    },
-  { id: "settings", icon: <Settings  size={22} />, href: "/settings" },
+  { id: "home",     icon: <Home          size={22} />, href: "/home"     },
+  { id: "map",      icon: <Map           size={22} />, href: "/map"      },
+  { id: "plan",     icon: <CalendarDays  size={22} />, href: "/plan"     },
+  { id: "saved",    icon: <Heart         size={22} />, href: "/saved"    },
+  { id: "settings", icon: <Settings      size={22} />, href: "/settings" },
 ];
 
 export function BottomNav({ active }: { active: Tab }) {

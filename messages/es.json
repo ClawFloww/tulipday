@@ -74,6 +74,7 @@
   "nav": {
     "home": "Inicio",
     "map": "Mapa",
+    "plan": "Plan",
     "routes": "Rutas",
     "saved": "Guardado",
     "settings": "Ajustes"

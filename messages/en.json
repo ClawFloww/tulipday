@@ -74,6 +74,7 @@
   "nav": {
     "home": "Home",
     "map": "Map",
+    "plan": "Plan",
     "routes": "Routes",
     "saved": "Saved",
     "settings": "Settings"

@@ -74,6 +74,7 @@
   "nav": {
     "home": "Home",
     "map": "Kaart",
+    "plan": "Plan",
     "routes": "Routes",
     "saved": "Opgeslagen",
     "settings": "Instellingen"

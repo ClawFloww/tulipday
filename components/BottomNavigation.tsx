@@ -6,10 +6,10 @@
 // Actieve tab: tulip-roze capsule + label; inactieve tabs: grijs icoon
 
 import { usePathname, useParams, useRouter } from "next/navigation";
-import { Map, Bike, Flower2, Heart, User, type LucideIcon } from "lucide-react";
+import { Map, CalendarDays, Flower2, Heart, User, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
-type TabId = "map" | "routes" | "fields" | "saved" | "profile";
+type TabId = "map" | "plan" | "fields" | "saved" | "profile";
 
 interface Tab {
   id:      TabId;
@@ -23,11 +23,11 @@ const ACTIVE_COLOR   = "var(--color-primary)";
 const INACTIVE_COLOR = "var(--color-text-3)";
 
 const TABS: Tab[] = [
-  { id: "map",     label: "Kaart",      segment: "map",      Icon: Map     },
-  { id: "routes",  label: "Routes",     segment: "routes",   Icon: Bike    },
-  { id: "fields",  label: "Velden",     segment: "home",     Icon: Flower2 },
-  { id: "saved",   label: "Opgeslagen", segment: "saved",    Icon: Heart   },
-  { id: "profile", label: "Profiel",    segment: "settings", Icon: User    },
+  { id: "map",     label: "Kaart",      segment: "map",      Icon: Map          },
+  { id: "plan",    label: "Plan",       segment: "plan",     Icon: CalendarDays },
+  { id: "fields",  label: "Velden",     segment: "home",     Icon: Flower2      },
+  { id: "saved",   label: "Opgeslagen", segment: "saved",    Icon: Heart        },
+  { id: "profile", label: "Profiel",    segment: "settings", Icon: User         },
 ];
 
 // Welke tab is actief op basis van URL

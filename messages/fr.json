@@ -74,6 +74,7 @@
   "nav": {
     "home": "Accueil",
     "map": "Carte",
+    "plan": "Plan",
     "routes": "Itinéraires",
     "saved": "Enregistré",
     "settings": "Paramètres"
