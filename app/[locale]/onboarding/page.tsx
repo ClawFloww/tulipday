@@ -252,9 +252,6 @@ export default function OnboardingPage() {
   const [privacyAnimating,   setPrivacyAnimating]   = useState(false);
   const [etiquetteAnimating, setEtiquetteAnimating] = useState(false);
   const [openDoc,            setOpenDoc]            = useState<"terms" | "privacy" | "etiquette" | null>(null);
-  const [viewedTerms,        setViewedTerms]        = useState(false);
-  const [viewedPrivacy,      setViewedPrivacy]      = useState(false);
-  const [viewedEtiquette,    setViewedEtiquette]    = useState(false);
 
   // Weerdata voor het resultaat-scherm (laadt op de achtergrond)
   const weather = useWeather(obState.startLocation?.coords ?? null);
@@ -566,7 +563,7 @@ export default function OnboardingPage() {
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
                   {tl("terms_prefix")}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); setViewedTerms(true); }}
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); }}
                     className="font-semibold underline"
                     style={{ color: "#E8102A" }}
                   >
@@ -589,7 +586,7 @@ export default function OnboardingPage() {
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
                   {tl("privacy_prefix")}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); setViewedPrivacy(true); }}
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); }}
                     className="font-semibold underline"
                     style={{ color: "#E8102A" }}
                   >
@@ -612,7 +609,7 @@ export default function OnboardingPage() {
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
                   {tl("etiquette_prefix")}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("etiquette"); setViewedEtiquette(true); }}
+                    onClick={(e) => { e.stopPropagation(); setOpenDoc("etiquette"); }}
                     className="font-semibold underline"
                     style={{ color: "#E8102A" }}
                   >
