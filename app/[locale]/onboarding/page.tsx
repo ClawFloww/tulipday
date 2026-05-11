@@ -557,10 +557,10 @@ export default function OnboardingPage() {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={viewedTerms ? toggleTerms : undefined}
-                onKeyDown={(e) => viewedTerms && e.key === "Enter" && toggleTerms()}
+                onClick={toggleTerms}
+                onKeyDown={(e) => e.key === "Enter" && toggleTerms()}
                 className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: viewedTerms ? "pointer" : "default", opacity: viewedTerms ? 1 : 0.5 }}
+                style={{ minHeight: 48, cursor: "pointer" }}
               >
                 <LegalCheckbox checked={acceptedTerms} animating={termsAnimating} />
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
@@ -580,10 +580,10 @@ export default function OnboardingPage() {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={viewedPrivacy ? togglePrivacy : undefined}
-                onKeyDown={(e) => viewedPrivacy && e.key === "Enter" && togglePrivacy()}
+                onClick={togglePrivacy}
+                onKeyDown={(e) => e.key === "Enter" && togglePrivacy()}
                 className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: viewedPrivacy ? "pointer" : "default", opacity: viewedPrivacy ? 1 : 0.5 }}
+                style={{ minHeight: 48, cursor: "pointer" }}
               >
                 <LegalCheckbox checked={acceptedPrivacy} animating={privacyAnimating} />
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
@@ -603,10 +603,10 @@ export default function OnboardingPage() {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={viewedEtiquette ? toggleEtiquette : undefined}
-                onKeyDown={(e) => viewedEtiquette && e.key === "Enter" && toggleEtiquette()}
+                onClick={toggleEtiquette}
+                onKeyDown={(e) => e.key === "Enter" && toggleEtiquette()}
                 className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: viewedEtiquette ? "pointer" : "default", opacity: viewedEtiquette ? 1 : 0.5 }}
+                style={{ minHeight: 48, cursor: "pointer" }}
               >
                 <LegalCheckbox checked={acceptedEtiquette} animating={etiquetteAnimating} />
                 <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
