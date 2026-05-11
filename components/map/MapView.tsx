@@ -1431,7 +1431,7 @@ export default function MapView() {
 
       {/* ── Routes browser slide-in panel ── */}
       <div
-        className={`absolute left-0 top-0 bottom-0 z-30 w-72 shadow-2xl
+        className={`absolute left-0 top-0 bottom-0 z-30 w-56 sm:w-72 shadow-2xl
                     transition-transform duration-300
                     ${routePanelOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
