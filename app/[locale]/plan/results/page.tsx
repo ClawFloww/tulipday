@@ -114,7 +114,11 @@ export default function PlanResultsPage() {
       fields:           plan.stops.map((s) => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })),
       geometry: {
         type:        "LineString",
-        coordinates: plan.stops.map((s) => [s.lng, s.lat] as [number, number]),
+        // Sluit de lus door het startpunt aan het einde te herhalen
+        coordinates: [
+          ...plan.stops.map((s) => [s.lng, s.lat] as [number, number]),
+          [plan.stops[0].lng, plan.stops[0].lat] as [number, number],
+        ],
       },
       distanceKm,
       estimatedMinutes: plan.totalMin,

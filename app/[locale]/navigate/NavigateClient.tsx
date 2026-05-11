@@ -129,24 +129,27 @@ async function fetchOSRMApproach(
 async function fetchOSRMSteps(
   waypoints: Array<{ lat: number; lng: number }>,
   mode: "bike" | "car" | "walk",
-): Promise<NavStep[]> {
-  if (waypoints.length < 2) return [];
+): Promise<{ steps: NavStep[]; geometry: [number, number][] | null }> {
+  if (waypoints.length < 2) return { steps: [], geometry: null };
   try {
     const profile = OSRM_PROFILES[mode];
     const coords  = waypoints.map((w) => `${w.lng},${w.lat}`).join(";");
     const url     = `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?steps=true&overview=full&geometries=geojson&annotations=false`;
 
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return [];
+    if (!res.ok) return { steps: [], geometry: null };
 
     const data = await res.json();
-    if (!data.routes?.[0]) return [];
+    if (!data.routes?.[0]) return { steps: [], geometry: null };
+
+    const route    = data.routes[0];
+    const geometry = (route.geometry?.coordinates ?? null) as [number, number][] | null;
 
     const steps: NavStep[] = [];
-    for (const leg of data.routes[0].legs) {
+    for (const leg of route.legs) {
       for (const step of leg.steps) {
         // Sla de "arrive"-stap op tussenstops over (alleen eindstap behouden)
-        if (step.maneuver.type === "arrive" && steps.length > 0 && leg !== data.routes[0].legs.at(-1)) continue;
+        if (step.maneuver.type === "arrive" && steps.length > 0 && leg !== route.legs.at(-1)) continue;
         steps.push({
           instruction: buildInstruction(step),
           streetName:  step.name ?? "",
@@ -157,9 +160,9 @@ async function fetchOSRMSteps(
         });
       }
     }
-    return steps;
+    return { steps, geometry };
   } catch {
-    return []; // stilzwijgend degraderen
+    return { steps: [], geometry: null };
   }
 }
 
@@ -209,13 +212,14 @@ export default function NavigateClient() {
           const routeStart = route.geometry.coordinates[0] as [number, number] | undefined;
           const rawGeometry = route.geometry.coordinates as [number, number][];
 
-          const [steps, userPos, snappedGeo] = await Promise.all([
+          // Één OSRM-call: levert zowel afslagen als de weggebaseerde geometrie.
+          // Zo blijven de rode route-lijn en de afslag-instructies exact synchroon.
+          const [{ steps, geometry: osrmGeometry }, userPos] = await Promise.all([
             fetchOSRMSteps(stops, mode),
             getUserPosition(),
-            fetchSnappedGeometry(rawGeometry, OSRM_PROFILES[mode]),
           ]);
 
-          const displayGeometry = snappedGeo ?? rawGeometry;
+          const displayGeometry = osrmGeometry ?? rawGeometry;
 
           let approachGeometry: [number, number][] | null = null;
           let approachSteps: NavStep[] = [];
@@ -297,7 +301,7 @@ export default function NavigateClient() {
       const routeStart = geometry[0]; // [lng, lat]
 
       // Parallel: OSRM-stappen + GPS-locatie + geometrie snappen aan wegennetwerk
-      const [steps, userPos, snappedGeo] = await Promise.all([
+      const [{ steps }, userPos, snappedGeo] = await Promise.all([
         fetchOSRMSteps(stops, mode),
         getUserPosition(),
         fetchSnappedGeometry(geometry, OSRM_PROFILES[mode]),
