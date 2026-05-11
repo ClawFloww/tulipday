@@ -191,7 +191,12 @@ function StepCard<T>({
 
 // ── Hoofd-component ───────────────────────────────────────────────────────────
 
-export default function PlannerFlow() {
+interface PlannerFlowProps {
+  /** Optionele callback — als opgegeven, wordt dit aangeroepen i.p.v. redirect naar /plan/results */
+  onComplete?: (profile: PlannerProfile) => void;
+}
+
+export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
@@ -231,7 +236,11 @@ export default function PlannerFlow() {
       pace:      pace!,
     };
     localStorage.setItem(PLANNER_PROFILE_KEY, JSON.stringify(profile));
-    router.push(`/${locale}/plan/results`);
+    if (onComplete) {
+      onComplete(profile);
+    } else {
+      router.push(`/${locale}/plan/results`);
+    }
   }
 
   return (
