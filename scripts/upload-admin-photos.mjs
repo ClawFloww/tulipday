@@ -21,7 +21,7 @@ function getEnv(key) {
 const SUPABASE_URL     = getEnv("NEXT_PUBLIC_SUPABASE_URL");
 const SERVICE_ROLE_KEY = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const BUCKET           = "location-photos";
-const PHOTO_DIR        = "/Users/clawfloww/Desktop/Tom lokatie,s foto,s  2026";
+const PHOTO_DIR        = "/Users/clawfloww/Documents/Tulipday alles/Alle Foto's/Tom lokatie,s foto,s  2026";
 
 const DRY_RUN = !process.argv.includes("--live");
 
@@ -202,18 +202,24 @@ async function main() {
           if (error) throw error;
           console.log(`✅ hoofdfoto`);
         } else {
-          const { error } = await sb.from("location_photos").insert({
-            location_id:     loc.id,
-            session_id:      "admin",
-            storage_path:    storagePath,
-            public_url:      url,
-            status:          "approved",
-            bloom_confirmed: false,
-            approved_at:     new Date().toISOString(),
-            approved_by:     "admin",
-          });
-          if (error) throw error;
-          console.log(`✅ extra foto ${p.num}`);
+          const { data: existing } = await sb.from("location_photos")
+            .select("id").eq("storage_path", storagePath).maybeSingle();
+          if (existing) {
+            console.log(`⏭  extra foto ${p.num} (bestond al)`);
+          } else {
+            const { error } = await sb.from("location_photos").insert({
+              location_id:     loc.id,
+              session_id:      "admin",
+              storage_path:    storagePath,
+              public_url:      url,
+              status:          "approved",
+              bloom_confirmed: false,
+              approved_at:     new Date().toISOString(),
+              approved_by:     "admin",
+            });
+            if (error) throw error;
+            console.log(`✅ extra foto ${p.num}`);
+          }
         }
         ok++;
       } catch (e) {
