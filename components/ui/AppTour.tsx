@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 const TOUR_KEY = "tulipday_feature_tour_v1";
 
@@ -13,37 +14,12 @@ interface Step {
   position: "above" | "below";
 }
 
-const STEPS: Step[] = [
-  {
-    selector: "[data-tour='nav-fields']",
-    title: "🌷 Startpagina",
-    body: "Hier vind je aanbevolen bollenvelden, routes en het actuele weer op één plek.",
-    position: "above",
-  },
-  {
-    selector: "[data-tour='nav-map']",
-    title: "🗺️ Kaart",
-    body: "Bekijk alle locaties op de kaart. Gekleurde stippen tonen de bloei-status. Bij horeca zie je groen (open) of rood (gesloten).",
-    position: "above",
-  },
-  {
-    selector: "[data-tour='nav-routes']",
-    title: "🚴 Routes",
-    body: "Kies een kant-en-klare route of teken zelf een route op de kaart. Deel hem daarna via een link.",
-    position: "above",
-  },
-  {
-    selector: "[data-tour='nav-saved']",
-    title: "❤️ Opgeslagen",
-    body: "Sla je favoriete locaties en routes op via het hartje. Alles staat hier overzichtelijk bij elkaar.",
-    position: "above",
-  },
-  {
-    selector: "[data-tour='nav-profile']",
-    title: "❤️ Opgeslagen & Instellingen",
-    body: "Sla je favoriete locaties en routes op. Pas taal en andere voorkeuren aan via Instellingen.",
-    position: "above",
-  },
+const STEP_DEFS: { selector: string; titleKey: string; bodyKey: string; position: "above" | "below" }[] = [
+  { selector: "[data-tour='nav-fields']",  titleKey: "tour.step1_title", bodyKey: "tour.step1_body", position: "above" },
+  { selector: "[data-tour='nav-map']",     titleKey: "tour.step2_title", bodyKey: "tour.step2_body", position: "above" },
+  { selector: "[data-tour='nav-routes']",  titleKey: "tour.step3_title", bodyKey: "tour.step3_body", position: "above" },
+  { selector: "[data-tour='nav-saved']",   titleKey: "tour.step4_title", bodyKey: "tour.step4_body", position: "above" },
+  { selector: "[data-tour='nav-profile']", titleKey: "tour.step5_title", bodyKey: "tour.step5_body", position: "above" },
 ];
 
 interface Rect { top: number; left: number; width: number; height: number; }
@@ -56,6 +32,13 @@ function getRect(selector: string): Rect | null {
 }
 
 export function AppTour({ onDone }: { onDone: () => void }) {
+  const { t } = useT();
+  const STEPS: Step[] = STEP_DEFS.map(s => ({
+    selector: s.selector,
+    title:    t(s.titleKey),
+    body:     t(s.bodyKey),
+    position: s.position,
+  }));
   const [index, setIndex] = useState(0);
   const [rect, setRect]   = useState<Rect | null>(null);
 
@@ -169,7 +152,7 @@ export function AppTour({ onDone }: { onDone: () => void }) {
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold text-white"
                 style={{ backgroundColor: "#E8102A" }}
               >
-                {isLast ? "Klaar!" : "Volgende"}
+                {isLast ? t("tour.done") : t("common.next")}
                 {!isLast && <ChevronRight size={14} />}
               </button>
             </div>

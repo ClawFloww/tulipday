@@ -11,6 +11,7 @@ import { ArrowLeft, Navigation, Check, Camera, Loader2 } from "lucide-react";
 import type { GeneratedRoute } from "@/lib/routeGenerator";
 import { haversineDistance } from "@/lib/tulipFields";
 import { useCorsoUpload } from "@/hooks/useCorsoUpload";
+import { useT } from "@/lib/i18n-context";
 import ActiveRouteMap from "@/components/routes/ActiveRouteMap";
 
 const ROUTE_KEY       = "tulipday_active_route";
@@ -37,6 +38,7 @@ function ArrivalBanner({
   isUploading:    boolean;
   uploadProgress: number;
 }) {
+  const { t } = useT();
   return (
     <>
       {/* Backdrop */}
@@ -72,7 +74,7 @@ function ArrivalBanner({
             🌷
           </motion.p>
           <h3 className="text-xl font-extrabold" style={{ color: "var(--color-text)" }}>
-            Je bent er!
+            {t("active_route.arrived")}
           </h3>
           <p className="text-sm mt-1 font-semibold" style={{ color: "var(--color-text-2)" }}>
             Stop {stopIdx + 1} · {stopName}
@@ -95,7 +97,7 @@ function ArrivalBanner({
             <p className="text-xs text-center flex items-center justify-center gap-2"
                style={{ color: "var(--color-text-3)" }}>
               <Loader2 size={12} className="animate-spin" />
-              Foto uploaden… {uploadProgress}%
+              {t("active_route.uploading_photo", { progress: uploadProgress })}
             </p>
           </div>
         ) : (
@@ -105,21 +107,21 @@ function ArrivalBanner({
               className="w-full py-4 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
               style={{ backgroundColor: "#E8527A" }}
             >
-              <Camera size={18} /> Foto maken &amp; aftekenen
+              <Camera size={18} /> {t("active_route.checkin_with_photo")}
             </button>
             <button
               onClick={onSkip}
               className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
               style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
             >
-              <Check size={16} /> Aftekenen zonder foto
+              <Check size={16} /> {t("active_route.checkin_no_photo")}
             </button>
             <button
               onClick={onDismiss}
               className="w-full py-2 text-xs font-medium"
               style={{ color: "var(--color-text-3)" }}
             >
-              Straks
+              {t("active_route.later")}
             </button>
           </div>
         )}
@@ -131,6 +133,7 @@ function ArrivalBanner({
 // ── Voltooid-scherm ───────────────────────────────────────────────────────────
 
 function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () => void }) {
+  const { t } = useT();
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
          style={{ backgroundColor: "var(--color-surface)" }}>
@@ -147,13 +150,13 @@ function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () =
         transition={{ delay: 0.2 }}
         className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}
       >
-        Route voltooid!
+        {t("active_route.completed")}
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
         className="text-sm mb-1" style={{ color: "var(--color-text-2)" }}
       >
-        Je hebt alle {route.fields.length} bollenvelden bezocht.
+        {t("active_route.fields_visited", { count: route.fields.length })}
       </motion.p>
       <motion.p
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
@@ -170,7 +173,7 @@ function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () =
           className="w-full py-4 rounded-2xl text-white font-extrabold text-base active:scale-[0.97] transition-transform"
           style={{ backgroundColor: "#E8527A" }}
         >
-          Terug naar home
+          {t("common.back_home")}
         </button>
       </motion.div>
     </div>

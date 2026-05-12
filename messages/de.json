@@ -11,7 +11,12 @@
     "copied": "Link kopiert!",
     "see_all": "Alle anzeigen",
     "featured": "Empfohlen",
-    "load_error": "Beim Laden der Daten ist ein Fehler aufgetreten. Bitte versuche es später erneut."
+    "load_error": "Beim Laden der Daten ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
+    "next": "Weiter",
+    "cancel": "Abbrechen",
+    "refresh": "Aktualisieren",
+    "retry": "Erneut versuchen",
+    "back_home": "Zurück zur Startseite"
   },
   "splash": {
     "tagline": "Die schönsten Blüten heute entdecken",
@@ -140,7 +145,18 @@
     "filter_family": "Familie",
     "filter_free": "Kostenlos",
     "filter_horeca": "Gastronomie",
-    "view_details": "Details ansehen"
+    "view_details": "Details ansehen",
+    "draw_route": "Route",
+    "stop_drawing": "Stopp",
+    "draw_first_point": "Tippen Sie auf die Karte, um einen Punkt hinzuzufügen",
+    "draw_more_points": "Weiteren Punkt hinzufügen für Reisezeiten",
+    "draw_points_count": "{count} Punkte — mehr hinzufügen oder Zeiten ansehen",
+    "routes_panel": "Routen",
+    "routes_hint": "Routen auf der Karte ansehen und vergleichen!",
+    "route_saved": "Gespeichert!",
+    "route_saved_sub": "Zu finden unter Gespeichert → Eigene",
+    "save_route": "Route speichern",
+    "save_route_sub": "Wählen Sie einen Namen für diese Route"
   },
   "location": {
     "loading": "Ort wird geladen…",
@@ -294,5 +310,58 @@
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
     "compress_progress": "Processing photo…"
+  },
+  "tour": {
+    "step1_title": "🌷 Startseite",
+    "step1_body": "Hier finden Sie empfohlene Tulpenfelder, Routen und das aktuelle Wetter auf einen Blick.",
+    "step2_title": "🗺️ Karte",
+    "step2_body": "Sehen Sie alle Orte auf der Karte. Farbige Punkte zeigen den Blütestatus. Bei Gastronomie ist grün geöffnet, rot geschlossen.",
+    "step3_title": "🚴 Routen",
+    "step3_body": "Wählen Sie eine fertige Route oder zeichnen Sie selbst eine Route auf der Karte. Teilen Sie sie per Link.",
+    "step4_title": "❤️ Gespeichert",
+    "step4_body": "Speichern Sie Ihre Lieblings-Orte und -Routen mit dem Herz-Symbol. Alles ist hier übersichtlich zusammen.",
+    "step5_title": "❤️ Gespeichert & Einstellungen",
+    "step5_body": "Speichern Sie Ihre Lieblings-Orte und -Routen. Sprache und andere Einstellungen ändern Sie unter Einstellungen.",
+    "done": "Fertig!"
+  },
+  "active_route": {
+    "arrived": "Sie sind da!",
+    "uploading_photo": "Foto wird hochgeladen… {progress}%",
+    "checkin_with_photo": "Foto machen & einchecken",
+    "checkin_no_photo": "Ohne Foto einchecken",
+    "later": "Später",
+    "completed": "Route abgeschlossen!",
+    "fields_visited": "Sie haben alle {count} Tulpenfelder besucht.",
+    "well_done": "Gut gemacht!"
+  },
+  "discover_page": {
+    "title": "🌷 Felder entdecken",
+    "loading_fields": "Felder werden geladen…",
+    "all_seen_title": "Alle Felder gesehen!",
+    "all_seen_desc": "Versuchen Sie einen anderen Filter oder beginnen Sie neu.",
+    "start_over": "Neu starten",
+    "load_more": "weitere Felder laden…",
+    "swipe_hint": "wischen oder die Tasten verwenden",
+    "fields_label": "Felder",
+    "count_visited": "{count} zu besuchen 📍",
+    "count_saved": "{count} gespeichert ♥"
+  },
+  "route_refresh": {
+    "fetching": "Blütendaten werden abgerufen...",
+    "stale": "Blütendaten älter als 4 Stunden",
+    "last_sync": "Letzte Synchronisierung: {time}"
+  },
+  "corso_upload": {
+    "title": "📷 Foto hochladen",
+    "share_intro": "Teilen Sie Ihr Erlebnis vom Blumenkorso",
+    "caption_placeholder": "Bildunterschrift hinzufügen… (optional)",
+    "where_are_you": "Wo sind Sie?",
+    "share_photo": "Foto teilen 🌸",
+    "compressing": "Bild wird komprimiert…",
+    "saving": "Wird gespeichert…",
+    "almost_done": "Fast fertig…",
+    "shared": "Foto geteilt!",
+    "shared_sub": "Ihr Foto ist jetzt im Live-Feed",
+    "upload_failed": "Upload fehlgeschlagen"
   }
 }

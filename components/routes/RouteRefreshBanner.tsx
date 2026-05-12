@@ -3,6 +3,7 @@
 // Banner die verschijnt als bloeidata ouder is dan 2 uur
 
 import { RefreshCw } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   staleness:  number;       // 0–1
@@ -21,6 +22,7 @@ export default function RouteRefreshBanner({
   lastSync,
   onRefresh,
 }: Props) {
+  const { t } = useT();
   const isStale = staleness >= 0.5;
 
   // Toon pas als data verouderd is óf als er gesynchroniseerd wordt
@@ -36,12 +38,12 @@ export default function RouteRefreshBanner({
     >
       <span style={{ color: isStale ? "#E65100" : "#2D7D46" }}>
         {isSyncing
-          ? "Bloeidata ophalen..."
+          ? t("route_refresh.fetching")
           : isStale
-          ? "Bloeidata ouder dan 4 uur"
+          ? t("route_refresh.stale")
           : lastSync
-          ? `Laatste sync: ${formatTime(lastSync)}`
-          : "Bloeidata ophalen..."}
+          ? t("route_refresh.last_sync", { time: formatTime(lastSync) })
+          : t("route_refresh.fetching")}
       </span>
       <button
         onClick={onRefresh}
@@ -50,7 +52,7 @@ export default function RouteRefreshBanner({
         style={{ color: isStale ? "#E65100" : "#2D7D46" }}
       >
         <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} />
-        {isSyncing ? "Laden..." : "Vernieuwen"}
+        {isSyncing ? t("common.loading") : t("common.refresh")}
       </button>
     </div>
   );

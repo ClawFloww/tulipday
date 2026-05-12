@@ -10,6 +10,7 @@ import type { FieldData } from "@/lib/bloomStatus";
 import type { Location }  from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { useT } from "@/lib/i18n-context";
 
 const BATCH_SIZE  = 20;   // per fetch
 const REFILL_AT   = 5;    // laad nieuwe batch als er nog ≤ 5 kaarten zijn
@@ -22,6 +23,7 @@ const CHIPS = ["Alle", "In bloei", "Bijna", "Voorbij", "Tulpen", "< 20 km", "Vri
 export default function DiscoverPage() {
   const { locale }       = useParams<{ locale: string }>();
   const router           = useRouter();
+  const { t }            = useT();
 
   const [fields,      setFields]      = useState<FieldData[]>([]);
   const [dismissed,   setDismissed]   = useState<Set<string>>(new Set());
@@ -165,7 +167,7 @@ export default function DiscoverPage() {
     <div className="min-h-screen bg-warm" style={{ paddingBottom: 80 }}>
       {/* Header */}
       <div className="px-5 pt-12 pb-4 shadow-sm" style={{ backgroundColor: "var(--color-surface-2)" }}>
-        <h1 className="text-xl font-extrabold mb-4" style={{ color: "var(--color-text)" }}>🌷 Ontdek velden</h1>
+        <h1 className="text-xl font-extrabold mb-4" style={{ color: "var(--color-text)" }}>{t("discover_page.title")}</h1>
         <FilterChips chips={CHIPS} active={activeChip} onChange={(chip) => {
           setActiveChip(chip);
           if (chip !== "Alle") track("filter_applied", { filter: chip });
@@ -175,12 +177,12 @@ export default function DiscoverPage() {
       {/* Stats */}
       <div className="flex items-center gap-4 px-5 py-3 text-xs font-semibold" style={{ color: "var(--color-text-3)" }}>
         {loading ? (
-          <span>Laden…</span>
+          <span>{t("common.loading")}</span>
         ) : (
           <>
-            <span>{deck.length}{hasMore ? "+" : ""} velden</span>
-            {visitedIds.size > 0 && <span style={{ color: "#639922" }}>{visitedIds.size} te bezoeken 📍</span>}
-            {savedIds.size > 0   && <span style={{ color: "#F472B6" }}>{savedIds.size} opgeslagen ♥</span>}
+            <span>{deck.length}{hasMore ? "+" : ""} {t("discover_page.fields_label")}</span>
+            {visitedIds.size > 0 && <span style={{ color: "#639922" }}>{t("discover_page.count_visited", { count: visitedIds.size })}</span>}
+            {savedIds.size > 0   && <span style={{ color: "#F472B6" }}>{t("discover_page.count_saved", { count: savedIds.size })}</span>}
           </>
         )}
       </div>
@@ -193,15 +195,15 @@ export default function DiscoverPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center rounded-3xl" style={{ height: 460, backgroundColor: "var(--color-surface-2)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
             <Loader2 size={36} className="text-tulip-400 animate-spin" />
-            <p className="text-sm mt-3" style={{ color: "var(--color-text-3)" }}>Velden laden…</p>
+            <p className="text-sm mt-3" style={{ color: "var(--color-text-3)" }}>{t("discover_page.loading_fields")}</p>
           </div>
         ) : visibleFields.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl text-center" style={{ height: 460, backgroundColor: "var(--color-surface-2)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
             <span style={{ fontSize: 56 }}>🌷</span>
-            <p className="text-lg font-extrabold mt-4 mb-2" style={{ color: "var(--color-text)" }}>Alle velden bekeken!</p>
-            <p className="text-sm mb-6 px-8" style={{ color: "var(--color-text-3)" }}>Probeer een ander filter of begin opnieuw.</p>
+            <p className="text-lg font-extrabold mt-4 mb-2" style={{ color: "var(--color-text)" }}>{t("discover_page.all_seen_title")}</p>
+            <p className="text-sm mb-6 px-8" style={{ color: "var(--color-text-3)" }}>{t("discover_page.all_seen_desc")}</p>
             <button onClick={handleReset} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: "#639922" }}>
-              Opnieuw beginnen
+              {t("discover_page.start_over")}
             </button>
           </div>
         ) : (
@@ -242,14 +244,14 @@ export default function DiscoverPage() {
         {loadingMore && !loading && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center">
             <span className="text-xs flex items-center gap-1" style={{ color: "var(--color-text-3)" }}>
-              <Loader2 size={11} className="animate-spin" /> meer velden laden…
+              <Loader2 size={11} className="animate-spin" /> {t("discover_page.load_more")}
             </span>
           </div>
         )}
       </div>
 
       {visibleFields.length > 0 && !loading && (
-        <p className="text-center text-xs mt-4 pb-2" style={{ color: "var(--color-text-3)" }}>sleep of gebruik de knoppen</p>
+        <p className="text-center text-xs mt-4 pb-2" style={{ color: "var(--color-text-3)" }}>{t("discover_page.swipe_hint")}</p>
       )}
     </div>
   );

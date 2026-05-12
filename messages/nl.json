@@ -11,7 +11,12 @@
     "copied": "Link gekopieerd!",
     "see_all": "Alles zien",
     "featured": "Uitgelicht",
-    "load_error": "Er is iets misgegaan bij het laden van de data. Probeer het later opnieuw."
+    "load_error": "Er is iets misgegaan bij het laden van de data. Probeer het later opnieuw.",
+    "next": "Volgende",
+    "cancel": "Annuleren",
+    "refresh": "Vernieuwen",
+    "retry": "Opnieuw proberen",
+    "back_home": "Terug naar home"
   },
   "splash": {
     "tagline": "Ontdek de mooiste tulpenvelden vandaag",
@@ -140,7 +145,18 @@
     "filter_family": "Familie",
     "filter_free": "Gratis",
     "filter_horeca": "Horeca",
-    "view_details": "Bekijk details"
+    "view_details": "Bekijk details",
+    "draw_route": "Route",
+    "stop_drawing": "Stoppen",
+    "draw_first_point": "Tik op de kaart om een punt toe te voegen",
+    "draw_more_points": "Voeg nog een punt toe voor reistijden",
+    "draw_points_count": "{count} punten — voeg meer toe of bekijk tijden",
+    "routes_panel": "Routes",
+    "routes_hint": "Bekijk en vergelijk routes op de kaart!",
+    "route_saved": "Opgeslagen!",
+    "route_saved_sub": "Terug te vinden onder Opgeslagen → Eigen",
+    "save_route": "Route opslaan",
+    "save_route_sub": "Kies een naam voor deze route"
   },
   "location": {
     "loading": "Locatie laden…",
@@ -294,5 +310,58 @@
     "badge_bloom": "Bloei bevestigd",
     "pending_label": "Wacht op goedkeuring",
     "compress_progress": "Foto verwerken…"
+  },
+  "tour": {
+    "step1_title": "🌷 Startpagina",
+    "step1_body": "Hier vind je aanbevolen bollenvelden, routes en het actuele weer op één plek.",
+    "step2_title": "🗺️ Kaart",
+    "step2_body": "Bekijk alle locaties op de kaart. Gekleurde stippen tonen de bloei-status. Bij horeca zie je groen (open) of rood (gesloten).",
+    "step3_title": "🚴 Routes",
+    "step3_body": "Kies een kant-en-klare route of teken zelf een route op de kaart. Deel hem daarna via een link.",
+    "step4_title": "❤️ Opgeslagen",
+    "step4_body": "Sla je favoriete locaties en routes op via het hartje. Alles staat hier overzichtelijk bij elkaar.",
+    "step5_title": "❤️ Opgeslagen & Instellingen",
+    "step5_body": "Sla je favoriete locaties en routes op. Pas taal en andere voorkeuren aan via Instellingen.",
+    "done": "Klaar!"
+  },
+  "active_route": {
+    "arrived": "Je bent er!",
+    "uploading_photo": "Foto uploaden… {progress}%",
+    "checkin_with_photo": "Foto maken & aftekenen",
+    "checkin_no_photo": "Aftekenen zonder foto",
+    "later": "Straks",
+    "completed": "Route voltooid!",
+    "fields_visited": "Je hebt alle {count} bollenvelden bezocht.",
+    "well_done": "Goed gedaan!"
+  },
+  "discover_page": {
+    "title": "🌷 Ontdek velden",
+    "loading_fields": "Velden laden…",
+    "all_seen_title": "Alle velden bekeken!",
+    "all_seen_desc": "Probeer een ander filter of begin opnieuw.",
+    "start_over": "Opnieuw beginnen",
+    "load_more": "meer velden laden…",
+    "swipe_hint": "sleep of gebruik de knoppen",
+    "fields_label": "velden",
+    "count_visited": "{count} te bezoeken 📍",
+    "count_saved": "{count} opgeslagen ♥"
+  },
+  "route_refresh": {
+    "fetching": "Bloeidata ophalen...",
+    "stale": "Bloeidata ouder dan 4 uur",
+    "last_sync": "Laatste sync: {time}"
+  },
+  "corso_upload": {
+    "title": "📷 Foto uploaden",
+    "share_intro": "Deel je beleving van het Bloemencorso",
+    "caption_placeholder": "Voeg een bijschrift toe… (optioneel)",
+    "where_are_you": "Waar ben je?",
+    "share_photo": "Foto delen 🌸",
+    "compressing": "Afbeelding comprimeren…",
+    "saving": "Opslaan…",
+    "almost_done": "Bijna klaar…",
+    "shared": "Foto gedeeld!",
+    "shared_sub": "Je foto staat nu in de live feed",
+    "upload_failed": "Upload mislukt"
   }
 }

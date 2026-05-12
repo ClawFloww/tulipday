@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, UserRound, Baby, Smile, Clock, Bike, Car, Footprints, Flower2, Camera, Landmark, UtensilsCrossed, Trees, Gauge, ChevronRight } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 import { PLANNER_PROFILE_KEY } from "@/lib/planner/types";
 import type { GroupType, TimeBudget, Transport, Vibe, Pace, PlannerProfile } from "@/lib/planner/types";
 
@@ -73,7 +74,7 @@ function StepCard<T>({
   onBack,
   step,
   total,
-  nextLabel = "Volgende",
+  nextLabel,
   nextDisabled,
 }: {
   title:        string;
@@ -89,6 +90,8 @@ function StepCard<T>({
   nextLabel?:   string;
   nextDisabled?: boolean;
 }) {
+  const { t } = useT();
+  const displayNextLabel = nextLabel ?? t("common.next");
   function isSelected(v: T): boolean {
     return multi
       ? (selected as T[]).includes(v)
@@ -181,7 +184,7 @@ function StepCard<T>({
           className="flex-[2] flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-[0.97] disabled:opacity-40"
           style={{ backgroundColor: "var(--color-primary)" }}
         >
-          {nextLabel}
+          {displayNextLabel}
           <ChevronRight size={16} />
         </button>
       </div>

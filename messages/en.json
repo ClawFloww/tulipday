@@ -11,7 +11,12 @@
     "copied": "Link copied!",
     "see_all": "See all",
     "featured": "Featured",
-    "load_error": "Something went wrong loading the data. Please try again later."
+    "load_error": "Something went wrong loading the data. Please try again later.",
+    "next": "Next",
+    "cancel": "Cancel",
+    "refresh": "Refresh",
+    "retry": "Try again",
+    "back_home": "Back to home"
   },
   "splash": {
     "tagline": "Find the best blooms today",
@@ -140,7 +145,18 @@
     "filter_family": "Family",
     "filter_free": "Free",
     "filter_horeca": "Dining",
-    "view_details": "View details"
+    "view_details": "View details",
+    "draw_route": "Route",
+    "stop_drawing": "Stop",
+    "draw_first_point": "Tap the map to add a point",
+    "draw_more_points": "Add another point to see travel times",
+    "draw_points_count": "{count} points — add more or check times",
+    "routes_panel": "Routes",
+    "routes_hint": "View and compare routes on the map!",
+    "route_saved": "Saved!",
+    "route_saved_sub": "Find it under Saved → Yours",
+    "save_route": "Save route",
+    "save_route_sub": "Pick a name for this route"
   },
   "location": {
     "loading": "Loading location…",
@@ -294,5 +310,58 @@
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
     "compress_progress": "Processing photo…"
+  },
+  "tour": {
+    "step1_title": "🌷 Home",
+    "step1_body": "Find recommended fields, routes and the current weather all in one place.",
+    "step2_title": "🗺️ Map",
+    "step2_body": "See all locations on the map. Coloured dots show bloom status. For dining, green means open and red means closed.",
+    "step3_title": "🚴 Routes",
+    "step3_body": "Pick a ready-made route or draw your own on the map. Share it with a link.",
+    "step4_title": "❤️ Saved",
+    "step4_body": "Save your favourite locations and routes with the heart icon. Everything stays neatly together here.",
+    "step5_title": "❤️ Saved & Settings",
+    "step5_body": "Save your favourite locations and routes. Change language and other preferences in Settings.",
+    "done": "Done!"
+  },
+  "active_route": {
+    "arrived": "You're here!",
+    "uploading_photo": "Uploading photo… {progress}%",
+    "checkin_with_photo": "Take photo & check in",
+    "checkin_no_photo": "Check in without photo",
+    "later": "Later",
+    "completed": "Route completed!",
+    "fields_visited": "You visited all {count} flower fields.",
+    "well_done": "Well done!"
+  },
+  "discover_page": {
+    "title": "🌷 Discover fields",
+    "loading_fields": "Loading fields…",
+    "all_seen_title": "All fields seen!",
+    "all_seen_desc": "Try a different filter or start again.",
+    "start_over": "Start over",
+    "load_more": "loading more fields…",
+    "swipe_hint": "swipe or use the buttons",
+    "fields_label": "fields",
+    "count_visited": "{count} to visit 📍",
+    "count_saved": "{count} saved ♥"
+  },
+  "route_refresh": {
+    "fetching": "Fetching bloom data...",
+    "stale": "Bloom data older than 4 hours",
+    "last_sync": "Last sync: {time}"
+  },
+  "corso_upload": {
+    "title": "📷 Upload photo",
+    "share_intro": "Share your experience of the Flower Parade",
+    "caption_placeholder": "Add a caption… (optional)",
+    "where_are_you": "Where are you?",
+    "share_photo": "Share photo 🌸",
+    "compressing": "Compressing image…",
+    "saving": "Saving…",
+    "almost_done": "Almost done…",
+    "shared": "Photo shared!",
+    "shared_sub": "Your photo is now in the live feed",
+    "upload_failed": "Upload failed"
   }
 }

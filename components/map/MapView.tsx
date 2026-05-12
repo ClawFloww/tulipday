@@ -1385,10 +1385,10 @@ export default function MapView() {
           <div className="bg-gray-900/80 backdrop-blur-sm text-white text-xs font-semibold
                           px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
             {waypoints.length === 0
-              ? "Tik op de kaart om een punt toe te voegen"
+              ? t("map.draw_first_point")
               : waypoints.length === 1
-              ? "Voeg nog een punt toe voor reistijden"
-              : `${waypoints.length} punten — voeg meer toe of bekijk tijden`}
+              ? t("map.draw_more_points")
+              : t("map.draw_points_count", { count: waypoints.length })}
           </div>
         </div>
       )}
@@ -1407,7 +1407,7 @@ export default function MapView() {
                    transition-all active:scale-95"
       >
         <List size={16} className={routePanelOpen ? "text-rose-600" : "text-gray-600"} />
-        <span className="text-xs font-bold text-gray-700">Routes</span>
+        <span className="text-xs font-bold text-gray-700">{t("map.routes_panel")}</span>
         {Object.keys(routeSlots).length > 0 && (
           <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center">
             {Object.keys(routeSlots).length}
@@ -1424,7 +1424,7 @@ export default function MapView() {
                             border-t-[6px] border-t-transparent
                             border-b-[6px] border-b-transparent
                             border-r-[7px] border-r-gray-900/90" />
-            Bekijk en vergelijk routes op de kaart!
+            {t("map.routes_hint")}
           </div>
         </div>
       )}
@@ -1461,7 +1461,7 @@ export default function MapView() {
                    }`}
       >
         <PenLine size={16} />
-        {drawMode ? "Stoppen" : "Route"}
+        {drawMode ? t("map.stop_drawing") : t("map.draw_route")}
       </button>
 
       {/* ── My location button ── */}
@@ -1519,13 +1519,13 @@ export default function MapView() {
                 <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
                   <Check size={24} className="text-green-600" />
                 </div>
-                <p className="text-sm font-extrabold text-gray-900">Opgeslagen!</p>
-                <p className="text-xs text-gray-400">Terug te vinden onder Opgeslagen → Eigen</p>
+                <p className="text-sm font-extrabold text-gray-900">{t("map.route_saved")}</p>
+                <p className="text-xs text-gray-400">{t("map.route_saved_sub")}</p>
               </div>
             ) : (
               <>
-                <p className="text-sm font-extrabold text-gray-900 mb-1">Route opslaan</p>
-                <p className="text-xs text-gray-400 mb-3">Kies een naam voor deze route</p>
+                <p className="text-sm font-extrabold text-gray-900 mb-1">{t("map.save_route")}</p>
+                <p className="text-xs text-gray-400 mb-3">{t("map.save_route_sub")}</p>
                 <input
                   type="text"
                   value={saveName}
@@ -1542,7 +1542,7 @@ export default function MapView() {
                     className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-500
                                hover:bg-gray-50 active:scale-95 transition-all"
                   >
-                    Annuleren
+                    {t("common.cancel")}
                   </button>
                   <button
                     onClick={confirmSave}
@@ -1551,7 +1551,7 @@ export default function MapView() {
                                hover:bg-tulip-600 active:scale-95 transition-all
                                disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Opslaan
+                    {t("common.save")}
                   </button>
                 </div>
               </>

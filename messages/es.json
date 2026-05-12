@@ -11,7 +11,12 @@
     "copied": "¡Enlace copiado!",
     "see_all": "Ver todo",
     "featured": "Destacado",
-    "load_error": "Se produjo un error al cargar los datos. Por favor, inténtalo de nuevo más tarde."
+    "load_error": "Se produjo un error al cargar los datos. Por favor, inténtalo de nuevo más tarde.",
+    "next": "Siguiente",
+    "cancel": "Cancelar",
+    "refresh": "Actualizar",
+    "retry": "Intentar de nuevo",
+    "back_home": "Volver al inicio"
   },
   "splash": {
     "tagline": "Encuentra las mejores flores hoy",
@@ -140,7 +145,18 @@
     "filter_family": "Familia",
     "filter_free": "Gratis",
     "filter_horeca": "Restaurantes",
-    "view_details": "Ver detalles"
+    "view_details": "Ver detalles",
+    "draw_route": "Ruta",
+    "stop_drawing": "Detener",
+    "draw_first_point": "Toca el mapa para añadir un punto",
+    "draw_more_points": "Añade otro punto para ver tiempos de viaje",
+    "draw_points_count": "{count} puntos — añade más o consulta los tiempos",
+    "routes_panel": "Rutas",
+    "routes_hint": "¡Mira y compara rutas en el mapa!",
+    "route_saved": "¡Guardado!",
+    "route_saved_sub": "Encuéntralo en Guardado → Tuyo",
+    "save_route": "Guardar ruta",
+    "save_route_sub": "Elige un nombre para esta ruta"
   },
   "location": {
     "loading": "Cargando lugar…",
@@ -294,5 +310,58 @@
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
     "compress_progress": "Processing photo…"
+  },
+  "tour": {
+    "step1_title": "🌷 Inicio",
+    "step1_body": "Encuentra campos recomendados, rutas y el clima actual en un solo lugar.",
+    "step2_title": "🗺️ Mapa",
+    "step2_body": "Ve todos los lugares en el mapa. Los puntos de colores muestran el estado de floración. En restaurantes: verde abierto, rojo cerrado.",
+    "step3_title": "🚴 Rutas",
+    "step3_body": "Elige una ruta ya preparada o dibuja tu propia ruta en el mapa. Compártela con un enlace.",
+    "step4_title": "❤️ Guardado",
+    "step4_body": "Guarda tus lugares y rutas favoritas con el corazón. Todo está aquí ordenado.",
+    "step5_title": "❤️ Guardado y Ajustes",
+    "step5_body": "Guarda tus lugares y rutas favoritas. Cambia el idioma y otras preferencias en Ajustes.",
+    "done": "¡Listo!"
+  },
+  "active_route": {
+    "arrived": "¡Has llegado!",
+    "uploading_photo": "Subiendo foto… {progress}%",
+    "checkin_with_photo": "Foto y confirmar",
+    "checkin_no_photo": "Confirmar sin foto",
+    "later": "Más tarde",
+    "completed": "¡Ruta completada!",
+    "fields_visited": "Has visitado los {count} campos de tulipanes.",
+    "well_done": "¡Bien hecho!"
+  },
+  "discover_page": {
+    "title": "🌷 Descubrir campos",
+    "loading_fields": "Cargando campos…",
+    "all_seen_title": "¡Todos los campos vistos!",
+    "all_seen_desc": "Prueba con otro filtro o empieza de nuevo.",
+    "start_over": "Empezar de nuevo",
+    "load_more": "cargando más campos…",
+    "swipe_hint": "desliza o usa los botones",
+    "fields_label": "campos",
+    "count_visited": "{count} por visitar 📍",
+    "count_saved": "{count} guardados ♥"
+  },
+  "route_refresh": {
+    "fetching": "Cargando datos de floración...",
+    "stale": "Datos de floración con más de 4 horas",
+    "last_sync": "Última sincronización: {time}"
+  },
+  "corso_upload": {
+    "title": "📷 Subir foto",
+    "share_intro": "Comparte tu experiencia del Desfile de las Flores",
+    "caption_placeholder": "Añade un pie de foto… (opcional)",
+    "where_are_you": "¿Dónde estás?",
+    "share_photo": "Compartir foto 🌸",
+    "compressing": "Comprimiendo imagen…",
+    "saving": "Guardando…",
+    "almost_done": "Casi listo…",
+    "shared": "¡Foto compartida!",
+    "shared_sub": "Tu foto ya está en el feed en directo",
+    "upload_failed": "Error al subir"
   }
 }

@@ -11,7 +11,12 @@
     "copied": "Lien copié !",
     "see_all": "Tout voir",
     "featured": "En vedette",
-    "load_error": "Une erreur est survenue lors du chargement. Veuillez réessayer plus tard."
+    "load_error": "Une erreur est survenue lors du chargement. Veuillez réessayer plus tard.",
+    "next": "Suivant",
+    "cancel": "Annuler",
+    "refresh": "Actualiser",
+    "retry": "Réessayer",
+    "back_home": "Retour à l'accueil"
   },
   "splash": {
     "tagline": "Trouvez les plus belles fleurs aujourd'hui",
@@ -140,7 +145,18 @@
     "filter_family": "Famille",
     "filter_free": "Gratuit",
     "filter_horeca": "Restaurants",
-    "view_details": "Voir les détails"
+    "view_details": "Voir les détails",
+    "draw_route": "Itinéraire",
+    "stop_drawing": "Arrêter",
+    "draw_first_point": "Touchez la carte pour ajouter un point",
+    "draw_more_points": "Ajoutez un autre point pour voir les temps de trajet",
+    "draw_points_count": "{count} points — ajoutez-en ou consultez les temps",
+    "routes_panel": "Itinéraires",
+    "routes_hint": "Affichez et comparez les itinéraires sur la carte !",
+    "route_saved": "Enregistré !",
+    "route_saved_sub": "Retrouvez-le sous Enregistré → Mes",
+    "save_route": "Enregistrer l'itinéraire",
+    "save_route_sub": "Choisissez un nom pour cet itinéraire"
   },
   "location": {
     "loading": "Chargement du lieu…",
@@ -294,5 +310,58 @@
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
     "compress_progress": "Processing photo…"
+  },
+  "tour": {
+    "step1_title": "🌷 Accueil",
+    "step1_body": "Retrouvez les champs recommandés, les itinéraires et la météo actuelle au même endroit.",
+    "step2_title": "🗺️ Carte",
+    "step2_body": "Voyez tous les lieux sur la carte. Les points colorés montrent l'état de floraison. Pour les restaurants : vert = ouvert, rouge = fermé.",
+    "step3_title": "🚴 Itinéraires",
+    "step3_body": "Choisissez un itinéraire prêt à l'emploi ou dessinez le vôtre sur la carte. Partagez-le ensuite via un lien.",
+    "step4_title": "❤️ Enregistré",
+    "step4_body": "Enregistrez vos lieux et itinéraires favoris avec le cœur. Tout est rassemblé ici de façon ordonnée.",
+    "step5_title": "❤️ Enregistré & Paramètres",
+    "step5_body": "Enregistrez vos lieux et itinéraires favoris. Changez la langue et d'autres préférences dans Paramètres.",
+    "done": "Terminé !"
+  },
+  "active_route": {
+    "arrived": "Vous y êtes !",
+    "uploading_photo": "Téléversement de la photo… {progress}%",
+    "checkin_with_photo": "Photo et confirmation",
+    "checkin_no_photo": "Confirmer sans photo",
+    "later": "Plus tard",
+    "completed": "Itinéraire terminé !",
+    "fields_visited": "Vous avez visité les {count} champs de tulipes.",
+    "well_done": "Bien joué !"
+  },
+  "discover_page": {
+    "title": "🌷 Découvrir les champs",
+    "loading_fields": "Chargement des champs…",
+    "all_seen_title": "Tous les champs vus !",
+    "all_seen_desc": "Essayez un autre filtre ou recommencez.",
+    "start_over": "Recommencer",
+    "load_more": "chargement de plus de champs…",
+    "swipe_hint": "glissez ou utilisez les boutons",
+    "fields_label": "champs",
+    "count_visited": "{count} à visiter 📍",
+    "count_saved": "{count} enregistrés ♥"
+  },
+  "route_refresh": {
+    "fetching": "Récupération des données de floraison...",
+    "stale": "Données de floraison datant de plus de 4 heures",
+    "last_sync": "Dernière synchro : {time}"
+  },
+  "corso_upload": {
+    "title": "📷 Téléverser une photo",
+    "share_intro": "Partagez votre expérience du Corso fleuri",
+    "caption_placeholder": "Ajoutez une légende… (facultatif)",
+    "where_are_you": "Où êtes-vous ?",
+    "share_photo": "Partager la photo 🌸",
+    "compressing": "Compression de l'image…",
+    "saving": "Enregistrement…",
+    "almost_done": "Presque terminé…",
+    "shared": "Photo partagée !",
+    "shared_sub": "Votre photo est maintenant dans le fil en direct",
+    "upload_failed": "Échec du téléversement"
   }
 }

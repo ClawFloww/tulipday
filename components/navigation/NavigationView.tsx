@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { haversineDistance } from "@/lib/tulipFields";
 import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n-context";
 
 const NavigationMap = dynamic(() => import("./NavigationMap"), { ssr: false });
 
@@ -84,6 +85,7 @@ const ARRIVAL_RADIUS = 80; // meter
 
 export default function NavigationView({ navRoute, locale }: { navRoute: NavRoute; locale: string }) {
   const router = useRouter();
+  const { t } = useT();
 
   // Navigatiestatus
   const [userPos,     setUserPos]     = useState<[number, number] | null>(null);
@@ -280,14 +282,14 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 280, damping: 18 }}
                     className="text-7xl mb-5 select-none">🌷</motion.div>
-        <h2 className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}>Route voltooid!</h2>
+        <h2 className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}>{t("active_route.completed")}</h2>
         <p className="text-sm mb-1" style={{ color: "var(--color-text-2)" }}>
           {navRoute.stops.length} stops · {navRoute.distanceKm} km
         </p>
-        <p className="text-base font-extrabold mb-10 text-tulip-500">Goed gedaan!</p>
+        <p className="text-base font-extrabold mb-10 text-tulip-500">{t("active_route.well_done")}</p>
         <button onClick={() => router.push(`/${locale}/home`)}
                 className="w-full max-w-sm py-4 rounded-2xl text-white font-extrabold text-base active:scale-[0.97] transition-transform bg-tulip-500">
-          Terug naar home
+          {t("common.back_home")}
         </button>
       </div>
     );
@@ -450,7 +452,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
                   <button type="button" onClick={() => setShowBloom(false)}
                           className="w-full py-1.5 text-xs font-medium rounded-lg"
                           style={{ color: "var(--color-text-3)" }}>
-                    Annuleren
+                    {t("common.cancel")}
                   </button>
                 </motion.div>
               ) : (
