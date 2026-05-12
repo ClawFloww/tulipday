@@ -4,11 +4,21 @@
 
 import fs   from "fs";
 import path from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID }   from "crypto";
 
-const SUPABASE_URL     = "https://xjwdvqjswygkibyefnjj.supabase.co";
-const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqd2R2cWpzd3lna2lieWVmbmpqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM2OTM4NCwiZXhwIjoyMDg5OTQ1Mzg0fQ.3vekm3W8K0LbIPl2mlJSD-L95s3C-dU6RWfkFO-vXXo";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envFile = fs.readFileSync(resolve(__dirname, "../.env.local"), "utf8");
+function getEnv(key) {
+  const m = envFile.match(new RegExp(`^${key}=(.+)$`, "m"));
+  if (!m) throw new Error(`Ontbrekende env var: ${key}`);
+  return m[1].trim();
+}
+
+const SUPABASE_URL     = getEnv("NEXT_PUBLIC_SUPABASE_URL");
+const SERVICE_ROLE_KEY = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 
 const DRY_RUN = !process.argv.includes("--live");
 const sb      = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
