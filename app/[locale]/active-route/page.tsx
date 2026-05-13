@@ -185,6 +185,7 @@ function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () =
 export default function ActiveRoutePage() {
   const router     = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const { t }      = useT();
 
   const [data,    setData]    = useState<StoredRoute | null>(null);
   const [visited, setVisited] = useState<Set<number>>(new Set());
@@ -371,8 +372,8 @@ export default function ActiveRoutePage() {
                   <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>
                     {field.name}
                   </p>
-                  {isActive  && <p className="text-xs font-semibold" style={{ color: "#E8527A" }}>Volgende stop</p>}
-                  {isVisited && <p className="text-xs" style={{ color: "var(--color-text-3)" }}>Bezocht ✓</p>}
+                  {isActive  && <p className="text-xs font-semibold" style={{ color: "#E8527A" }}>{t("active_route.next_stop")}</p>}
+                  {isVisited && <p className="text-xs" style={{ color: "var(--color-text-3)" }}>{t("active_route.visited")}</p>}
                 </div>
                 {isActive && (
                   <button onClick={() => navigateTo(idx)}
@@ -400,14 +401,14 @@ export default function ActiveRoutePage() {
           className="w-full py-4 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
           style={{ backgroundColor: "#E8527A" }}
         >
-          <Navigation size={18} /> Navigeer naar stop {activeIdx + 1}
+          <Navigation size={18} /> {t("active_route.navigate_to_stop", { n: activeIdx + 1 })}
         </button>
         <button
           onClick={() => markVisited(activeIdx)}
           className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
           style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
         >
-          <Check size={16} /> Stop {activeIdx + 1} aftekenen
+          <Check size={16} /> {t("active_route.checkin_stop", { n: activeIdx + 1 })}
         </button>
       </div>
 

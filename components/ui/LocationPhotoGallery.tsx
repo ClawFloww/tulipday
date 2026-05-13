@@ -140,7 +140,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
           {activeIdx > 0 && (
             <button
               onClick={prev}
-              aria-label="Vorige foto"
+              aria-label={t("photos.prev_photo")}
               className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full
                          bg-black/30 backdrop-blur-sm text-white flex items-center justify-center
                          hover:bg-black/50 transition-colors"
@@ -151,7 +151,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
           {activeIdx < allPhotos.length - 1 && (
             <button
               onClick={next}
-              aria-label="Volgende foto"
+              aria-label={t("photos.next_photo")}
               className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full
                          bg-black/30 backdrop-blur-sm text-white flex items-center justify-center
                          hover:bg-black/50 transition-colors"

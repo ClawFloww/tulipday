@@ -16,7 +16,9 @@
     "cancel": "Abbrechen",
     "refresh": "Aktualisieren",
     "retry": "Erneut versuchen",
-    "back_home": "Zurück zur Startseite"
+    "back_home": "Zurück zur Startseite",
+    "close": "Schließen",
+    "check_in": "Einchecken"
   },
   "splash": {
     "tagline": "Die schönsten Blüten heute entdecken",
@@ -309,7 +311,11 @@
     "badge_today": "Today",
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
-    "compress_progress": "Processing photo…"
+    "compress_progress": "Processing photo…",
+    "prev_photo": "Vorheriges Foto",
+    "next_photo": "Nächstes Foto",
+    "photo_added": "Foto hinzugefügt",
+    "note_placeholder": "Optional: Schreibe etwas über dieses Feld…"
   },
   "tour": {
     "step1_title": "🌷 Startseite",
@@ -332,7 +338,11 @@
     "later": "Später",
     "completed": "Route abgeschlossen!",
     "fields_visited": "Sie haben alle {count} Tulpenfelder besucht.",
-    "well_done": "Gut gemacht!"
+    "well_done": "Gut gemacht!",
+    "next_stop": "Nächster Stopp",
+    "visited": "Besucht ✓",
+    "navigate_to_stop": "Zu Stopp {n} navigieren",
+    "checkin_stop": "Stopp {n} einchecken"
   },
   "discover_page": {
     "title": "🌷 Felder entdecken",
@@ -363,5 +373,86 @@
     "shared": "Foto geteilt!",
     "shared_sub": "Ihr Foto ist jetzt im Live-Feed",
     "upload_failed": "Upload fehlgeschlagen"
+  },
+  "navigation": {
+    "locating": "Standort wird bestimmt…",
+    "enable_gps": "Bitte stellen Sie sicher, dass GPS aktiviert ist",
+    "no_gps_title": "Kein Standortzugriff",
+    "no_gps_body": "Bitte erlauben Sie den Standortzugriff in den Browsereinstellungen, um zu navigieren.",
+    "to_start": "Zum Startpunkt",
+    "approach_calculated": "Anfahrtsroute berechnet",
+    "then_starts": "Dann beginnt →",
+    "after_that": "Danach →",
+    "then_begins_named": "Dann beginnt {name}",
+    "stop_of_total": "Stopp {current} von {total}",
+    "bloom_question": "Steht dieses Feld in Blüte?",
+    "bloom_in_bloom": "🌷 Voll in Blüte",
+    "bloom_fading": "🌸 Verblüht langsam",
+    "bloom_finished": "🍃 Verblüht",
+    "reported_in_bloom": "In Blüte ✓",
+    "reported_fading": "Verblüht ✓",
+    "reported_finished": "Verblüht ✓",
+    "report_bloom": "Blüte melden",
+    "navigate_now": "Jetzt navigieren"
+  },
+  "planner": {
+    "header_eyebrow": "Ihre Tagesroute",
+    "header_title": "Planen Sie Ihren perfekten Tulpentag",
+    "step_group": "Mit wem sind Sie unterwegs?",
+    "step_time": "Wie viel Zeit haben Sie?",
+    "step_transport": "Wie sind Sie unterwegs?",
+    "step_vibe": "Was passt zu Ihnen?",
+    "step_vibe_sub": "Wählen Sie ein oder mehrere Themen",
+    "step_pace": "Welches Tempo passt zu Ihnen?",
+    "cta": "Meine Route erstellen",
+    "group": {
+      "solo": "Solo",
+      "solo_sub": "Alleine unterwegs",
+      "couple": "Paar",
+      "couple_sub": "Romantischer Ausflug",
+      "family": "Familie",
+      "family_sub": "Mit Kindern",
+      "friends": "Freunde",
+      "friends_sub": "Gruppenausflug"
+    },
+    "time": {
+      "short": "~2 Stunden",
+      "short_sub": "Kurze Highlights",
+      "half": "Halber Tag",
+      "half_sub": "Entspannter Morgen oder Nachmittag",
+      "full": "Ganzer Tag",
+      "full_sub": "Alles mitnehmen"
+    },
+    "transport": {
+      "walking": "Zu Fuß",
+      "walking_sub": "Gemütlich spazieren",
+      "cycling": "Fahrrad",
+      "cycling_sub": "Durch die Felder radeln",
+      "car": "Auto",
+      "car_sub": "Zwischen den Spots fahren"
+    },
+    "vibe": {
+      "flowers": "Blumen",
+      "flowers_sub": "Farbenfrohe Tulpenfelder",
+      "photography": "Fotografie",
+      "photography_sub": "Perfekte Aufnahmen machen",
+      "culture": "Kultur",
+      "culture_sub": "Sehenswürdigkeiten",
+      "food": "Essen & Trinken",
+      "food_sub": "Leckeres Mittag- oder Abendessen",
+      "nature": "Natur",
+      "nature_sub": "Draußen im Grünen"
+    },
+    "pace": {
+      "relaxed": "Ruhig",
+      "relaxed_sub": "Wirklich entspannen",
+      "normal": "Normal",
+      "normal_sub": "Gute Balance",
+      "active": "Aktiv",
+      "active_sub": "So viel wie möglich sehen"
+    }
+  },
+  "search": {
+    "placeholder": "Orte oder Routen suchen…"
   }
 }

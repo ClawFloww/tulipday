@@ -16,7 +16,9 @@
     "cancel": "取消",
     "refresh": "刷新",
     "retry": "重试",
-    "back_home": "返回首页"
+    "back_home": "返回首页",
+    "close": "关闭",
+    "check_in": "签到"
   },
   "splash": {
     "tagline": "今日寻觅最美花田",
@@ -309,7 +311,11 @@
     "badge_today": "Today",
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
-    "compress_progress": "Processing photo…"
+    "compress_progress": "Processing photo…",
+    "prev_photo": "上一张照片",
+    "next_photo": "下一张照片",
+    "photo_added": "已添加照片",
+    "note_placeholder": "可选: 写一些关于这片花田的内容…"
   },
   "tour": {
     "step1_title": "🌷 首页",
@@ -332,7 +338,11 @@
     "later": "稍后",
     "completed": "路线完成!",
     "fields_visited": "您已访问全部 {count} 个郁金香花田。",
-    "well_done": "干得好!"
+    "well_done": "干得好!",
+    "next_stop": "下一站",
+    "visited": "已访问 ✓",
+    "navigate_to_stop": "导航到第 {n} 站",
+    "checkin_stop": "第 {n} 站签到"
   },
   "discover_page": {
     "title": "🌷 探索花田",
@@ -363,5 +373,86 @@
     "shared": "照片已分享!",
     "shared_sub": "您的照片现已显示在实时动态中",
     "upload_failed": "上传失败"
+  },
+  "navigation": {
+    "locating": "正在定位…",
+    "enable_gps": "请确保已开启 GPS",
+    "no_gps_title": "无位置访问权限",
+    "no_gps_body": "请在浏览器设置中允许位置访问以进行导航。",
+    "to_start": "前往起点",
+    "approach_calculated": "已计算前往路线",
+    "then_starts": "然后开始 →",
+    "after_that": "接着 →",
+    "then_begins_named": "然后开始 {name}",
+    "stop_of_total": "第 {current} / {total} 站",
+    "bloom_question": "这片花田正在盛开吗?",
+    "bloom_in_bloom": "🌷 盛开中",
+    "bloom_fading": "🌸 开始凋谢",
+    "bloom_finished": "🍃 已凋谢",
+    "reported_in_bloom": "盛开中 ✓",
+    "reported_fading": "正在凋谢 ✓",
+    "reported_finished": "已凋谢 ✓",
+    "report_bloom": "上报花期",
+    "navigate_now": "正在导航"
+  },
+  "planner": {
+    "header_eyebrow": "您的当日路线",
+    "header_title": "规划完美的郁金香一日游",
+    "step_group": "您和谁一起?",
+    "step_time": "您有多少时间?",
+    "step_transport": "您如何出行?",
+    "step_vibe": "您喜欢什么?",
+    "step_vibe_sub": "选择一个或多个主题",
+    "step_pace": "您喜欢什么节奏?",
+    "cta": "创建我的路线",
+    "group": {
+      "solo": "独自",
+      "solo_sub": "一个人出行",
+      "couple": "情侣",
+      "couple_sub": "浪漫之旅",
+      "family": "家庭",
+      "family_sub": "带孩子",
+      "friends": "朋友",
+      "friends_sub": "团体出行"
+    },
+    "time": {
+      "short": "约 2 小时",
+      "short_sub": "快速精华游",
+      "half": "半天",
+      "half_sub": "轻松的上午或下午",
+      "full": "全天",
+      "full_sub": "尽览一切"
+    },
+    "transport": {
+      "walking": "步行",
+      "walking_sub": "悠闲漫步",
+      "cycling": "骑行",
+      "cycling_sub": "骑车穿越花田",
+      "car": "开车",
+      "car_sub": "驾车游览各处"
+    },
+    "vibe": {
+      "flowers": "鲜花",
+      "flowers_sub": "色彩缤纷的郁金香花田",
+      "photography": "摄影",
+      "photography_sub": "拍出完美照片",
+      "culture": "文化",
+      "culture_sub": "名胜古迹",
+      "food": "餐饮",
+      "food_sub": "美味的午餐或晚餐",
+      "nature": "自然",
+      "nature_sub": "在绿意中漫游"
+    },
+    "pace": {
+      "relaxed": "悠闲",
+      "relaxed_sub": "真正放松",
+      "normal": "正常",
+      "normal_sub": "良好平衡",
+      "active": "活跃",
+      "active_sub": "尽可能多看"
+    }
+  },
+  "search": {
+    "placeholder": "搜索地点或路线…"
   }
 }

@@ -180,7 +180,7 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
           <h2 className="text-base font-extrabold text-gray-900">{t("photos.sheet_title")}</h2>
           <button
             onClick={onClose}
-            aria-label="Sluiten"
+            aria-label={t("common.close")}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
           >
             <X size={16} />

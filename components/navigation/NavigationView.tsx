@@ -309,8 +309,8 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm"
           >
             <div className="w-10 h-10 rounded-full border-3 border-white border-t-transparent animate-spin" />
-            <p className="text-white font-bold text-base">Locatie bepalen…</p>
-            <p className="text-white/60 text-sm">Zorg dat GPS is ingeschakeld</p>
+            <p className="text-white font-bold text-base">{t("navigation.locating")}</p>
+            <p className="text-white/60 text-sm">{t("navigation.enable_gps")}</p>
           </motion.div>
         )}
         {gpsStatus === "denied" && (
@@ -319,13 +319,13 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 px-8 bg-black/70"
           >
             <Locate size={40} className="text-white" />
-            <p className="text-white font-extrabold text-lg text-center">Geen locatietoegang</p>
+            <p className="text-white font-extrabold text-lg text-center">{t("navigation.no_gps_title")}</p>
             <p className="text-white/70 text-sm text-center">
-              Sta locatietoegang toe in je browserinstellingen om te navigeren.
+              {t("navigation.no_gps_body")}
             </p>
             <button onClick={() => router.back()}
                     className="mt-2 px-6 py-3 rounded-2xl bg-white text-tulip-600 font-bold">
-              Terug
+              {t("common.back")}
             </button>
           </motion.div>
         )}
@@ -353,7 +353,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
             <div className="flex-1 min-w-0">
               <p className="text-white font-extrabold text-lg leading-tight truncate">
                 {approachPhase
-                  ? (activeApproachStep?.streetName || "Naar startpunt")
+                  ? (activeApproachStep?.streetName || t("navigation.to_start"))
                   : (activeStep?.streetName || activeStop?.name || navRoute.name)}
               </p>
               <p className="text-white/80 text-sm font-semibold mt-0.5">
@@ -362,12 +362,12 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
                       ? formatDist(distToStart)
                       : activeApproachStep
                         ? formatDist(activeApproachStep.distance)
-                        : "Aanrijdroute berekend")
+                        : t("navigation.approach_calculated"))
                   : (distToStop !== null
                       ? formatDist(distToStop)
                       : activeStep
                         ? formatDist(activeStep.distance)
-                        : gpsStatus === "waiting" ? "Locatie bepalen…" : "")}
+                        : gpsStatus === "waiting" ? t("navigation.locating") : "")}
               </p>
             </div>
 
@@ -381,12 +381,12 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
           {/* Onderbalk: aanrijdroute → routenaam / hoofdroute → volgende stop */}
           {approachPhase ? (
             <div className="px-4 pb-2.5 flex items-center gap-1.5">
-              <span className="text-white/60 text-[11px] font-medium">Dan begint →</span>
+              <span className="text-white/60 text-[11px] font-medium">{t("navigation.then_starts")}</span>
               <span className="text-white/90 text-[11px] font-bold truncate">{navRoute.name}</span>
             </div>
           ) : navRoute.stops[currentStop + 1] ? (
             <div className="px-4 pb-2.5 flex items-center gap-1.5">
-              <span className="text-white/60 text-[11px] font-medium">Daarna →</span>
+              <span className="text-white/60 text-[11px] font-medium">{t("navigation.after_that")}</span>
               <span className="text-white/90 text-[11px] font-bold truncate">
                 {navRoute.stops[currentStop + 1].name}
               </span>
@@ -436,12 +436,12 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
                   style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
                 >
                   <p className="text-xs font-bold mb-2 px-0.5" style={{ color: "var(--color-text-2)" }}>
-                    Staat dit veld in bloei?
+                    {t("navigation.bloom_question")}
                   </p>
                   {[
-                    { value: "in_bloom",  label: "🌷 Volop in bloei" },
-                    { value: "fading",    label: "🌸 Aan het vervagen" },
-                    { value: "finished",  label: "🍃 Uitgebloeid" },
+                    { value: "in_bloom",  label: t("navigation.bloom_in_bloom") },
+                    { value: "fading",    label: t("navigation.bloom_fading") },
+                    { value: "finished",  label: t("navigation.bloom_finished") },
                   ].map((opt) => (
                     <button key={opt.value} type="button" onClick={() => handleBloomReport(opt.value)}
                             className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 mb-1"
@@ -467,10 +467,10 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
                   }}
                 >
                   <Flower2 size={14} className="text-tulip-500" />
-                  {reportedBloom === "in_bloom" ? "In bloei ✓"
-                    : reportedBloom === "fading" ? "Vervagend ✓"
-                    : reportedBloom === "finished" ? "Uitgebloeid ✓"
-                    : "Bloei melden"}
+                  {reportedBloom === "in_bloom" ? t("navigation.reported_in_bloom")
+                    : reportedBloom === "fading" ? t("navigation.reported_fading")
+                    : reportedBloom === "finished" ? t("navigation.reported_finished")
+                    : t("navigation.report_bloom")}
                 </motion.button>
               )}
             </AnimatePresence>
@@ -501,19 +501,19 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
             <div className="flex-1 min-w-0">
               <p className="text-base font-extrabold leading-tight" style={{ color: "var(--color-text)" }}>
                 {approachPhase
-                  ? (distToStart !== null ? formatDist(distToStart) : "Naar startpunt")
+                  ? (distToStart !== null ? formatDist(distToStart) : t("navigation.to_start"))
                   : formatDist(distRemaining)}
               </p>
               <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
                 {approachPhase
-                  ? `Dan begint ${navRoute.name}`
-                  : `~${formatETA(etaMinutes)} · stop ${currentStop + 1} van ${navRoute.stops.length}`}
+                  ? t("navigation.then_begins_named", { name: navRoute.name })
+                  : `~${formatETA(etaMinutes)} · ${t("navigation.stop_of_total", { current: currentStop + 1, total: navRoute.stops.length })}`}
               </p>
             </div>
             {!approachPhase && (
               <button type="button" onClick={() => handleMarkArrived(currentStop)}
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-sm font-bold active:scale-95 transition-transform bg-tulip-500">
-                <Check size={15} /> Aftekenen
+                <Check size={15} /> {t("common.check_in")}
               </button>
             )}
           </div>
@@ -559,7 +559,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{stop.name}</p>
-                        {isActive && <p className="text-xs font-bold text-tulip-500">Nu navigeren</p>}
+                        {isActive && <p className="text-xs font-bold text-tulip-500">{t("navigation.navigate_now")}</p>}
                       </div>
                       {!isVisited && !isActive && <ChevronRight size={14} style={{ color: "var(--color-text-3)" }} />}
                     </div>

@@ -16,7 +16,9 @@
     "cancel": "Annuleren",
     "refresh": "Vernieuwen",
     "retry": "Opnieuw proberen",
-    "back_home": "Terug naar home"
+    "back_home": "Terug naar home",
+    "close": "Sluiten",
+    "check_in": "Aftekenen"
   },
   "splash": {
     "tagline": "Ontdek de mooiste tulpenvelden vandaag",
@@ -309,7 +311,11 @@
     "badge_today": "Vandaag",
     "badge_bloom": "Bloei bevestigd",
     "pending_label": "Wacht op goedkeuring",
-    "compress_progress": "Foto verwerken…"
+    "compress_progress": "Foto verwerken…",
+    "prev_photo": "Vorige foto",
+    "next_photo": "Volgende foto",
+    "photo_added": "Foto toegevoegd",
+    "note_placeholder": "Optioneel: schrijf iets over dit veld…"
   },
   "tour": {
     "step1_title": "🌷 Startpagina",
@@ -332,7 +338,11 @@
     "later": "Straks",
     "completed": "Route voltooid!",
     "fields_visited": "Je hebt alle {count} bollenvelden bezocht.",
-    "well_done": "Goed gedaan!"
+    "well_done": "Goed gedaan!",
+    "next_stop": "Volgende stop",
+    "visited": "Bezocht ✓",
+    "navigate_to_stop": "Navigeer naar stop {n}",
+    "checkin_stop": "Stop {n} aftekenen"
   },
   "discover_page": {
     "title": "🌷 Ontdek velden",
@@ -363,5 +373,86 @@
     "shared": "Foto gedeeld!",
     "shared_sub": "Je foto staat nu in de live feed",
     "upload_failed": "Upload mislukt"
+  },
+  "navigation": {
+    "locating": "Locatie bepalen…",
+    "enable_gps": "Zorg dat GPS is ingeschakeld",
+    "no_gps_title": "Geen locatietoegang",
+    "no_gps_body": "Sta locatietoegang toe in je browserinstellingen om te navigeren.",
+    "to_start": "Naar startpunt",
+    "approach_calculated": "Aanrijdroute berekend",
+    "then_starts": "Dan begint →",
+    "after_that": "Daarna →",
+    "then_begins_named": "Dan begint {name}",
+    "stop_of_total": "stop {current} van {total}",
+    "bloom_question": "Staat dit veld in bloei?",
+    "bloom_in_bloom": "🌷 Volop in bloei",
+    "bloom_fading": "🌸 Aan het vervagen",
+    "bloom_finished": "🍃 Uitgebloeid",
+    "reported_in_bloom": "In bloei ✓",
+    "reported_fading": "Vervagend ✓",
+    "reported_finished": "Uitgebloeid ✓",
+    "report_bloom": "Bloei melden",
+    "navigate_now": "Nu navigeren"
+  },
+  "planner": {
+    "header_eyebrow": "Jouw dagroute",
+    "header_title": "Plan de perfecte tulpendag",
+    "step_group": "Met wie ga je op pad?",
+    "step_time": "Hoeveel tijd heb je?",
+    "step_transport": "Hoe verplaats je je?",
+    "step_vibe": "Wat past bij jou?",
+    "step_vibe_sub": "Kies één of meerdere onderwerpen",
+    "step_pace": "Welk tempo past bij je?",
+    "cta": "Maak mijn route",
+    "group": {
+      "solo": "Solo",
+      "solo_sub": "Alleen op pad",
+      "couple": "Stel",
+      "couple_sub": "Romantisch uitje",
+      "family": "Familie",
+      "family_sub": "Met kinderen",
+      "friends": "Vrienden",
+      "friends_sub": "Groepsuitje"
+    },
+    "time": {
+      "short": "~2 uur",
+      "short_sub": "Snel de hoogtepunten",
+      "half": "Halve dag",
+      "half_sub": "Rustige ochtend of middag",
+      "full": "Hele dag",
+      "full_sub": "Alles meepakken"
+    },
+    "transport": {
+      "walking": "Te voet",
+      "walking_sub": "Rustig wandelen",
+      "cycling": "Fiets",
+      "cycling_sub": "Fietsen door de velden",
+      "car": "Auto",
+      "car_sub": "Rijden tussen locaties"
+    },
+    "vibe": {
+      "flowers": "Bloemen",
+      "flowers_sub": "Kleurrijke bollenvelden",
+      "photography": "Fotografie",
+      "photography_sub": "Perfecte plaatjes schieten",
+      "culture": "Cultuur",
+      "culture_sub": "Bezienswaardigheden",
+      "food": "Eten & drinken",
+      "food_sub": "Lekker lunchen of dineren",
+      "nature": "Natuur",
+      "nature_sub": "Buiten in het groen"
+    },
+    "pace": {
+      "relaxed": "Rustig",
+      "relaxed_sub": "Echt ontspannen",
+      "normal": "Normaal",
+      "normal_sub": "Goede balans",
+      "active": "Actief",
+      "active_sub": "Zoveel mogelijk zien"
+    }
+  },
+  "search": {
+    "placeholder": "Zoek locaties of routes…"
   }
 }

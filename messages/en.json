@@ -16,7 +16,9 @@
     "cancel": "Cancel",
     "refresh": "Refresh",
     "retry": "Try again",
-    "back_home": "Back to home"
+    "back_home": "Back to home",
+    "close": "Close",
+    "check_in": "Check in"
   },
   "splash": {
     "tagline": "Find the best blooms today",
@@ -309,7 +311,11 @@
     "badge_today": "Today",
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
-    "compress_progress": "Processing photo…"
+    "compress_progress": "Processing photo…",
+    "prev_photo": "Previous photo",
+    "next_photo": "Next photo",
+    "photo_added": "Photo added",
+    "note_placeholder": "Optional: write something about this field…"
   },
   "tour": {
     "step1_title": "🌷 Home",
@@ -332,7 +338,11 @@
     "later": "Later",
     "completed": "Route completed!",
     "fields_visited": "You visited all {count} flower fields.",
-    "well_done": "Well done!"
+    "well_done": "Well done!",
+    "next_stop": "Next stop",
+    "visited": "Visited ✓",
+    "navigate_to_stop": "Navigate to stop {n}",
+    "checkin_stop": "Check in stop {n}"
   },
   "discover_page": {
     "title": "🌷 Discover fields",
@@ -363,5 +373,86 @@
     "shared": "Photo shared!",
     "shared_sub": "Your photo is now in the live feed",
     "upload_failed": "Upload failed"
+  },
+  "navigation": {
+    "locating": "Finding your location…",
+    "enable_gps": "Make sure GPS is enabled",
+    "no_gps_title": "No location access",
+    "no_gps_body": "Please allow location access in your browser settings to navigate.",
+    "to_start": "To start point",
+    "approach_calculated": "Approach route calculated",
+    "then_starts": "Then starts →",
+    "after_that": "Then →",
+    "then_begins_named": "Then {name} begins",
+    "stop_of_total": "stop {current} of {total}",
+    "bloom_question": "Is this field in bloom?",
+    "bloom_in_bloom": "🌷 In full bloom",
+    "bloom_fading": "🌸 Starting to fade",
+    "bloom_finished": "🍃 Past peak",
+    "reported_in_bloom": "In bloom ✓",
+    "reported_fading": "Fading ✓",
+    "reported_finished": "Past peak ✓",
+    "report_bloom": "Report bloom",
+    "navigate_now": "Navigating now"
+  },
+  "planner": {
+    "header_eyebrow": "Your day route",
+    "header_title": "Plan the perfect tulip day",
+    "step_group": "Who are you going with?",
+    "step_time": "How much time do you have?",
+    "step_transport": "How will you get around?",
+    "step_vibe": "What suits you?",
+    "step_vibe_sub": "Pick one or more topics",
+    "step_pace": "What pace suits you?",
+    "cta": "Create my route",
+    "group": {
+      "solo": "Solo",
+      "solo_sub": "On your own",
+      "couple": "Couple",
+      "couple_sub": "Romantic outing",
+      "family": "Family",
+      "family_sub": "With kids",
+      "friends": "Friends",
+      "friends_sub": "Group outing"
+    },
+    "time": {
+      "short": "~2 hours",
+      "short_sub": "Quick highlights",
+      "half": "Half day",
+      "half_sub": "Relaxed morning or afternoon",
+      "full": "Full day",
+      "full_sub": "See it all"
+    },
+    "transport": {
+      "walking": "Walking",
+      "walking_sub": "Easy stroll",
+      "cycling": "Cycling",
+      "cycling_sub": "Cycle through the fields",
+      "car": "Car",
+      "car_sub": "Drive between spots"
+    },
+    "vibe": {
+      "flowers": "Flowers",
+      "flowers_sub": "Colourful tulip fields",
+      "photography": "Photography",
+      "photography_sub": "Capture perfect shots",
+      "culture": "Culture",
+      "culture_sub": "Landmarks and sights",
+      "food": "Food & drink",
+      "food_sub": "Good lunch or dinner",
+      "nature": "Nature",
+      "nature_sub": "Out in the green"
+    },
+    "pace": {
+      "relaxed": "Relaxed",
+      "relaxed_sub": "Truly unwind",
+      "normal": "Normal",
+      "normal_sub": "Good balance",
+      "active": "Active",
+      "active_sub": "See as much as possible"
+    }
+  },
+  "search": {
+    "placeholder": "Search locations or routes…"
   }
 }

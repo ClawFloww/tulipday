@@ -16,7 +16,9 @@
     "cancel": "Annuler",
     "refresh": "Actualiser",
     "retry": "Réessayer",
-    "back_home": "Retour à l'accueil"
+    "back_home": "Retour à l'accueil",
+    "close": "Fermer",
+    "check_in": "Confirmer"
   },
   "splash": {
     "tagline": "Trouvez les plus belles fleurs aujourd'hui",
@@ -309,7 +311,11 @@
     "badge_today": "Today",
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
-    "compress_progress": "Processing photo…"
+    "compress_progress": "Processing photo…",
+    "prev_photo": "Photo précédente",
+    "next_photo": "Photo suivante",
+    "photo_added": "Photo ajoutée",
+    "note_placeholder": "Facultatif : écrivez quelque chose sur ce champ…"
   },
   "tour": {
     "step1_title": "🌷 Accueil",
@@ -332,7 +338,11 @@
     "later": "Plus tard",
     "completed": "Itinéraire terminé !",
     "fields_visited": "Vous avez visité les {count} champs de tulipes.",
-    "well_done": "Bien joué !"
+    "well_done": "Bien joué !",
+    "next_stop": "Prochaine étape",
+    "visited": "Visité ✓",
+    "navigate_to_stop": "Naviguer vers l'étape {n}",
+    "checkin_stop": "Confirmer l'étape {n}"
   },
   "discover_page": {
     "title": "🌷 Découvrir les champs",
@@ -363,5 +373,86 @@
     "shared": "Photo partagée !",
     "shared_sub": "Votre photo est maintenant dans le fil en direct",
     "upload_failed": "Échec du téléversement"
+  },
+  "navigation": {
+    "locating": "Localisation en cours…",
+    "enable_gps": "Assurez-vous que le GPS est activé",
+    "no_gps_title": "Pas d'accès à la localisation",
+    "no_gps_body": "Veuillez autoriser l'accès à la localisation dans les paramètres du navigateur pour naviguer.",
+    "to_start": "Vers le point de départ",
+    "approach_calculated": "Itinéraire d'approche calculé",
+    "then_starts": "Ensuite commence →",
+    "after_that": "Puis →",
+    "then_begins_named": "Puis {name} commence",
+    "stop_of_total": "étape {current} sur {total}",
+    "bloom_question": "Ce champ est-il en fleurs ?",
+    "bloom_in_bloom": "🌷 En pleine floraison",
+    "bloom_fading": "🌸 Commence à se faner",
+    "bloom_finished": "🍃 Fané",
+    "reported_in_bloom": "En fleurs ✓",
+    "reported_fading": "Se fane ✓",
+    "reported_finished": "Fané ✓",
+    "report_bloom": "Signaler la floraison",
+    "navigate_now": "Navigation en cours"
+  },
+  "planner": {
+    "header_eyebrow": "Votre itinéraire du jour",
+    "header_title": "Planifiez la journée tulipes parfaite",
+    "step_group": "Avec qui partez-vous ?",
+    "step_time": "De combien de temps disposez-vous ?",
+    "step_transport": "Comment vous déplacez-vous ?",
+    "step_vibe": "Qu'est-ce qui vous correspond ?",
+    "step_vibe_sub": "Choisissez un ou plusieurs thèmes",
+    "step_pace": "Quel rythme vous convient ?",
+    "cta": "Créer mon itinéraire",
+    "group": {
+      "solo": "Solo",
+      "solo_sub": "Tout seul",
+      "couple": "En couple",
+      "couple_sub": "Sortie romantique",
+      "family": "En famille",
+      "family_sub": "Avec des enfants",
+      "friends": "Entre amis",
+      "friends_sub": "Sortie de groupe"
+    },
+    "time": {
+      "short": "~2 heures",
+      "short_sub": "Points forts rapides",
+      "half": "Demi-journée",
+      "half_sub": "Matinée ou après-midi détendu",
+      "full": "Journée entière",
+      "full_sub": "Tout voir"
+    },
+    "transport": {
+      "walking": "À pied",
+      "walking_sub": "Marche tranquille",
+      "cycling": "Vélo",
+      "cycling_sub": "Pédaler dans les champs",
+      "car": "Voiture",
+      "car_sub": "Conduire entre les spots"
+    },
+    "vibe": {
+      "flowers": "Fleurs",
+      "flowers_sub": "Champs de tulipes colorés",
+      "photography": "Photographie",
+      "photography_sub": "Capturer de belles photos",
+      "culture": "Culture",
+      "culture_sub": "Sites et monuments",
+      "food": "Nourriture & boissons",
+      "food_sub": "Bon déjeuner ou dîner",
+      "nature": "Nature",
+      "nature_sub": "Dehors dans la verdure"
+    },
+    "pace": {
+      "relaxed": "Tranquille",
+      "relaxed_sub": "Vraiment se détendre",
+      "normal": "Normal",
+      "normal_sub": "Bon équilibre",
+      "active": "Actif",
+      "active_sub": "Voir le plus possible"
+    }
+  },
+  "search": {
+    "placeholder": "Rechercher des lieux ou itinéraires…"
   }
 }

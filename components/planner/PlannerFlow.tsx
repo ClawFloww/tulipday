@@ -20,38 +20,49 @@ interface Option<T> {
   icon:  React.ReactNode;
 }
 
-const GROUP_OPTIONS: Option<GroupType>[] = [
-  { value: "solo",    label: "Solo",      sub: "Alleen op pad",        icon: <UserRound size={26} /> },
-  { value: "couple",  label: "Stel",      sub: "Romantisch uitje",     icon: <Smile     size={26} /> },
-  { value: "family",  label: "Familie",   sub: "Met kinderen",         icon: <Baby      size={26} /> },
-  { value: "friends", label: "Vrienden",  sub: "Groepsuitje",          icon: <Users     size={26} /> },
+interface OptionDef<T> {
+  value:    T;
+  labelKey: string;
+  subKey:   string;
+  icon:     React.ReactNode;
+}
+
+const GROUP_DEFS: OptionDef<GroupType>[] = [
+  { value: "solo",    labelKey: "planner.group.solo",    subKey: "planner.group.solo_sub",    icon: <UserRound size={26} /> },
+  { value: "couple",  labelKey: "planner.group.couple",  subKey: "planner.group.couple_sub",  icon: <Smile     size={26} /> },
+  { value: "family",  labelKey: "planner.group.family",  subKey: "planner.group.family_sub",  icon: <Baby      size={26} /> },
+  { value: "friends", labelKey: "planner.group.friends", subKey: "planner.group.friends_sub", icon: <Users     size={26} /> },
 ];
 
-const TIME_OPTIONS: Option<TimeBudget>[] = [
-  { value: "2h",   label: "~2 uur",      sub: "Snel de hoogtepunten",       icon: <Clock size={26} /> },
-  { value: "half", label: "Halve dag",   sub: "Rustige ochtend of middag",  icon: <Clock size={26} /> },
-  { value: "full", label: "Hele dag",    sub: "Alles meepakken",            icon: <Clock size={26} /> },
+const TIME_DEFS: OptionDef<TimeBudget>[] = [
+  { value: "2h",   labelKey: "planner.time.short", subKey: "planner.time.short_sub", icon: <Clock size={26} /> },
+  { value: "half", labelKey: "planner.time.half",  subKey: "planner.time.half_sub",  icon: <Clock size={26} /> },
+  { value: "full", labelKey: "planner.time.full",  subKey: "planner.time.full_sub",  icon: <Clock size={26} /> },
 ];
 
-const TRANSPORT_OPTIONS: Option<Transport>[] = [
-  { value: "walking", label: "Te voet",  sub: "Rustig wandelen",     icon: <Footprints size={26} /> },
-  { value: "cycling", label: "Fiets",    sub: "Fietsen door de velden", icon: <Bike    size={26} /> },
-  { value: "car",     label: "Auto",     sub: "Rijden tussen locaties", icon: <Car     size={26} /> },
+const TRANSPORT_DEFS: OptionDef<Transport>[] = [
+  { value: "walking", labelKey: "planner.transport.walking", subKey: "planner.transport.walking_sub", icon: <Footprints size={26} /> },
+  { value: "cycling", labelKey: "planner.transport.cycling", subKey: "planner.transport.cycling_sub", icon: <Bike       size={26} /> },
+  { value: "car",     labelKey: "planner.transport.car",     subKey: "planner.transport.car_sub",     icon: <Car        size={26} /> },
 ];
 
-const VIBE_OPTIONS: Option<Vibe>[] = [
-  { value: "bloemen",    label: "Bloemen",      sub: "Kleurrijke bollenvelden",    icon: <Flower2          size={24} /> },
-  { value: "fotografie", label: "Fotografie",   sub: "Perfecte plaatjes schieten", icon: <Camera           size={24} /> },
-  { value: "cultuur",    label: "Cultuur",      sub: "Bezienswaardigheden",        icon: <Landmark         size={24} /> },
-  { value: "eten",       label: "Eten & drinken", sub: "Lekker lunchen of dineren", icon: <UtensilsCrossed size={24} /> },
-  { value: "natuur",     label: "Natuur",       sub: "Buiten in het groen",        icon: <Trees            size={24} /> },
+const VIBE_DEFS: OptionDef<Vibe>[] = [
+  { value: "bloemen",    labelKey: "planner.vibe.flowers",     subKey: "planner.vibe.flowers_sub",     icon: <Flower2          size={24} /> },
+  { value: "fotografie", labelKey: "planner.vibe.photography", subKey: "planner.vibe.photography_sub", icon: <Camera           size={24} /> },
+  { value: "cultuur",    labelKey: "planner.vibe.culture",     subKey: "planner.vibe.culture_sub",     icon: <Landmark         size={24} /> },
+  { value: "eten",       labelKey: "planner.vibe.food",        subKey: "planner.vibe.food_sub",        icon: <UtensilsCrossed  size={24} /> },
+  { value: "natuur",     labelKey: "planner.vibe.nature",      subKey: "planner.vibe.nature_sub",      icon: <Trees            size={24} /> },
 ];
 
-const PACE_OPTIONS: Option<Pace>[] = [
-  { value: "relaxed", label: "Rustig",  sub: "Echt ontspannen",       icon: <Gauge size={26} /> },
-  { value: "normal",  label: "Normaal", sub: "Goede balans",           icon: <Gauge size={26} /> },
-  { value: "active",  label: "Actief",  sub: "Zoveel mogelijk zien",   icon: <Gauge size={26} /> },
+const PACE_DEFS: OptionDef<Pace>[] = [
+  { value: "relaxed", labelKey: "planner.pace.relaxed", subKey: "planner.pace.relaxed_sub", icon: <Gauge size={26} /> },
+  { value: "normal",  labelKey: "planner.pace.normal",  subKey: "planner.pace.normal_sub",  icon: <Gauge size={26} /> },
+  { value: "active",  labelKey: "planner.pace.active",  subKey: "planner.pace.active_sub",  icon: <Gauge size={26} /> },
 ];
+
+function defsToOptions<T>(defs: OptionDef<T>[], t: (k: string) => string): Option<T>[] {
+  return defs.map(d => ({ value: d.value, label: t(d.labelKey), sub: t(d.subKey), icon: d.icon }));
+}
 
 // ── Animate-varianten ────────────────────────────────────────────────────────
 
@@ -202,6 +213,13 @@ interface PlannerFlowProps {
 export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const { t } = useT();
+
+  const GROUP_OPTIONS     = defsToOptions(GROUP_DEFS, t);
+  const TIME_OPTIONS      = defsToOptions(TIME_DEFS, t);
+  const TRANSPORT_OPTIONS = defsToOptions(TRANSPORT_DEFS, t);
+  const VIBE_OPTIONS      = defsToOptions(VIBE_DEFS, t);
+  const PACE_OPTIONS      = defsToOptions(PACE_DEFS, t);
 
   const [step,      setStep]      = useState(0);
   const [direction, setDirection] = useState(1);
@@ -251,10 +269,10 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-14 pb-4" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
         <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: "var(--color-primary)" }}>
-          Jouw dagroute
+          {t("planner.header_eyebrow")}
         </p>
         <h1 className="text-lg font-bold" style={{ color: "var(--color-text)" }}>
-          Plan de perfecte tulpendag
+          {t("planner.header_title")}
         </h1>
       </div>
 
@@ -273,7 +291,7 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
           >
             {step === 0 && (
               <StepCard
-                title="Met wie ga je op pad?"
+                title={t("planner.step_group")}
                 options={GROUP_OPTIONS}
                 selected={group ?? ("" as GroupType)}
                 onSelect={(v) => { setGroup(v); goNext(); }}
@@ -285,7 +303,7 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
             )}
             {step === 1 && (
               <StepCard
-                title="Hoeveel tijd heb je?"
+                title={t("planner.step_time")}
                 options={TIME_OPTIONS}
                 selected={time ?? ("" as TimeBudget)}
                 onSelect={(v) => { setTime(v); goNext(); }}
@@ -298,7 +316,7 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
             )}
             {step === 2 && (
               <StepCard
-                title="Hoe verplaats je je?"
+                title={t("planner.step_transport")}
                 options={TRANSPORT_OPTIONS}
                 selected={transport ?? ("" as Transport)}
                 onSelect={(v) => { setTransport(v); goNext(); }}
@@ -311,8 +329,8 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
             )}
             {step === 3 && (
               <StepCard
-                title="Wat past bij jou?"
-                sub="Kies één of meerdere onderwerpen"
+                title={t("planner.step_vibe")}
+                sub={t("planner.step_vibe_sub")}
                 options={VIBE_OPTIONS}
                 selected={vibes}
                 multi
@@ -325,7 +343,7 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
             )}
             {step === 4 && (
               <StepCard
-                title="Welk tempo past bij je?"
+                title={t("planner.step_pace")}
                 options={PACE_OPTIONS}
                 selected={pace ?? ("" as Pace)}
                 onSelect={(v) => { setPace(v); }}
@@ -333,7 +351,7 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
                 onBack={goBack}
                 step={step}
                 total={TOTAL}
-                nextLabel="Maak mijn route"
+                nextLabel={t("planner.cta")}
                 nextDisabled={!pace}
               />
             )}

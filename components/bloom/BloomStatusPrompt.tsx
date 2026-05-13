@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell } from "lucide-react";
 import type { TulipField, BloomStatusType } from "@/lib/tulipFields";
 import { STATUS_CONFIG } from "@/lib/tulipFields";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   field: TulipField;
@@ -28,6 +29,7 @@ export default function BloomStatusPrompt({
   onDismiss,
   onNotificationSettings,
 }: Props) {
+  const { t } = useT();
   return (
     <AnimatePresence>
       {isOpen && (
@@ -73,7 +75,7 @@ export default function BloomStatusPrompt({
                 </div>
                 <button
                   onClick={onDismiss}
-                  aria-label="Sluiten"
+                  aria-label={t("common.close")}
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100
                              hover:bg-gray-200 transition-colors flex-shrink-0"
                 >

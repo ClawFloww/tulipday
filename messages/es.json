@@ -16,7 +16,9 @@
     "cancel": "Cancelar",
     "refresh": "Actualizar",
     "retry": "Intentar de nuevo",
-    "back_home": "Volver al inicio"
+    "back_home": "Volver al inicio",
+    "close": "Cerrar",
+    "check_in": "Confirmar"
   },
   "splash": {
     "tagline": "Encuentra las mejores flores hoy",
@@ -309,7 +311,11 @@
     "badge_today": "Today",
     "badge_bloom": "Bloom confirmed",
     "pending_label": "Awaiting approval",
-    "compress_progress": "Processing photo…"
+    "compress_progress": "Processing photo…",
+    "prev_photo": "Foto anterior",
+    "next_photo": "Siguiente foto",
+    "photo_added": "Foto añadida",
+    "note_placeholder": "Opcional: escribe algo sobre este campo…"
   },
   "tour": {
     "step1_title": "🌷 Inicio",
@@ -332,7 +338,11 @@
     "later": "Más tarde",
     "completed": "¡Ruta completada!",
     "fields_visited": "Has visitado los {count} campos de tulipanes.",
-    "well_done": "¡Bien hecho!"
+    "well_done": "¡Bien hecho!",
+    "next_stop": "Siguiente parada",
+    "visited": "Visitado ✓",
+    "navigate_to_stop": "Navegar a la parada {n}",
+    "checkin_stop": "Confirmar parada {n}"
   },
   "discover_page": {
     "title": "🌷 Descubrir campos",
@@ -363,5 +373,86 @@
     "shared": "¡Foto compartida!",
     "shared_sub": "Tu foto ya está en el feed en directo",
     "upload_failed": "Error al subir"
+  },
+  "navigation": {
+    "locating": "Localizando…",
+    "enable_gps": "Asegúrate de que el GPS está activado",
+    "no_gps_title": "Sin acceso a la ubicación",
+    "no_gps_body": "Permite el acceso a la ubicación en los ajustes del navegador para navegar.",
+    "to_start": "Al punto de inicio",
+    "approach_calculated": "Ruta de aproximación calculada",
+    "then_starts": "Después empieza →",
+    "after_that": "Luego →",
+    "then_begins_named": "Después empieza {name}",
+    "stop_of_total": "parada {current} de {total}",
+    "bloom_question": "¿Está este campo en flor?",
+    "bloom_in_bloom": "🌷 En plena floración",
+    "bloom_fading": "🌸 Empezando a marchitarse",
+    "bloom_finished": "🍃 Marchitado",
+    "reported_in_bloom": "En flor ✓",
+    "reported_fading": "Marchitándose ✓",
+    "reported_finished": "Marchitado ✓",
+    "report_bloom": "Reportar floración",
+    "navigate_now": "Navegando"
+  },
+  "planner": {
+    "header_eyebrow": "Tu ruta del día",
+    "header_title": "Planifica el día perfecto entre tulipanes",
+    "step_group": "¿Con quién vas?",
+    "step_time": "¿Cuánto tiempo tienes?",
+    "step_transport": "¿Cómo te mueves?",
+    "step_vibe": "¿Qué te gusta?",
+    "step_vibe_sub": "Elige uno o varios temas",
+    "step_pace": "¿Qué ritmo prefieres?",
+    "cta": "Crear mi ruta",
+    "group": {
+      "solo": "Solo",
+      "solo_sub": "Yo solo",
+      "couple": "En pareja",
+      "couple_sub": "Salida romántica",
+      "family": "En familia",
+      "family_sub": "Con niños",
+      "friends": "Con amigos",
+      "friends_sub": "Salida en grupo"
+    },
+    "time": {
+      "short": "~2 horas",
+      "short_sub": "Lo más destacado rápido",
+      "half": "Medio día",
+      "half_sub": "Mañana o tarde tranquila",
+      "full": "Todo el día",
+      "full_sub": "Verlo todo"
+    },
+    "transport": {
+      "walking": "A pie",
+      "walking_sub": "Paseo tranquilo",
+      "cycling": "Bicicleta",
+      "cycling_sub": "Pedalear por los campos",
+      "car": "Coche",
+      "car_sub": "Conducir entre los spots"
+    },
+    "vibe": {
+      "flowers": "Flores",
+      "flowers_sub": "Campos de tulipanes coloridos",
+      "photography": "Fotografía",
+      "photography_sub": "Capturar fotos perfectas",
+      "culture": "Cultura",
+      "culture_sub": "Lugares de interés",
+      "food": "Comida y bebida",
+      "food_sub": "Buen almuerzo o cena",
+      "nature": "Naturaleza",
+      "nature_sub": "Al aire libre en el verde"
+    },
+    "pace": {
+      "relaxed": "Relajado",
+      "relaxed_sub": "Realmente desconectar",
+      "normal": "Normal",
+      "normal_sub": "Buen equilibrio",
+      "active": "Activo",
+      "active_sub": "Ver tanto como sea posible"
+    }
+  },
+  "search": {
+    "placeholder": "Buscar lugares o rutas…"
   }
 }

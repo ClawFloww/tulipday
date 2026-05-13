@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Search, MapPin, Route, X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n-context";
 import type { Location, Route as RouteType } from "@/lib/types";
 
 interface SearchResults {
@@ -19,6 +20,7 @@ export default function SearchPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) ?? "nl";
+  const { t } = useT();
   const [query,     setQuery]     = useState("");
   const [results,   setResults]   = useState<SearchResults>(EMPTY);
   const [loading,   setLoading]   = useState(false);
@@ -82,7 +84,7 @@ export default function SearchPage() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Zoek locaties of routes..."
+              placeholder={t("search.placeholder")}
               className="flex-1 bg-transparent text-sm outline-none"
               style={{ color: "var(--color-text)" }}
             />

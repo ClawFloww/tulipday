@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Star, Check, X } from "lucide-react";
 import type { TulipField, BloomStatusType } from "@/lib/tulipFields";
 import { STATUS_CONFIG } from "@/lib/tulipFields";
+import { useT } from "@/lib/i18n-context";
 
 interface FollowUpData {
   photoUrl?: string;
@@ -29,6 +30,7 @@ export default function BloomStatusFollowUp({
   onComplete,
   onClose,
 }: Props) {
+  const { t } = useT();
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState("");
@@ -100,7 +102,7 @@ export default function BloomStatusFollowUp({
                 </div>
                 <button
                   onClick={onClose}
-                  aria-label="Sluiten"
+                  aria-label={t("common.close")}
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100
                              hover:bg-gray-200 transition-colors flex-shrink-0 ml-3"
                 >
@@ -130,7 +132,7 @@ export default function BloomStatusFollowUp({
                   )}
                   <div>
                     <p className={`font-bold text-sm ${mockPhotoAdded ? "text-green-700" : "text-gray-800"}`}>
-                      {mockPhotoAdded ? "Foto toegevoegd" : "Foto toevoegen"}
+                      {mockPhotoAdded ? t("photos.photo_added") : t("photos.upload_button")}
                     </p>
                     {!mockPhotoAdded && (
                       <p className="text-xs text-gray-400 mt-0.5">Camera of galerij</p>
@@ -181,7 +183,7 @@ export default function BloomStatusFollowUp({
                         <textarea
                           value={reviewText}
                           onChange={(e) => setReviewText(e.target.value.slice(0, 120))}
-                          placeholder="Optioneel: schrijf iets over dit veld..."
+                          placeholder={t("photos.note_placeholder")}
                           rows={2}
                           className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl
                                      focus:outline-none focus:ring-2 focus:border-transparent
