@@ -4,31 +4,33 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { getOrCreateSessionId } from "@/lib/session";
+import { useT } from "@/lib/i18n-context";
 
-const FEATURES_TABLE = [
-  { label: "10 locaties",       free: true,  season: true  },
-  { label: "Alle locaties",     free: false, season: true  },
-  { label: "2 routes",          free: true,  season: true  },
-  { label: "Alle routes",       free: false, season: true  },
-  { label: "Basis kaart",       free: true,  season: true  },
-  { label: "Bloei-alerts",      free: false, season: true  },
-  { label: "Street View",       free: false, season: true  },
-  { label: "Exclusieve routes", free: false, season: true  },
+const FEATURE_DEFS = [
+  { labelKey: "premium.feature_10_locations",     free: true,  season: true },
+  { labelKey: "premium.feature_all_locations",    free: false, season: true },
+  { labelKey: "premium.feature_2_routes",         free: true,  season: true },
+  { labelKey: "premium.feature_all_routes",       free: false, season: true },
+  { labelKey: "premium.feature_basic_map",        free: true,  season: true },
+  { labelKey: "premium.feature_bloom_alerts",     free: false, season: true },
+  { labelKey: "premium.feature_street_view",      free: false, season: true },
+  { labelKey: "premium.feature_exclusive_routes", free: false, season: true },
 ];
 
-const CARD_FEATURES = [
-  { emoji: "📍", label: "Alle locaties" },
-  { emoji: "🗺️", label: "Alle routes"   },
-  { emoji: "🌸", label: "Bloei-alerts"  },
-  { emoji: "🚲", label: "Excl. routes"  },
-  { emoji: "📵", label: "Offline mode"  },
-  { emoji: "🔭", label: "Street View"   },
+const CARD_FEATURE_DEFS = [
+  { emoji: "📍", labelKey: "premium.feature_all_locations" },
+  { emoji: "🗺️", labelKey: "premium.feature_all_routes"    },
+  { emoji: "🌸", labelKey: "premium.feature_bloom_alerts"  },
+  { emoji: "🚲", labelKey: "premium.card_label_exclusive"  },
+  { emoji: "📵", labelKey: "premium.card_label_offline"    },
+  { emoji: "🔭", labelKey: "premium.feature_street_view"   },
 ];
 
 const SEASON_PRICE_ID = "price_1TQ3MiCMTdZLUsIufuuGl3vb";
 
 export default function PremiumPage() {
   const router = useRouter();
+  const { t } = useT();
   const [busy, setBusy] = useState(false);
 
   async function handleCheckout() {
@@ -69,10 +71,10 @@ export default function PremiumPage() {
         </button>
         <div>
           <h1 className="text-[17px] font-bold leading-tight" style={{ color: "var(--color-text)" }}>
-            🌷 TulipDay Seizoenspas
+            {t("premium.title")}
           </h1>
           <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
-            Alles uit het tulpenseizoen halen
+            {t("premium.subtitle")}
           </p>
         </div>
       </div>
@@ -83,18 +85,18 @@ export default function PremiumPage() {
         <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
           {/* Kolomheader */}
           <div className="grid grid-cols-3 px-4 py-2.5" style={{ backgroundColor: "var(--color-surface-3)", borderBottom: "1px solid var(--color-border)" }}>
-            <span className="text-[9.5px] font-bold uppercase tracking-widest" style={{ color: "var(--color-text-3)" }}>Feature</span>
-            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center" style={{ color: "var(--color-text-3)" }}>Gratis</span>
-            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center text-tulip-500">Seizoen</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest" style={{ color: "var(--color-text-3)" }}>{t("premium.col_feature")}</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center" style={{ color: "var(--color-text-3)" }}>{t("premium.col_free")}</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-widest text-center text-tulip-500">{t("premium.col_season")}</span>
           </div>
           {/* Rijen */}
-          {FEATURES_TABLE.map((f, i) => (
+          {FEATURE_DEFS.map((f, i) => (
             <div
-              key={f.label}
+              key={f.labelKey}
               className="grid grid-cols-3 items-center px-4 py-3"
               style={i > 0 ? { borderTop: "1px solid var(--color-border)" } : {}}
             >
-              <span className="text-sm" style={{ color: "var(--color-text-2)" }}>{f.label}</span>
+              <span className="text-sm" style={{ color: "var(--color-text-2)" }}>{t(f.labelKey)}</span>
               <div className="flex justify-center">
                 {f.free
                   ? <Check size={15} className="text-green-500" strokeWidth={3} />
@@ -116,24 +118,24 @@ export default function PremiumPage() {
           {/* Prijs */}
           <div className="flex items-start justify-between mb-4 gap-3">
             <div>
-              <p className="text-[9.5px] font-bold uppercase tracking-widest text-white/60 mb-1">Seizoenspas 2026</p>
+              <p className="text-[9.5px] font-bold uppercase tracking-widest text-white/60 mb-1">{t("premium.season_pass_label")}</p>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-[42px] font-extrabold text-white leading-none tracking-tight">€4,99</span>
               </div>
-              <p className="text-xs text-white/60 mt-0.5">heel tulpenseizoen</p>
+              <p className="text-xs text-white/60 mt-0.5">{t("premium.season_full_period")}</p>
             </div>
             <div className="shrink-0 mt-1 px-3 py-1.5 rounded-full text-[10.5px] font-medium text-white/85"
                  style={{ backgroundColor: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.2)" }}>
-              ⏳ t/m 31 mei 2026
+              {t("premium.valid_until")}
             </div>
           </div>
 
           {/* Features grid */}
           <div className="grid grid-cols-2 gap-2 mb-5">
-            {CARD_FEATURES.map((f) => (
-              <div key={f.label} className="flex items-center gap-2 text-[12px] text-white/85">
+            {CARD_FEATURE_DEFS.map((f) => (
+              <div key={f.labelKey} className="flex items-center gap-2 text-[12px] text-white/85">
                 <span className="text-[13px]">{f.emoji}</span>
-                {f.label}
+                {t(f.labelKey)}
               </div>
             ))}
           </div>
@@ -146,7 +148,7 @@ export default function PremiumPage() {
             style={{ color: "#E8102A" }}
           >
             {busy && <Loader2 size={15} className="animate-spin" />}
-            Activeer seizoenspas
+            {t("premium.activate_cta")}
           </button>
         </div>
 
@@ -155,8 +157,8 @@ export default function PremiumPage() {
              style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}>
           <span className="text-[17px] flex-shrink-0 mt-0.5">🌱</span>
           <p className="text-[11.5px] leading-relaxed" style={{ color: "var(--color-text-3)" }}>
-            <span className="font-semibold" style={{ color: "var(--color-text-2)" }}>Volgend seizoen vroegboekersprijs:</span>{" "}
-            Als bestaande gebruiker krijg je in februari 2027 toegang voor €2,99.
+            <span className="font-semibold" style={{ color: "var(--color-text-2)" }}>{t("premium.early_bird_label")}</span>{" "}
+            {t("premium.early_bird_body")}
           </p>
         </div>
 
@@ -166,11 +168,11 @@ export default function PremiumPage() {
           className="w-full text-center text-[12.5px] py-3 underline underline-offset-2"
           style={{ color: "var(--color-text-3)" }}
         >
-          Doorgaan met gratis versie
+          {t("premium.continue_free")}
         </button>
 
         <p className="text-center text-[11px] pb-2" style={{ color: "var(--color-text-3)" }}>
-          iDEAL & creditcard · Tulpenseizoen april–mei 2026
+          {t("premium.payment_footer")}
         </p>
 
       </div>

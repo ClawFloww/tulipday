@@ -34,12 +34,12 @@ const DEFAULT_FILTERS: FilterState = {
   audiences: [], environments: [], themes: [],
 };
 
-const ACTIVITIES = [
-  { id: "all",               label: "Alle",     icon: <Map        size={12} /> },
-  { id: "Fietsroute",        label: "Fietsen",  icon: <Bike       size={12} /> },
-  { id: "Wandelroute",       label: "Wandelen", icon: <Footprints size={12} /> },
-  { id: "Mountainbikeroute", label: "MTB",      icon: <Mountain   size={12} /> },
-  { id: "E-Step Route",      label: "E-Step",   icon: <Zap        size={12} /> },
+const ACTIVITY_DEFS = [
+  { id: "all",               labelKey: "routes.filter_all",     icon: <Map        size={12} /> },
+  { id: "Fietsroute",        labelKey: "routes.filter_cycling", icon: <Bike       size={12} /> },
+  { id: "Wandelroute",       labelKey: "routes.filter_walking", icon: <Footprints size={12} /> },
+  { id: "Mountainbikeroute", labelKey: "routes.filter_mtb",     icon: <Mountain   size={12} /> },
+  { id: "E-Step Route",      labelKey: "routes.filter_estep",   icon: <Zap        size={12} /> },
 ];
 
 const DISTANCES    = ["Kort", "Middellang", "Lang", "Meerdaagse route"];
@@ -382,7 +382,7 @@ export default function RoutesPage() {
         {/* Activiteit pills + filters-knop */}
         <div className="flex items-center gap-2 pt-3 pb-0.5">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
-            {ACTIVITIES.map((a) => {
+            {ACTIVITY_DEFS.map((a) => {
               const isActive = filters.activity === a.id;
               const count = routes.filter((r) =>
                 matchesFilters(r, { ...filters, activity: a.id })
@@ -396,7 +396,7 @@ export default function RoutesPage() {
                               ${isActive ? "bg-tulip-500 border-tulip-500 text-white shadow-sm" : "border-[var(--color-border)]"}`}
                   style={!isActive ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" } : {}}
                 >
-                  {a.icon} {a.label}
+                  {a.icon} {t(a.labelKey)}
                   {!loading && count > 0 && (
                     <span
                       className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none

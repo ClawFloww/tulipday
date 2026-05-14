@@ -16,10 +16,10 @@ interface Props {
   onNotificationSettings: () => void;
 }
 
-const OPTIONS: { status: BloomStatusType; description: string }[] = [
-  { status: "in_bloom",  description: "Kleurrijke, open bloemen" },
-  { status: "fading",    description: "Bloemen verliezen kleur" },
-  { status: "finished",  description: "Bloemen zijn uitgebloeid" },
+const OPTION_DEFS: { status: BloomStatusType; descKey: string }[] = [
+  { status: "in_bloom",  descKey: "bloom_prompt.desc_in_bloom" },
+  { status: "fading",    descKey: "bloom_prompt.desc_fading" },
+  { status: "finished",  descKey: "bloom_prompt.desc_finished" },
 ];
 
 export default function BloomStatusPrompt({
@@ -54,7 +54,7 @@ export default function BloomStatusPrompt({
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             role="dialog"
             aria-modal="true"
-            aria-label="Bloei-status melden"
+            aria-label={t("bloom_prompt.aria_label")}
           >
             {/* Handvat */}
             <div className="flex justify-center pt-3 pb-1">
@@ -67,7 +67,7 @@ export default function BloomStatusPrompt({
                 <div className="flex-1 pr-3">
                   <p className="text-xs font-semibold uppercase tracking-wide"
                      style={{ color: "#E8527A" }}>
-                    Bollenveld in de buurt
+                    {t("bloom_prompt.header_label")}
                   </p>
                   <h2 className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
                     {field.name}
@@ -84,13 +84,14 @@ export default function BloomStatusPrompt({
               </div>
 
               <p className="text-sm text-gray-500 mb-5">
-                Hoe staat dit veld er nu bij?
+                {t("bloom_prompt.question")}
               </p>
 
               {/* Status kaarten */}
               <div className="space-y-3 mb-6">
-                {OPTIONS.map(({ status, description }) => {
+                {OPTION_DEFS.map(({ status, descKey }) => {
                   const cfg = STATUS_CONFIG[status];
+                  const description = t(descKey);
                   return (
                     <motion.button
                       key={status}
@@ -127,7 +128,7 @@ export default function BloomStatusPrompt({
                   className="text-sm font-semibold text-gray-400 hover:text-gray-600
                              transition-colors py-2 px-1"
                 >
-                  Niet nu
+                  {t("bloom_prompt.not_now")}
                 </button>
                 <button
                   onClick={onNotificationSettings}
@@ -135,7 +136,7 @@ export default function BloomStatusPrompt({
                              hover:text-gray-600 transition-colors py-2 px-1"
                 >
                   <Bell size={14} />
-                  Meldingen aanpassen
+                  {t("bloom_prompt.notifications")}
                 </button>
               </div>
             </div>

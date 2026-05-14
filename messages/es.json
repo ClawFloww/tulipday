@@ -18,7 +18,9 @@
     "retry": "Intentar de nuevo",
     "back_home": "Volver al inicio",
     "close": "Cerrar",
-    "check_in": "Confirmar"
+    "check_in": "Confirmar",
+    "done": "Listo",
+    "search_short": "Buscar…"
   },
   "splash": {
     "tagline": "Encuentra las mejores flores hoy",
@@ -137,7 +139,8 @@
     "no_photo_spots": "Sin spots fotográficos todavía.",
     "search_count": "{count} resultado para \"{query}\"",
     "search_count_plural": "{count} resultados para \"{query}\"",
-    "no_locations_found": "No se encontraron lugares."
+    "no_locations_found": "No se encontraron lugares.",
+    "locations_count": "{count} lugares"
   },
   "map": {
     "filter_peak": "Plena floración",
@@ -199,7 +202,8 @@
     "day_thu": "Ju",
     "day_fri": "Vi",
     "day_sat": "Sá",
-    "day_sun": "Do"
+    "day_sun": "Do",
+    "share_text": "Mira {title} en TulipDay"
   },
   "routes": {
     "title": "Rutas",
@@ -211,6 +215,8 @@
     "filter_walking": "Senderismo",
     "filter_family": "Familia",
     "filter_photo": "Tour fotográfico",
+    "filter_mtb": "BTT",
+    "filter_estep": "Patinete",
     "no_routes_title": "No se encontraron rutas",
     "no_routes_desc": "Prueba con otro filtro",
     "show_all": "Mostrar todas las rutas →",
@@ -454,5 +460,54 @@
   },
   "search": {
     "placeholder": "Buscar lugares o rutas…"
+  },
+  "bloom_prompt": {
+    "aria_label": "Reportar estado de floración",
+    "header_label": "Campo de tulipanes cerca",
+    "question": "¿Cómo está este campo ahora?",
+    "desc_in_bloom": "Flores coloridas y abiertas",
+    "desc_fading": "Las flores pierden color",
+    "desc_finished": "Las flores se han marchitado",
+    "not_now": "Ahora no",
+    "notifications": "Ajustar notificaciones"
+  },
+  "bloom_followup": {
+    "aria_label": "Añadir información extra",
+    "title": "Genial, gracias. ¿Quieres añadir algo?",
+    "camera_or_gallery": "Cámara o galería",
+    "rating_title": "Dar una valoración",
+    "rating_one_star": "1 estrella",
+    "rating_n_stars": "{n} estrellas",
+    "rating_label_1": "Mala",
+    "rating_label_2": "Regular",
+    "rating_label_3": "Buena",
+    "rating_label_4": "Muy buena",
+    "rating_label_5": "Fantástica",
+    "add_review": "+ Añadir comentario"
+  },
+  "premium": {
+    "title": "🌷 Pase de Temporada TulipDay",
+    "subtitle": "Aprovecha al máximo la temporada de tulipanes",
+    "col_feature": "Función",
+    "col_free": "Gratis",
+    "col_season": "Temporada",
+    "feature_10_locations": "10 lugares",
+    "feature_all_locations": "Todos los lugares",
+    "feature_2_routes": "2 rutas",
+    "feature_all_routes": "Todas las rutas",
+    "feature_basic_map": "Mapa básico",
+    "feature_bloom_alerts": "Alertas de floración",
+    "feature_street_view": "Street View",
+    "feature_exclusive_routes": "Rutas exclusivas",
+    "card_label_exclusive": "Rutas excl.",
+    "card_label_offline": "Modo sin conexión",
+    "season_pass_label": "Pase de Temporada 2026",
+    "season_full_period": "toda la temporada de tulipanes",
+    "valid_until": "⏳ hasta el 31 de mayo de 2026",
+    "activate_cta": "Activar pase de temporada",
+    "early_bird_label": "Precio anticipado próxima temporada:",
+    "early_bird_body": "Como usuario existente tendrás acceso por 2,99 € en febrero de 2027.",
+    "continue_free": "Continuar con la versión gratuita",
+    "payment_footer": "iDEAL y tarjeta · Temporada de tulipanes abril–mayo 2026"
   }
 }

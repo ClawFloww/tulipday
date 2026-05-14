@@ -76,7 +76,7 @@ export default function BloomStatusFollowUp({
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             role="dialog"
             aria-modal="true"
-            aria-label="Extra informatie toevoegen"
+            aria-label={t("bloom_followup.aria_label")}
           >
             {/* Handvat */}
             <div className="flex justify-center pt-3 pb-1">
@@ -96,7 +96,7 @@ export default function BloomStatusFollowUp({
                     </span>
                   </div>
                   <h2 className="text-base font-extrabold text-gray-900">
-                    Top, dank je. Wil je nog iets toevoegen?
+                    {t("bloom_followup.title")}
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">{field.name}</p>
                 </div>
@@ -135,14 +135,14 @@ export default function BloomStatusFollowUp({
                       {mockPhotoAdded ? t("photos.photo_added") : t("photos.upload_button")}
                     </p>
                     {!mockPhotoAdded && (
-                      <p className="text-xs text-gray-400 mt-0.5">Camera of galerij</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t("bloom_followup.camera_or_gallery")}</p>
                     )}
                   </div>
                 </motion.button>
 
                 {/* Beoordeling */}
                 <div className="px-4 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50">
-                  <p className="font-bold text-sm text-gray-800 mb-3">Beoordeling geven</p>
+                  <p className="font-bold text-sm text-gray-800 mb-3">{t("bloom_followup.rating_title")}</p>
                   {/* Sterren */}
                   <div className="flex gap-2 mb-3">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -152,7 +152,7 @@ export default function BloomStatusFollowUp({
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => setRating(star === rating ? 0 : star)}
-                        aria-label={`${star} ster${star !== 1 ? "ren" : ""}`}
+                        aria-label={star === 1 ? t("bloom_followup.rating_one_star") : t("bloom_followup.rating_n_stars", { n: star })}
                         className="p-1"
                         style={{ minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
                       >
@@ -166,7 +166,7 @@ export default function BloomStatusFollowUp({
                     ))}
                     {rating > 0 && (
                       <span className="text-sm text-gray-500 self-center ml-1">
-                        {["", "Slecht", "Matig", "Goed", "Heel goed", "Fantastisch"][rating]}
+                        {t(`bloom_followup.rating_label_${rating}`)}
                       </span>
                     )}
                   </div>
@@ -202,7 +202,7 @@ export default function BloomStatusFollowUp({
                       onClick={() => setShowReview(true)}
                       className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      + Reactie toevoegen
+                      {t("bloom_followup.add_review")}
                     </button>
                   )}
                 </div>
@@ -216,7 +216,7 @@ export default function BloomStatusFollowUp({
                            transition-colors"
                 style={{ backgroundColor: "#E8527A", minHeight: 52 }}
               >
-                Klaar
+                {t("common.done")}
               </motion.button>
             </div>
           </motion.div>

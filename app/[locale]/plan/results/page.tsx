@@ -8,6 +8,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Bike, Car, Footprints, Clock, MapPin, Play } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n-context";
 import { scoreLocation } from "@/lib/planner/scoring";
 import { buildOptimalRoute } from "@/lib/planner/routeOptimizer";
 import { PLANNER_PROFILE_KEY } from "@/lib/planner/types";
@@ -53,6 +54,7 @@ function TransportPill({ transport }: { transport: string }) {
 export default function PlanResultsPage() {
   const router          = useRouter();
   const { locale }      = useParams<{ locale: string }>();
+  const { t }           = useT();
 
   const [plan,    setPlan]    = useState<DayPlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,7 +74,7 @@ export default function PlanResultsPage() {
         .not("longitude", "is", null);
 
       if (dbError || !locations?.length) {
-        setError("Kon geen locaties laden. Probeer het opnieuw.");
+        setError(t("common.load_error"));
         setLoading(false);
         return;
       }
@@ -88,7 +90,7 @@ export default function PlanResultsPage() {
     }
 
     compute().catch(() => {
-      setError("Er is iets misgegaan. Probeer het opnieuw.");
+      setError(t("common.load_error"));
       setLoading(false);
     });
   }, [locale, router]);

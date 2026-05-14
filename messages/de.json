@@ -18,7 +18,9 @@
     "retry": "Erneut versuchen",
     "back_home": "Zurück zur Startseite",
     "close": "Schließen",
-    "check_in": "Einchecken"
+    "check_in": "Einchecken",
+    "done": "Fertig",
+    "search_short": "Suchen…"
   },
   "splash": {
     "tagline": "Die schönsten Blüten heute entdecken",
@@ -137,7 +139,8 @@
     "no_photo_spots": "Noch keine Fotospots.",
     "search_count": "{count} Ergebnis für \"{query}\"",
     "search_count_plural": "{count} Ergebnisse für \"{query}\"",
-    "no_locations_found": "Keine Orte gefunden."
+    "no_locations_found": "Keine Orte gefunden.",
+    "locations_count": "{count} Orte"
   },
   "map": {
     "filter_peak": "Volle Blüte",
@@ -199,7 +202,8 @@
     "day_thu": "Do",
     "day_fri": "Fr",
     "day_sat": "Sa",
-    "day_sun": "So"
+    "day_sun": "So",
+    "share_text": "Schauen Sie sich {title} auf TulipDay an"
   },
   "routes": {
     "title": "Routen",
@@ -211,6 +215,8 @@
     "filter_walking": "Wandern",
     "filter_family": "Familie",
     "filter_photo": "Fototour",
+    "filter_mtb": "MTB",
+    "filter_estep": "E-Scooter",
     "no_routes_title": "Keine Routen gefunden",
     "no_routes_desc": "Versuchen Sie einen anderen Filter",
     "show_all": "Alle Routen anzeigen →",
@@ -454,5 +460,54 @@
   },
   "search": {
     "placeholder": "Orte oder Routen suchen…"
+  },
+  "bloom_prompt": {
+    "aria_label": "Blütestatus melden",
+    "header_label": "Tulpenfeld in der Nähe",
+    "question": "Wie sieht dieses Feld gerade aus?",
+    "desc_in_bloom": "Bunte, offene Blumen",
+    "desc_fading": "Blumen verlieren Farbe",
+    "desc_finished": "Blumen sind verblüht",
+    "not_now": "Nicht jetzt",
+    "notifications": "Benachrichtigungen anpassen"
+  },
+  "bloom_followup": {
+    "aria_label": "Zusätzliche Informationen hinzufügen",
+    "title": "Klasse, danke. Möchten Sie noch etwas hinzufügen?",
+    "camera_or_gallery": "Kamera oder Galerie",
+    "rating_title": "Bewertung abgeben",
+    "rating_one_star": "1 Stern",
+    "rating_n_stars": "{n} Sterne",
+    "rating_label_1": "Schlecht",
+    "rating_label_2": "Mäßig",
+    "rating_label_3": "Gut",
+    "rating_label_4": "Sehr gut",
+    "rating_label_5": "Fantastisch",
+    "add_review": "+ Kommentar hinzufügen"
+  },
+  "premium": {
+    "title": "🌷 TulipDay Saisonpass",
+    "subtitle": "Holen Sie alles aus der Tulpensaison heraus",
+    "col_feature": "Funktion",
+    "col_free": "Kostenlos",
+    "col_season": "Saison",
+    "feature_10_locations": "10 Orte",
+    "feature_all_locations": "Alle Orte",
+    "feature_2_routes": "2 Routen",
+    "feature_all_routes": "Alle Routen",
+    "feature_basic_map": "Basis-Karte",
+    "feature_bloom_alerts": "Blüten-Alerts",
+    "feature_street_view": "Street View",
+    "feature_exclusive_routes": "Exklusive Routen",
+    "card_label_exclusive": "Excl. Routen",
+    "card_label_offline": "Offline-Modus",
+    "season_pass_label": "Saisonpass 2026",
+    "season_full_period": "ganze Tulpensaison",
+    "valid_until": "⏳ bis 31. Mai 2026",
+    "activate_cta": "Saisonpass aktivieren",
+    "early_bird_label": "Frühbucherpreis nächste Saison:",
+    "early_bird_body": "Als bestehender Nutzer erhalten Sie im Februar 2027 Zugang für €2,99.",
+    "continue_free": "Mit der kostenlosen Version fortfahren",
+    "payment_footer": "iDEAL & Kreditkarte · Tulpensaison April–Mai 2026"
   }
 }

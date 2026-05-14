@@ -18,7 +18,9 @@
     "retry": "重试",
     "back_home": "返回首页",
     "close": "关闭",
-    "check_in": "签到"
+    "check_in": "签到",
+    "done": "完成",
+    "search_short": "搜索…"
   },
   "splash": {
     "tagline": "今日寻觅最美花田",
@@ -137,7 +139,8 @@
     "no_photo_spots": "暂无拍照地点。",
     "search_count": "\"{query}\"有{count}个结果",
     "search_count_plural": "\"{query}\"有{count}个结果",
-    "no_locations_found": "未找到地点。"
+    "no_locations_found": "未找到地点。",
+    "locations_count": "{count} 个地点"
   },
   "map": {
     "filter_peak": "盛开期",
@@ -199,7 +202,8 @@
     "day_thu": "周四",
     "day_fri": "周五",
     "day_sat": "周六",
-    "day_sun": "周日"
+    "day_sun": "周日",
+    "share_text": "在 TulipDay 查看 {title}"
   },
   "routes": {
     "title": "路线",
@@ -211,6 +215,8 @@
     "filter_walking": "步行",
     "filter_family": "家庭",
     "filter_photo": "摄影之旅",
+    "filter_mtb": "山地车",
+    "filter_estep": "电动滑板车",
     "no_routes_title": "未找到路线",
     "no_routes_desc": "请尝试其他筛选条件",
     "show_all": "显示全部路线 →",
@@ -454,5 +460,54 @@
   },
   "search": {
     "placeholder": "搜索地点或路线…"
+  },
+  "bloom_prompt": {
+    "aria_label": "上报花期状态",
+    "header_label": "附近的郁金香花田",
+    "question": "这片花田现在状况如何?",
+    "desc_in_bloom": "色彩缤纷,绽放中",
+    "desc_fading": "花朵正在褪色",
+    "desc_finished": "花朵已凋谢",
+    "not_now": "暂不",
+    "notifications": "调整通知"
+  },
+  "bloom_followup": {
+    "aria_label": "添加额外信息",
+    "title": "太棒了,谢谢。还想补充点什么吗?",
+    "camera_or_gallery": "相机或图库",
+    "rating_title": "评分",
+    "rating_one_star": "1 星",
+    "rating_n_stars": "{n} 星",
+    "rating_label_1": "差",
+    "rating_label_2": "一般",
+    "rating_label_3": "好",
+    "rating_label_4": "很好",
+    "rating_label_5": "极佳",
+    "add_review": "+ 添加评论"
+  },
+  "premium": {
+    "title": "🌷 TulipDay 季票",
+    "subtitle": "充分享受郁金香季节",
+    "col_feature": "功能",
+    "col_free": "免费",
+    "col_season": "季票",
+    "feature_10_locations": "10 个地点",
+    "feature_all_locations": "所有地点",
+    "feature_2_routes": "2 条路线",
+    "feature_all_routes": "所有路线",
+    "feature_basic_map": "基础地图",
+    "feature_bloom_alerts": "花期提醒",
+    "feature_street_view": "街景视图",
+    "feature_exclusive_routes": "独家路线",
+    "card_label_exclusive": "独家路线",
+    "card_label_offline": "离线模式",
+    "season_pass_label": "2026 季票",
+    "season_full_period": "整个郁金香季",
+    "valid_until": "⏳ 至 2026 年 5 月 31 日",
+    "activate_cta": "激活季票",
+    "early_bird_label": "下一季早鸟价:",
+    "early_bird_body": "作为现有用户,您将在 2027 年 2 月以 €2,99 的价格获得访问权限。",
+    "continue_free": "继续使用免费版",
+    "payment_footer": "iDEAL 和信用卡 · 2026 年 4–5 月郁金香季"
   }
 }

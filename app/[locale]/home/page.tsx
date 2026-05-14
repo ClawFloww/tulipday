@@ -41,6 +41,7 @@ function SeeAllSheet({
   onClose:    () => void;
   onNavigate: (slug: string) => void;
 }) {
+  const { t } = useT();
   const [query, setQuery] = useState("");
   const filtered = query.trim()
     ? locations.filter(
@@ -76,7 +77,7 @@ function SeeAllSheet({
             {title}
           </h2>
           <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
-            {locations.length} locaties
+            {t("home.locations_count", { count: locations.length })}
           </p>
         </div>
       </div>
@@ -89,7 +90,7 @@ function SeeAllSheet({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Zoeken…"
+            placeholder={t("common.search_short")}
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tulip-500/40"
             style={{
               backgroundColor: "var(--color-surface-3)",

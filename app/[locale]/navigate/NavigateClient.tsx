@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n-context";
 import NavigationView, { type NavRoute, type NavStep } from "@/components/navigation/NavigationView";
 
 const ROUTE_KEY = "tulipday_active_route";
@@ -170,6 +171,7 @@ export default function NavigateClient() {
   const { locale }    = useParams<{ locale: string }>();
   const searchParams  = useSearchParams();
   const router        = useRouter();
+  const { t }         = useT();
 
   const [navRoute, setNavRoute] = useState<NavRoute | null>(null);
   const [error,    setError]    = useState<string | null>(null);
@@ -266,7 +268,7 @@ export default function NavigateClient() {
         .eq("is_active", true)
         .single();
 
-      if (!route) { setError("Route niet gevonden"); return; }
+      if (!route) { setError(t("route_detail.not_found")); return; }
 
       const { data: routeStops } = await supabase
         .from("route_stops")
@@ -340,7 +342,7 @@ export default function NavigateClient() {
       });
     }
 
-    load().catch(() => setError("Fout bij laden route"));
+    load().catch(() => setError(t("common.load_error")));
   }, [slug, generated, locale, router]);
 
   if (error) {

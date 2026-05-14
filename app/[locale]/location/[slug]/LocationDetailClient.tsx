@@ -110,7 +110,7 @@ export default function LocationDetailPage() {
     const url = window.location.href;
     const shareData = {
       title: location.title,
-      text: location.short_description ?? `Bekijk ${location.title} op TulipDay`,
+      text: location.short_description ?? t("location.share_text", { title: location.title }),
       url,
     };
     track("share", { location_id: location.id });

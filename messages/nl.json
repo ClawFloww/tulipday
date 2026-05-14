@@ -18,7 +18,9 @@
     "retry": "Opnieuw proberen",
     "back_home": "Terug naar home",
     "close": "Sluiten",
-    "check_in": "Aftekenen"
+    "check_in": "Aftekenen",
+    "done": "Klaar",
+    "search_short": "Zoeken…"
   },
   "splash": {
     "tagline": "Ontdek de mooiste tulpenvelden vandaag",
@@ -137,7 +139,8 @@
     "no_photo_spots": "Nog geen fotolocaties.",
     "search_count": "{count} resultaat voor \"{query}\"",
     "search_count_plural": "{count} resultaten voor \"{query}\"",
-    "no_locations_found": "Geen locaties gevonden."
+    "no_locations_found": "Geen locaties gevonden.",
+    "locations_count": "{count} locaties"
   },
   "map": {
     "filter_peak": "Volle bloei",
@@ -199,7 +202,8 @@
     "day_thu": "Do",
     "day_fri": "Vr",
     "day_sat": "Za",
-    "day_sun": "Zo"
+    "day_sun": "Zo",
+    "share_text": "Bekijk {title} op TulipDay"
   },
   "routes": {
     "title": "Routes",
@@ -211,6 +215,8 @@
     "filter_walking": "Wandelen",
     "filter_family": "Familie",
     "filter_photo": "Fototour",
+    "filter_mtb": "MTB",
+    "filter_estep": "E-Step",
     "no_routes_title": "Geen routes gevonden",
     "no_routes_desc": "Probeer een ander filter",
     "show_all": "Alle routes tonen →",
@@ -454,5 +460,54 @@
   },
   "search": {
     "placeholder": "Zoek locaties of routes…"
+  },
+  "bloom_prompt": {
+    "aria_label": "Bloei-status melden",
+    "header_label": "Bollenveld in de buurt",
+    "question": "Hoe staat dit veld er nu bij?",
+    "desc_in_bloom": "Kleurrijke, open bloemen",
+    "desc_fading": "Bloemen verliezen kleur",
+    "desc_finished": "Bloemen zijn uitgebloeid",
+    "not_now": "Niet nu",
+    "notifications": "Meldingen aanpassen"
+  },
+  "bloom_followup": {
+    "aria_label": "Extra informatie toevoegen",
+    "title": "Top, dank je. Wil je nog iets toevoegen?",
+    "camera_or_gallery": "Camera of galerij",
+    "rating_title": "Beoordeling geven",
+    "rating_one_star": "1 ster",
+    "rating_n_stars": "{n} sterren",
+    "rating_label_1": "Slecht",
+    "rating_label_2": "Matig",
+    "rating_label_3": "Goed",
+    "rating_label_4": "Heel goed",
+    "rating_label_5": "Fantastisch",
+    "add_review": "+ Reactie toevoegen"
+  },
+  "premium": {
+    "title": "🌷 TulipDay Seizoenspas",
+    "subtitle": "Alles uit het tulpenseizoen halen",
+    "col_feature": "Feature",
+    "col_free": "Gratis",
+    "col_season": "Seizoen",
+    "feature_10_locations": "10 locaties",
+    "feature_all_locations": "Alle locaties",
+    "feature_2_routes": "2 routes",
+    "feature_all_routes": "Alle routes",
+    "feature_basic_map": "Basis kaart",
+    "feature_bloom_alerts": "Bloei-alerts",
+    "feature_street_view": "Street View",
+    "feature_exclusive_routes": "Exclusieve routes",
+    "card_label_exclusive": "Excl. routes",
+    "card_label_offline": "Offline mode",
+    "season_pass_label": "Seizoenspas 2026",
+    "season_full_period": "heel tulpenseizoen",
+    "valid_until": "⏳ t/m 31 mei 2026",
+    "activate_cta": "Activeer seizoenspas",
+    "early_bird_label": "Volgend seizoen vroegboekersprijs:",
+    "early_bird_body": "Als bestaande gebruiker krijg je in februari 2027 toegang voor €2,99.",
+    "continue_free": "Doorgaan met gratis versie",
+    "payment_footer": "iDEAL & creditcard · Tulpenseizoen april–mei 2026"
   }
 }

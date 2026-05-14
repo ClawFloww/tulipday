@@ -18,7 +18,9 @@
     "retry": "Réessayer",
     "back_home": "Retour à l'accueil",
     "close": "Fermer",
-    "check_in": "Confirmer"
+    "check_in": "Confirmer",
+    "done": "Terminé",
+    "search_short": "Rechercher…"
   },
   "splash": {
     "tagline": "Trouvez les plus belles fleurs aujourd'hui",
@@ -137,7 +139,8 @@
     "no_photo_spots": "Pas encore de spots photo.",
     "search_count": "{count} résultat pour \"{query}\"",
     "search_count_plural": "{count} résultats pour \"{query}\"",
-    "no_locations_found": "Aucun lieu trouvé."
+    "no_locations_found": "Aucun lieu trouvé.",
+    "locations_count": "{count} lieux"
   },
   "map": {
     "filter_peak": "Pleine floraison",
@@ -199,7 +202,8 @@
     "day_thu": "Je",
     "day_fri": "Ve",
     "day_sat": "Sa",
-    "day_sun": "Di"
+    "day_sun": "Di",
+    "share_text": "Découvrez {title} sur TulipDay"
   },
   "routes": {
     "title": "Itinéraires",
@@ -211,6 +215,8 @@
     "filter_walking": "Marche",
     "filter_family": "Famille",
     "filter_photo": "Circuit photo",
+    "filter_mtb": "VTT",
+    "filter_estep": "Trottinette",
     "no_routes_title": "Aucun itinéraire trouvé",
     "no_routes_desc": "Essayez un autre filtre",
     "show_all": "Voir tous les itinéraires →",
@@ -454,5 +460,54 @@
   },
   "search": {
     "placeholder": "Rechercher des lieux ou itinéraires…"
+  },
+  "bloom_prompt": {
+    "aria_label": "Signaler l'état de floraison",
+    "header_label": "Champ de tulipes à proximité",
+    "question": "Comment se porte ce champ en ce moment ?",
+    "desc_in_bloom": "Fleurs colorées et ouvertes",
+    "desc_fading": "Les fleurs perdent leur couleur",
+    "desc_finished": "Les fleurs sont fanées",
+    "not_now": "Pas maintenant",
+    "notifications": "Modifier les notifications"
+  },
+  "bloom_followup": {
+    "aria_label": "Ajouter des informations supplémentaires",
+    "title": "Super, merci. Voulez-vous ajouter autre chose ?",
+    "camera_or_gallery": "Caméra ou galerie",
+    "rating_title": "Donner une note",
+    "rating_one_star": "1 étoile",
+    "rating_n_stars": "{n} étoiles",
+    "rating_label_1": "Médiocre",
+    "rating_label_2": "Moyen",
+    "rating_label_3": "Bien",
+    "rating_label_4": "Très bien",
+    "rating_label_5": "Fantastique",
+    "add_review": "+ Ajouter un commentaire"
+  },
+  "premium": {
+    "title": "🌷 Pass Saison TulipDay",
+    "subtitle": "Profitez pleinement de la saison des tulipes",
+    "col_feature": "Fonctionnalité",
+    "col_free": "Gratuit",
+    "col_season": "Saison",
+    "feature_10_locations": "10 lieux",
+    "feature_all_locations": "Tous les lieux",
+    "feature_2_routes": "2 itinéraires",
+    "feature_all_routes": "Tous les itinéraires",
+    "feature_basic_map": "Carte de base",
+    "feature_bloom_alerts": "Alertes floraison",
+    "feature_street_view": "Street View",
+    "feature_exclusive_routes": "Itinéraires exclusifs",
+    "card_label_exclusive": "Itin. excl.",
+    "card_label_offline": "Mode hors ligne",
+    "season_pass_label": "Pass Saison 2026",
+    "season_full_period": "toute la saison des tulipes",
+    "valid_until": "⏳ jusqu'au 31 mai 2026",
+    "activate_cta": "Activer le pass saison",
+    "early_bird_label": "Tarif lève-tôt la saison prochaine :",
+    "early_bird_body": "En tant qu'utilisateur existant, vous y aurez accès pour 2,99 € en février 2027.",
+    "continue_free": "Continuer avec la version gratuite",
+    "payment_footer": "iDEAL & carte bancaire · Saison des tulipes avril–mai 2026"
   }
 }
