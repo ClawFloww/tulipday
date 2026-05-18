@@ -8,7 +8,13 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
+const MAPTILER_KEY = "SeaEiJkthxx3KNUCV0aI";
+const STYLE_URLS = {
+  streets:   `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
+  satellite: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
+};
+
+export type MapStyle = "streets" | "satellite";
 
 export interface NavStop {
   id: string;
@@ -28,6 +34,57 @@ interface Props {
   heading:          number;
   locked:           boolean;  // kaart vergrendeld op gebruikerslocatie
   onUserPan:        () => void;
+  mapStyle?:        MapStyle; // wisselt tussen streets en satellite hybrid
+}
+
+// Voegt de route-/aanrijdlijn-sources en hun layers (opnieuw) toe. Wordt
+// zowel bij init als na elke setStyle-wissel aangeroepen — MapLibre dropt
+// sources/layers bij een style-change, markers blijven echter staan.
+function addRouteLayers(
+  map: maplibregl.Map,
+  geometry: [number, number][],
+  approachGeometry: [number, number][] | null,
+) {
+  if (!map.getSource("nav-approach")) {
+    map.addSource("nav-approach", {
+      type: "geojson",
+      data: approachGeometry && approachGeometry.length >= 2
+        ? { type: "Feature", geometry: { type: "LineString", coordinates: approachGeometry }, properties: {} } as GeoJSON.Feature
+        : { type: "FeatureCollection", features: [] },
+    });
+    map.addLayer({
+      id: "nav-approach-casing", type: "line", source: "nav-approach",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint:  { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.55 },
+    });
+    map.addLayer({
+      id: "nav-approach-line", type: "line", source: "nav-approach",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint:  { "line-color": "#6B7280", "line-width": 6 },
+    });
+  }
+
+  if (!map.getSource("nav-route")) {
+    map.addSource("nav-route", {
+      type: "geojson",
+      data: { type: "Feature", geometry: { type: "LineString", coordinates: geometry }, properties: {} },
+    });
+    map.addLayer({
+      id: "nav-route-shadow", type: "line", source: "nav-route",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint:  { "line-color": "rgba(0,0,0,0.15)", "line-width": 14, "line-blur": 5 },
+    });
+    map.addLayer({
+      id: "nav-route-line", type: "line", source: "nav-route",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint:  { "line-color": "#E8102A", "line-width": 8 },
+    });
+    map.addLayer({
+      id: "nav-route-border", type: "line", source: "nav-route",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint:  { "line-color": "#fff", "line-width": 2, "line-opacity": 0.3 },
+    });
+  }
 }
 
 export default function NavigationMap({
@@ -40,17 +97,23 @@ export default function NavigationMap({
   heading,
   locked,
   onUserPan,
+  mapStyle = "streets",
 }: Props) {
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const mapRef        = useRef<maplibregl.Map | null>(null);
-  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const initDone      = useRef(false);
-  const lockedRef     = useRef(locked);
-  const onUserPanRef  = useRef(onUserPan);
+  const containerRef     = useRef<HTMLDivElement>(null);
+  const mapRef           = useRef<maplibregl.Map | null>(null);
+  const userMarkerRef    = useRef<maplibregl.Marker | null>(null);
+  const initDone         = useRef(false);
+  const lockedRef        = useRef(locked);
+  const onUserPanRef     = useRef(onUserPan);
+  // Refs voor de geometriedata zodat re-add na setStyle de actuele lijnen ziet
+  const geometryRef      = useRef(geometry);
+  const approachGeomRef  = useRef(approachGeometry);
 
   // Synchroniseer refs
-  useEffect(() => { lockedRef.current    = locked; },    [locked]);
-  useEffect(() => { onUserPanRef.current = onUserPan; }, [onUserPan]);
+  useEffect(() => { lockedRef.current     = locked; },           [locked]);
+  useEffect(() => { onUserPanRef.current  = onUserPan; },        [onUserPan]);
+  useEffect(() => { geometryRef.current   = geometry; },         [geometry]);
+  useEffect(() => { approachGeomRef.current = approachGeometry; }, [approachGeometry]);
 
   // ── Kaart initialiseren (één keer) ────────────────────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,7 +128,7 @@ export default function NavigationMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style:     MAP_STYLE,
+      style:     STYLE_URLS[mapStyle],
       center,
       zoom:    13,
       pitch:   0,
@@ -84,53 +147,7 @@ export default function NavigationMap({
     });
 
     map.on("load", () => {
-      // ── Aanrijdlijn (grijs) — van huidige locatie naar startpunt ──────
-      map.addSource("nav-approach", {
-        type: "geojson",
-        data: approachGeometry && approachGeometry.length >= 2
-          ? { type: "Feature", geometry: { type: "LineString", coordinates: approachGeometry }, properties: {} } as GeoJSON.Feature
-          : { type: "FeatureCollection", features: [] },
-      });
-
-      map.addLayer({
-        id: "nav-approach-casing", type: "line", source: "nav-approach",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint:  { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.55 },
-      });
-
-      map.addLayer({
-        id: "nav-approach-line", type: "line", source: "nav-approach",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint:  { "line-color": "#6B7280", "line-width": 6 },
-      });
-
-      // ── Route-lijn (rood) ─────────────────────────────────────────────
-      map.addSource("nav-route", {
-        type: "geojson",
-        data: {
-          type:     "Feature",
-          geometry: { type: "LineString", coordinates: geometry },
-          properties: {},
-        },
-      });
-
-      map.addLayer({
-        id: "nav-route-shadow", type: "line", source: "nav-route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint:  { "line-color": "rgba(0,0,0,0.15)", "line-width": 14, "line-blur": 5 },
-      });
-
-      map.addLayer({
-        id: "nav-route-line", type: "line", source: "nav-route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint:  { "line-color": "#E8102A", "line-width": 8 },
-      });
-
-      map.addLayer({
-        id: "nav-route-border", type: "line", source: "nav-route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint:  { "line-color": "#fff", "line-width": 2, "line-opacity": 0.3 },
-      });
+      addRouteLayers(map, geometry, approachGeometry);
 
       // ── Stop-markers ───────────────────────────────────────────────────
       stops.forEach((stop, idx) => {
@@ -193,6 +210,20 @@ export default function NavigationMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // kaart initialiseer één keer; stop-markers worden via DOM aangemaakt
+
+  // ── Style wisselen (streets ↔ satellite) ─────────────────────────────────
+  // setStyle gooit sources/layers weg; markers blijven. Na de nieuwe style is
+  // geladen, voegen we de route-/aanrijdlijn-layers opnieuw toe.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !initDone.current) return;
+    map.setStyle(STYLE_URLS[mapStyle]);
+    const onLoad = () => {
+      addRouteLayers(map, geometryRef.current, approachGeomRef.current);
+    };
+    map.once("style.load", onLoad);
+    return () => { map.off("style.load", onLoad); };
+  }, [mapStyle]);
 
   // ── Aanrijdlijn tonen/verbergen op basis van approachGeometry ────────────
   useEffect(() => {
