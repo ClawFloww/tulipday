@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, Inter_Tight } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 
@@ -57,6 +59,8 @@ export default function RootLayout({
         className={`${playfair.variable} ${inter.variable} ${interTight.variable} font-sans antialiased`}
       >
         <I18nProvider>{children}</I18nProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
