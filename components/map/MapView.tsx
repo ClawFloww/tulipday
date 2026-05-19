@@ -458,7 +458,8 @@ function RouteDetailSheet({
   canAddToMap,
   onToggleMap,
   onClose,
-  onNavigate,
+  onDetails,
+  onStart,
 }: {
   route: MapRoute;
   detail: FullRouteDetail | null;
@@ -469,19 +470,20 @@ function RouteDetailSheet({
   canAddToMap: boolean;
   onToggleMap: () => void;
   onClose: () => void;
-  onNavigate: () => void;
+  onDetails: () => void;
+  onStart: () => void;
 }) {
   const [descExpanded, setDescExpanded] = useState(false);
   const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=800";
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl shadow-black/30 animate-slide-up flex flex-col"
-      style={{ maxHeight: "88vh" }}
+      className="absolute bottom-0 left-0 right-0 z-40 rounded-t-3xl shadow-2xl shadow-black/30 animate-slide-up flex flex-col"
+      style={{ maxHeight: "88vh", backgroundColor: "var(--color-surface-2)" }}
     >
       {/* Drag handle */}
       <div className="flex-shrink-0 flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        <div className="w-10 h-1 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
       </div>
 
       {/* Scrollable body */}
@@ -511,35 +513,43 @@ function RouteDetailSheet({
               {route.activity}
             </span>
           )}
-          <h2 className="text-base font-extrabold text-gray-900 leading-tight mb-3">{route.title}</h2>
+          <h2 className="text-base font-extrabold leading-tight mb-3" style={{ color: "var(--color-text)" }}>
+            {route.title}
+          </h2>
 
           <div className="flex items-center gap-3 flex-wrap">
             {route.distance_km && (
-              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
+                   style={{ backgroundColor: "var(--color-surface-3)" }}>
                 <span className="text-sm">📏</span>
-                <span className="text-xs font-bold text-gray-800">{route.distance_km} km</span>
+                <span className="text-xs font-bold" style={{ color: "var(--color-text)" }}>{route.distance_km} km</span>
               </div>
             )}
             {detail?.duration_minutes && (
-              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
+                   style={{ backgroundColor: "var(--color-surface-3)" }}>
                 <span className="text-sm">🕐</span>
-                <span className="text-xs font-bold text-gray-800">{fmtDuration(detail.duration_minutes * 60)}</span>
+                <span className="text-xs font-bold" style={{ color: "var(--color-text)" }}>{fmtDuration(detail.duration_minutes * 60)}</span>
               </div>
             )}
             {route.difficulty && (
-              <div className="bg-gray-50 px-2.5 py-1.5 rounded-xl">
-                <span className="text-xs font-bold text-gray-600">{route.difficulty}</span>
+              <div className="px-2.5 py-1.5 rounded-xl" style={{ backgroundColor: "var(--color-surface-3)" }}>
+                <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>{route.difficulty}</span>
               </div>
             )}
           </div>
         </div>
 
-        <div className="h-px bg-gray-100 mx-4" />
+        <div className="h-px mx-4" style={{ backgroundColor: "var(--color-border)" }} />
 
         {loading ? (
           <div className="p-4 space-y-3">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-4 bg-gray-100 rounded-lg animate-pulse" style={{ width: i % 2 === 0 ? "100%" : "75%" }} />
+              <div key={i} className="h-4 rounded-lg animate-pulse"
+                   style={{
+                     width: i % 2 === 0 ? "100%" : "75%",
+                     backgroundColor: "var(--color-surface-3)",
+                   }} />
             ))}
           </div>
         ) : (
@@ -548,10 +558,10 @@ function RouteDetailSheet({
             {((detail?.environment?.length ?? 0) > 0 || (detail?.themes?.length ?? 0) > 0) && (
               <div className="px-4 pt-3 pb-1 flex flex-wrap gap-1.5">
                 {detail?.environment?.map((e) => (
-                  <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">{e}</span>
+                  <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{e}</span>
                 ))}
                 {detail?.themes?.map((t) => (
-                  <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">{t}</span>
+                  <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{t}</span>
                 ))}
               </div>
             )}
@@ -559,13 +569,14 @@ function RouteDetailSheet({
             {/* Description */}
             {detail?.description && (
               <div className="px-4 py-3">
-                <p className={`text-xs text-gray-600 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
+                <p className={`text-xs leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}
+                   style={{ color: "var(--color-text-2)" }}>
                   {detail.description}
                 </p>
                 {detail.description.length > 150 && (
                   <button
                     onClick={() => setDescExpanded((p) => !p)}
-                    className="text-xs font-bold text-rose-600 mt-1.5"
+                    className="text-xs font-bold text-tulip-500 mt-1.5"
                   >
                     {descExpanded ? "Minder" : "Lees meer"}
                   </button>
@@ -576,30 +587,40 @@ function RouteDetailSheet({
             {/* Stops */}
             {stops.length > 0 && (
               <div className="px-4 pt-1 pb-4">
-                <div className="h-px bg-gray-100 mb-3" />
-                <h3 className="text-xs font-extrabold text-gray-900 mb-3">Routestops</h3>
+                <div className="h-px mb-3" style={{ backgroundColor: "var(--color-border)" }} />
+                <h3 className="text-xs font-extrabold mb-3" style={{ color: "var(--color-text)" }}>Routestops</h3>
                 <div className="relative">
                   {/* Vertical connector line */}
-                  <div className="absolute left-[13px] top-6 bottom-6 w-px bg-gray-200" />
+                  <div className="absolute left-[13px] top-6 bottom-6 w-px"
+                       style={{ backgroundColor: "var(--color-border)" }} />
 
                   {/* Start */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-extrabold z-10">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold z-10"
+                         style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}>
                       A
                     </div>
-                    <span className="text-xs font-bold text-gray-600">Startpunt</span>
+                    <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>Startpunt</span>
                   </div>
 
                   {/* Numbered stops */}
                   {stops.map((stop, idx) => (
                     <div key={stop.id} className="flex items-center gap-3 mb-3">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white border-2 border-gray-300 text-gray-700 flex items-center justify-center text-[10px] font-bold z-10">
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-bold z-10"
+                           style={{
+                             backgroundColor: "var(--color-surface-2)",
+                             borderColor: "var(--color-border)",
+                             color: "var(--color-text-2)",
+                           }}>
                         {idx + 1}
                       </div>
                       <div className="flex-1 flex items-center gap-2 min-w-0">
-                        <p className="flex-1 text-xs font-semibold text-gray-800 line-clamp-1">{stop.locations.title}</p>
+                        <p className="flex-1 text-xs font-semibold line-clamp-1" style={{ color: "var(--color-text)" }}>
+                          {stop.locations.title}
+                        </p>
                         {stop.locations.image_url && (
-                          <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
+                               style={{ backgroundColor: "var(--color-surface-3)" }}>
                             <Image src={stop.locations.image_url} alt={stop.locations.title} fill className="object-cover" />
                           </div>
                         )}
@@ -609,10 +630,11 @@ function RouteDetailSheet({
 
                   {/* End */}
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-extrabold z-10">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold z-10"
+                         style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}>
                       B
                     </div>
-                    <span className="text-xs font-bold text-gray-600">Eindpunt</span>
+                    <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>Eindpunt</span>
                   </div>
                 </div>
               </div>
@@ -624,28 +646,39 @@ function RouteDetailSheet({
         <div className="h-24" />
       </div>
 
-      {/* Bottom action bar */}
+      {/* Bottom action bar — 3 knoppen: Op kaart / Details / Start */}
       <div
-        className="flex-shrink-0 px-4 pt-3 border-t border-gray-100 flex gap-2"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+        className="flex-shrink-0 px-4 pt-3 flex gap-2"
+        style={{
+          borderTop: "1px solid var(--color-border)",
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
+        }}
       >
         <button
           onClick={onToggleMap}
           disabled={!isOnMap && !canAddToMap}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95 disabled:opacity-40"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 disabled:opacity-40"
           style={isOnMap
             ? { backgroundColor: slotColor!, color: "#fff" }
-            : { backgroundColor: "#f3f4f6", color: "#374151" }}
+            : { backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
         >
-          <MapPin size={14} />
+          <MapPin size={13} />
           {isOnMap ? "Van kaart" : "Op kaart"}
         </button>
         <button
-          onClick={onNavigate}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-rose-600 text-white text-sm font-bold transition-all active:scale-95"
+          onClick={onDetails}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95"
+          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
         >
-          Bekijk route
-          <ChevronRight size={14} />
+          Details
+        </button>
+        <button
+          onClick={onStart}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-tulip-500 text-white text-xs font-bold transition-all active:scale-95"
+          style={{ boxShadow: "0 4px 12px rgba(232,16,42,0.32)" }}
+        >
+          Start
+          <ChevronRight size={13} />
         </button>
       </div>
     </div>
@@ -1572,7 +1605,8 @@ export default function MapView() {
           canAddToMap={Object.keys(routeSlots).length < 3}
           onToggleMap={() => toggleRouteOnMap(selectedMapRoute)}
           onClose={() => setSelectedMapRoute(null)}
-          onNavigate={() => router.push(`/routes/${selectedMapRoute.slug}`)}
+          onDetails={() => router.push(`/routes/${selectedMapRoute.slug}`)}
+          onStart={() => router.push(`/navigate?slug=${selectedMapRoute.slug}`)}
         />
       )}
 
