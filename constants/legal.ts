@@ -28,7 +28,7 @@ Zie: openstreetmap.org/copyright
 TulipDay is niet aansprakelijk voor onjuiste bloeistatus-informatie, schade door routes, technische storingen of inhoud van andere gebruikers.
 
 8. Toepasselijk recht
-Nederlands recht is van toepassing. Contact: info@tulipday.nl`;
+Nederlands recht is van toepassing. Contact: info@tulipday.online`;
 
 export const PRIVACYBELEID = `1. Welke gegevens verzamelen wij?
 - Locatiedata (optioneel): alleen lokaal op je apparaat, max 15 minuten.
@@ -44,7 +44,7 @@ Wij delen geen persoonsgegevens voor commerciële doeleinden. Wij gebruiken Supa
 
 4. Jouw rechten (AVG)
 Je hebt recht op inzage, verwijdering, bezwaar en dataportabiliteit.
-Verzoeken via: info@tulipday.nl (reactie binnen 30 dagen).
+Verzoeken via: info@tulipday.online (reactie binnen 30 dagen).
 
 5. Bewaartermijnen
 - Locatiedata: max 15 minuten.
@@ -55,7 +55,7 @@ Verzoeken via: info@tulipday.nl (reactie binnen 30 dagen).
 TulipDay gebruikt geen tracking-cookies en deelt geen data met advertentienetwerken.
 
 7. Contact en klachten
-Vragen of klachten? Mail naar info@tulipday.nl of dien een klacht in bij de Autoriteit Persoonsgegevens (autoriteitpersoonsgegevens.nl).`;
+Vragen of klachten? Mail naar info@tulipday.online of dien een klacht in bij de Autoriteit Persoonsgegevens (autoriteitpersoonsgegevens.nl).`;
 
 // ── Engelse versies (voor alle niet-NL locales) ───────────────────────────────
 
@@ -83,7 +83,7 @@ See: openstreetmap.org/copyright
 TulipDay is not liable for incorrect bloom-status information, damage caused by routes, technical failures, or content uploaded by other users.
 
 8. Applicable law
-Dutch law applies. Contact: info@tulipday.nl`;
+Dutch law applies. Contact: info@tulipday.online`;
 
 export const PRIVACY_POLICY = `1. What data do we collect?
 - Location data (optional): stored only locally on your device, for max 15 minutes.
@@ -99,7 +99,7 @@ We do not share personal data for commercial purposes. We use Supabase (EU), Ope
 
 4. Your rights (GDPR)
 You have the right to access, deletion, objection, and data portability.
-Requests via: info@tulipday.nl (response within 30 days).
+Requests via: info@tulipday.online (response within 30 days).
 
 5. Retention periods
 - Location data: max 15 minutes.
@@ -110,7 +110,7 @@ Requests via: info@tulipday.nl (response within 30 days).
 TulipDay does not use tracking cookies and does not share data with advertising networks.
 
 7. Contact and complaints
-Questions or complaints? Email info@tulipday.nl or file a complaint with the Dutch Data Protection Authority (autoriteitpersoonsgegevens.nl).`;
+Questions or complaints? Email info@tulipday.online or file a complaint with the Dutch Data Protection Authority (autoriteitpersoonsgegevens.nl).`;
 
 // ── Veldetiquette ─────────────────────────────────────────────────────────────
 

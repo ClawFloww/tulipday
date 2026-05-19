@@ -222,10 +222,10 @@ export default function SettingsPage() {
           accent="text-forest-500"
           right={
             <span className="flex items-center gap-1 text-xs" style={{ color: "var(--color-text-3)" }}>
-              hello@tulipday.nl <ExternalLink size={11} />
+              hello@tulipday.online <ExternalLink size={11} />
             </span>
           }
-          onClick={() => window.open("mailto:hello@tulipday.nl", "_blank")}
+          onClick={() => window.open("mailto:hello@tulipday.online", "_blank")}
         />
 
         <SectionLabel label={t("settings.section_legal")} />

@@ -344,7 +344,7 @@ export default function OnboardingPage() {
                 {tl("continue")}
               </button>
               <p className="text-center text-[11px]" style={{ color: "var(--color-text-3)" }}>
-                v{TERMS_VERSION} · {TERMS_DATE} · info@tulipday.nl
+                v{TERMS_VERSION} · {TERMS_DATE} · info@tulipday.online
               </p>
             </motion.div>
 

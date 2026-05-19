@@ -62,7 +62,7 @@ export default function PrivacyPage() {
           <P>
             TulipDay is a mobile app that helps users discover tulip fields, bloom statuses,
             and scenic routes across the Netherlands. The app is operated by TulipDay
-            (contact: <a href="mailto:hello@tulipday.nl" style={{ color: "#E8334A" }}>hello@tulipday.nl</a>).
+            (contact: <a href="mailto:hello@tulipday.online" style={{ color: "#E8334A" }}>hello@tulipday.online</a>).
           </P>
         </Section>
 
@@ -163,8 +163,8 @@ export default function PrivacyPage() {
         <Section title="11. Contact">
           <P>
             Questions about this privacy policy?{" "}
-            <a href="mailto:hello@tulipday.nl" style={{ color: "#E8334A", fontWeight: 600 }}>
-              hello@tulipday.nl
+            <a href="mailto:hello@tulipday.online" style={{ color: "#E8334A", fontWeight: 600 }}>
+              hello@tulipday.online
             </a>
           </P>
         </Section>
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
           <P>
             TulipDay is een mobiele app waarmee gebruikers tulpenvelden, bloeistatus en
             routes in Nederland kunnen ontdekken. Contact:{" "}
-            <a href="mailto:hello@tulipday.nl" style={{ color: "#E8334A" }}>hello@tulipday.nl</a>.
+            <a href="mailto:hello@tulipday.online" style={{ color: "#E8334A" }}>hello@tulipday.online</a>.
           </P>
         </Section>
 
@@ -226,8 +226,8 @@ export default function PrivacyPage() {
         <Section title="6. Contact & jouw rechten">
           <P>
             Vragen over dit beleid?{" "}
-            <a href="mailto:hello@tulipday.nl" style={{ color: "#E8334A", fontWeight: 600 }}>
-              hello@tulipday.nl
+            <a href="mailto:hello@tulipday.online" style={{ color: "#E8334A", fontWeight: 600 }}>
+              hello@tulipday.online
             </a>
           </P>
           <P>
