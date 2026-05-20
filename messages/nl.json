@@ -434,7 +434,16 @@
     "voice_sharp_right": "Sla scherp rechtsaf op {street}",
     "voice_slight_right": "Sla licht rechtsaf op {street}",
     "voice_uturn": "Maak een U-bocht",
-    "voice_continue": "Ga rechtdoor op {street}"
+    "voice_continue": "Ga rechtdoor op {street}",
+    "start_choice_eyebrow": "Start je route",
+    "start_choice_prompt": "Vanaf welk punt wil je beginnen?",
+    "start_use_current": "Huidige locatie",
+    "start_use_current_hint": "Start vanaf waar je nu bent (GPS)",
+    "start_pick_on_map": "Kies een startpunt",
+    "start_pick_on_map_hint": "Tap een plek op de kaart",
+    "pick_start_title": "Kies je startpunt",
+    "pick_start_hint": "Tap op de kaart waar je wilt beginnen",
+    "pick_start_confirm": "Bevestig"
   },
   "planner": {
     "header_eyebrow": "Jouw dagroute",

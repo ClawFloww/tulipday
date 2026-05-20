@@ -434,7 +434,16 @@
     "voice_sharp_right": "Tournez fortement à droite sur {street}",
     "voice_slight_right": "Restez à droite sur {street}",
     "voice_uturn": "Faites demi-tour",
-    "voice_continue": "Continuez sur {street}"
+    "voice_continue": "Continuez sur {street}",
+    "start_choice_eyebrow": "Démarrer votre itinéraire",
+    "start_choice_prompt": "Où voulez-vous commencer ?",
+    "start_use_current": "Position actuelle",
+    "start_use_current_hint": "Démarrer depuis votre position GPS",
+    "start_pick_on_map": "Choisir un point de départ",
+    "start_pick_on_map_hint": "Touchez un endroit sur la carte",
+    "pick_start_title": "Choisissez votre point de départ",
+    "pick_start_hint": "Touchez la carte à l'endroit où vous voulez commencer",
+    "pick_start_confirm": "Confirmer"
   },
   "planner": {
     "header_eyebrow": "Votre itinéraire du jour",

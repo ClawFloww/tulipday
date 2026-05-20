@@ -434,7 +434,16 @@
     "voice_sharp_right": "Gire bruscamente a la derecha en {street}",
     "voice_slight_right": "Manténgase a la derecha en {street}",
     "voice_uturn": "Dé media vuelta",
-    "voice_continue": "Continúe por {street}"
+    "voice_continue": "Continúe por {street}",
+    "start_choice_eyebrow": "Iniciar tu ruta",
+    "start_choice_prompt": "¿Desde dónde quieres empezar?",
+    "start_use_current": "Ubicación actual",
+    "start_use_current_hint": "Iniciar desde tu posición GPS",
+    "start_pick_on_map": "Elegir un punto de inicio",
+    "start_pick_on_map_hint": "Toca un lugar en el mapa",
+    "pick_start_title": "Elige tu punto de inicio",
+    "pick_start_hint": "Toca el mapa donde quieres comenzar",
+    "pick_start_confirm": "Confirmar"
   },
   "planner": {
     "header_eyebrow": "Tu ruta del día",

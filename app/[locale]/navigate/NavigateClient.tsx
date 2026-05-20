@@ -1,13 +1,19 @@
 "use client";
 
 // Laadt route-data (preset of gegenereerd) en haalt OSRM-stappen op voor afslag-instructies.
-// Geeft een NavRoute door aan NavigationView.
+// Toont eerst een keuze-modal voor het startpunt (huidige locatie of kies op
+// kaart), genereert daarna de approach-route vanaf dat punt naar de eerste
+// stop. Geeft een complete NavRoute door aan NavigationView.
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
 import NavigationView, { type NavRoute, type NavStep } from "@/components/navigation/NavigationView";
+import StartChoiceModal from "@/components/navigation/StartChoiceModal";
+import StartPointPicker from "@/components/navigation/StartPointPicker";
+
+type StartPhase = "choosing" | "picking" | "ready";
 
 const ROUTE_KEY = "tulipday_active_route";
 
@@ -173,8 +179,11 @@ export default function NavigateClient() {
   const router        = useRouter();
   const { t }         = useT();
 
-  const [navRoute, setNavRoute] = useState<NavRoute | null>(null);
-  const [error,    setError]    = useState<string | null>(null);
+  const [baseRoute,   setBaseRoute]   = useState<NavRoute | null>(null); // zonder approach
+  const [navRoute,    setNavRoute]    = useState<NavRoute | null>(null); // met approach
+  const [error,       setError]       = useState<string | null>(null);
+  const [startPhase,  setStartPhase]  = useState<StartPhase>("choosing");
+  const [customStart, setCustomStart] = useState<[number, number] | null>(null); // [lng, lat]
 
   const slug      = searchParams.get("slug");
   const generated = searchParams.get("generated") === "true";
@@ -214,33 +223,17 @@ export default function NavigateClient() {
           const routeStart = route.geometry.coordinates[0] as [number, number] | undefined;
           const rawGeometry = route.geometry.coordinates as [number, number][];
 
-          // Één OSRM-call: levert zowel afslagen als de weggebaseerde geometrie.
-          // Zo blijven de rode route-lijn en de afslag-instructies exact synchroon.
-          const [{ steps, geometry: osrmGeometry }, userPos] = await Promise.all([
-            fetchOSRMSteps(stops, mode),
-            getUserPosition(),
-          ]);
-
+          // Eén OSRM-call levert zowel de afslag-stappen als de weggebaseerde
+          // geometrie. Approach (van startpunt naar eerste stop) volgt later
+          // in een tweede effect — pas nadat de gebruiker het startpunt heeft
+          // gekozen via StartChoiceModal/StartPointPicker.
+          const { steps, geometry: osrmGeometry } = await fetchOSRMSteps(stops, mode);
           const displayGeometry = osrmGeometry ?? rawGeometry;
+          // routeStart wordt later gebruikt door het approach-effect, daarom
+          // hoeft hij hier niets meer te doen dan in scope blijven.
+          void routeStart;
 
-          let approachGeometry: [number, number][] | null = null;
-          let approachSteps: NavStep[] = [];
-          let approachDistanceM: number | null = null;
-
-          if (userPos && routeStart) {
-            const approach = await fetchOSRMApproach(
-              { lat: userPos.lat, lng: userPos.lng },
-              { lat: routeStart[1], lng: routeStart[0] }, // routeStart is [lng, lat]
-              mode,
-            );
-            if (approach) {
-              approachGeometry  = approach.geometry;
-              approachSteps     = approach.steps;
-              approachDistanceM = approach.distanceM;
-            }
-          }
-
-          setNavRoute({
+          setBaseRoute({
             name:             route.name,
             mode,
             stops,
@@ -248,9 +241,9 @@ export default function NavigateClient() {
             distanceKm:       route.distanceKm,
             durationMinutes:  route.estimatedMinutes,
             steps,
-            approachGeometry,
-            approachSteps,
-            approachDistanceM,
+            approachGeometry:  null,
+            approachSteps:     [],
+            approachDistanceM: null,
           });
         } catch {
           router.replace(`/${locale}/home`);
@@ -300,26 +293,67 @@ export default function NavigateClient() {
           ? (route.geometry_points as [number, number][]).map(([lat, lng]) => [lng, lat])
           : stops.map((s) => [s.lng, s.lat]);
 
-      const routeStart = geometry[0]; // [lng, lat]
-
-      // Parallel: OSRM-stappen + GPS-locatie + geometrie snappen aan wegennetwerk
-      const [{ steps }, userPos, snappedGeo] = await Promise.all([
+      // Parallel: OSRM-stappen + geometrie snappen aan wegennetwerk.
+      // Approach komt later in een apart effect, na de startkeuze.
+      const [{ steps }, snappedGeo] = await Promise.all([
         fetchOSRMSteps(stops, mode),
-        getUserPosition(),
         fetchSnappedGeometry(geometry, OSRM_PROFILES[mode]),
       ]);
 
       const displayGeometry = snappedGeo ?? geometry;
 
-      let approachGeometry: [number, number][] | null = null;
-      let approachSteps: NavStep[] = [];
-      let approachDistanceM: number | null = null;
+      setBaseRoute({
+        name:             route.title,
+        mode,
+        stops,
+        geometry:         displayGeometry,
+        distanceKm:       route.distance_km ?? 0,
+        durationMinutes:  route.duration_minutes ?? 0,
+        steps,
+        approachGeometry:  null,
+        approachSteps:     [],
+        approachDistanceM: null,
+      });
+    }
 
-      if (userPos && routeStart) {
+    load().catch(() => setError(t("common.load_error")));
+  }, [slug, generated, locale, router, t]);
+
+  // ── Approach-route genereren zodra het startpunt bekend is ─────────────────
+  // Wordt getriggerd zodra startPhase 'ready' wordt (na de keuze in de modal
+  // of bevestiging in de picker). Bouwt een OSRM-route van het gekozen
+  // startpunt naar de eerste stop en bevestigt dan de complete NavRoute.
+  useEffect(() => {
+    if (!baseRoute || startPhase !== "ready") return;
+
+    let cancelled = false;
+
+    async function buildApproach() {
+      // Type-narrowing: baseRoute is hierboven al gegarandeerd niet-null.
+      const base = baseRoute!;
+      const routeStart = base.geometry[0];
+      if (!routeStart) {
+        if (!cancelled) setNavRoute(base);
+        return;
+      }
+
+      // Origin = gekozen pin, of fall-back op GPS-positie als "huidige locatie"
+      let origin: { lat: number; lng: number } | null;
+      if (customStart) {
+        origin = { lat: customStart[1], lng: customStart[0] };
+      } else {
+        origin = await getUserPosition();
+      }
+
+      let approachGeometry:  [number, number][] | null = null;
+      let approachSteps:     NavStep[]                 = [];
+      let approachDistanceM: number | null             = null;
+
+      if (origin) {
         const approach = await fetchOSRMApproach(
-          { lat: userPos.lat, lng: userPos.lng },
+          origin,
           { lat: routeStart[1], lng: routeStart[0] }, // routeStart is [lng, lat]
-          mode,
+          base.mode,
         );
         if (approach) {
           approachGeometry  = approach.geometry;
@@ -328,22 +362,14 @@ export default function NavigateClient() {
         }
       }
 
-      setNavRoute({
-        name:             route.title,
-        mode,
-        stops,
-        geometry:         displayGeometry,
-        distanceKm:       route.distance_km ?? 0,
-        durationMinutes:  route.duration_minutes ?? 0,
-        steps,
-        approachGeometry,
-        approachSteps,
-        approachDistanceM,
-      });
+      if (!cancelled) {
+        setNavRoute({ ...base, approachGeometry, approachSteps, approachDistanceM });
+      }
     }
 
-    load().catch(() => setError(t("common.load_error")));
-  }, [slug, generated, locale, router]);
+    buildApproach();
+    return () => { cancelled = true; };
+  }, [baseRoute, startPhase, customStart]);
 
   if (error) {
     return (
@@ -356,6 +382,45 @@ export default function NavigateClient() {
     );
   }
 
+  // Route nog niet geladen → spinner
+  if (!baseRoute) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "var(--color-surface)" }}
+      >
+        <div className="w-8 h-8 rounded-full border-2 border-tulip-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  // Eerste keuze: huidige locatie of pin op kaart
+  if (startPhase === "choosing") {
+    return (
+      <StartChoiceModal
+        routeName={baseRoute.name}
+        onUseCurrentLocation={() => { setCustomStart(null); setStartPhase("ready"); }}
+        onPickOnMap={() => setStartPhase("picking")}
+        onCancel={() => router.back()}
+      />
+    );
+  }
+
+  // Pin-modus: gebruiker tapt op kaart om startpunt te kiezen
+  if (startPhase === "picking") {
+    return (
+      <StartPointPicker
+        routeName={baseRoute.name}
+        routeGeometry={baseRoute.geometry}
+        stops={baseRoute.stops}
+        initialUserPos={null}
+        onConfirm={(lngLat) => { setCustomStart(lngLat); setStartPhase("ready"); }}
+        onCancel={() => setStartPhase("choosing")}
+      />
+    );
+  }
+
+  // startPhase === "ready" — wacht op approach-generatie, dan rendert NavigationView
   if (!navRoute) {
     return (
       <div

@@ -434,7 +434,16 @@
     "voice_sharp_right": "Scharf rechts abbiegen auf {street}",
     "voice_slight_right": "Leicht rechts halten auf {street}",
     "voice_uturn": "Wenden Sie",
-    "voice_continue": "Geradeaus weiterfahren auf {street}"
+    "voice_continue": "Geradeaus weiterfahren auf {street}",
+    "start_choice_eyebrow": "Route starten",
+    "start_choice_prompt": "Wo möchten Sie beginnen?",
+    "start_use_current": "Aktueller Standort",
+    "start_use_current_hint": "Vom aktuellen GPS-Standort starten",
+    "start_pick_on_map": "Startpunkt wählen",
+    "start_pick_on_map_hint": "Tippen Sie auf eine Stelle auf der Karte",
+    "pick_start_title": "Wählen Sie Ihren Startpunkt",
+    "pick_start_hint": "Tippen Sie auf der Karte auf den gewünschten Startpunkt",
+    "pick_start_confirm": "Bestätigen"
   },
   "planner": {
     "header_eyebrow": "Ihre Tagesroute",

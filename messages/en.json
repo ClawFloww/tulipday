@@ -434,7 +434,16 @@
     "voice_sharp_right": "Turn sharp right onto {street}",
     "voice_slight_right": "Bear right onto {street}",
     "voice_uturn": "Make a U-turn",
-    "voice_continue": "Continue on {street}"
+    "voice_continue": "Continue on {street}",
+    "start_choice_eyebrow": "Start your route",
+    "start_choice_prompt": "Where do you want to start?",
+    "start_use_current": "Current location",
+    "start_use_current_hint": "Start from where you are now (GPS)",
+    "start_pick_on_map": "Pick a starting point",
+    "start_pick_on_map_hint": "Tap a spot on the map",
+    "pick_start_title": "Choose your starting point",
+    "pick_start_hint": "Tap on the map where you want to begin",
+    "pick_start_confirm": "Confirm"
   },
   "planner": {
     "header_eyebrow": "Your day route",

@@ -434,7 +434,16 @@
     "voice_sharp_right": "在 {street} 急右转",
     "voice_slight_right": "在 {street} 微右转",
     "voice_uturn": "请掉头",
-    "voice_continue": "沿 {street} 直行"
+    "voice_continue": "沿 {street} 直行",
+    "start_choice_eyebrow": "开始您的路线",
+    "start_choice_prompt": "您想从哪里出发？",
+    "start_use_current": "当前位置",
+    "start_use_current_hint": "从您当前的 GPS 位置出发",
+    "start_pick_on_map": "选择起点",
+    "start_pick_on_map_hint": "在地图上点选一个位置",
+    "pick_start_title": "选择您的起点",
+    "pick_start_hint": "点选地图上您想开始的位置",
+    "pick_start_confirm": "确认"
   },
   "planner": {
     "header_eyebrow": "您的当日路线",
