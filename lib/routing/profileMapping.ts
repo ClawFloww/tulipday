@@ -1,11 +1,15 @@
 // Vertaalt route-activiteitstype uit de DB naar het juiste BRouter-profiel.
 // Activiteit-strings komen uit de `activity`-kolom in de routes-tabel.
 //
-// Waarom niet altijd 'trekking'?
-//   • Wandelroutes (duinen, Atlantikwall, strandslagen) moeten hiking-mountain
-//     gebruiken — trekking volgt fietspaden die voetgangers niet mogen gebruiken.
-//   • Gewone fietsroutes: trekking (volgt LF-routes en fietspaden).
-//   • Familieroutes op rustige wegen: safety (vermijdt drukke N-wegen).
+// Profielkeuze per activiteit:
+//   • Wandelroutes (duinen, Atlantikwall, strandslagen): hiking-mountain —
+//     mag voetpaden en natuurpaden volgen.
+//   • MTB-routes: trekking — BRouter heeft geen publiek MTB-profiel,
+//     trekking volgt karrenpaden/fietspaden die MTB'ers willen.
+//   • Reguliere fiets- en familieroutes: safety — vermijdt drukke N-wegen
+//     én ongepaste karrenpaden/veldpaden. Voor toeristische Bollenstreek-
+//     routes is dit veruit het beste profiel (eerder gebruikten we
+//     trekking, maar dat koos soms onverharde veldwegen als kortere route).
 
 import type { BRouterProfile } from "./brouter";
 
@@ -16,17 +20,17 @@ export function pickBRouterProfile(activity: string | null | undefined): BRouter
     return "hiking-mountain";
   }
   if (act.includes("mountainbike") || act.includes("mtb")) {
-    return "trekking"; // BRouter heeft geen apart MTB-profiel publiek beschikbaar
-  }
-  if (act.includes("familie") || act.includes("family") || act.includes("e-step")) {
-    return "safety";
-  }
-  if (act.includes("fiets") || act.includes("cycling") || act.includes("bike")) {
     return "trekking";
   }
+  if (
+    act.includes("familie") || act.includes("family") || act.includes("e-step") ||
+    act.includes("fiets")   || act.includes("cycling") || act.includes("bike")
+  ) {
+    return "safety";
+  }
 
-  // Fallback: als route_type beschikbaar is, gebruik dat
-  return "trekking";
+  // Fallback voor onbekende activiteiten: safety geeft de minste verrassingen
+  return "safety";
 }
 
 /** Leesbaarder label per profiel voor logging */
