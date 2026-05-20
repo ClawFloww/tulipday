@@ -13,6 +13,7 @@ import {
   Flower2, Layers, Locate, Volume2, VolumeX,
 } from "lucide-react";
 import { haversineDistance } from "@/lib/tulipFields";
+import { snapToPolyline } from "@/lib/routeSnapping";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
 import {
@@ -90,6 +91,7 @@ function ManeuverIcon({ type, modifier, size = 22 }: { type: string; modifier?: 
 // ─── Hoofd-component ─────────────────────────────────────────────────────────
 
 const ARRIVAL_RADIUS = 80; // meter
+const SNAP_THRESHOLD = 30; // meter — binnen deze afstand snappen we de gebruiker-dot aan de route
 
 export default function NavigationView({ navRoute, locale }: { navRoute: NavRoute; locale: string }) {
   const router = useRouter();
@@ -175,10 +177,33 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         const hdg = pos.coords.heading;
 
         setGpsStatus("active");
-        setUserPos([lat, lng]);
-        if (hdg !== null && !isNaN(hdg)) setHeading(hdg);
         // Snelheid in m/s — null als GPS geen snelheid levert (bv. eerste fix)
         setSpeed(pos.coords.speed);
+
+        // Snap-to-route voor stabielere blauwe dot + betrouwbare heading.
+        // Tijdens approach gebruiken we de approach-geometrie (van startpunt
+        // naar eerste stop), anders de hoofdroute. Snap-distance > drempel
+        // → val terug op rauwe GPS-waarden (gebruiker is off-route).
+        const activeGeom = approachPhaseRef.current
+          ? (navRoute.approachGeometry ?? null)
+          : navRoute.geometry;
+        let displayLat = lat;
+        let displayLng = lng;
+        let displayHeading: number | null = null;
+        if (activeGeom && activeGeom.length >= 2) {
+          const snap = snapToPolyline(lat, lng, activeGeom);
+          if (snap && snap.distance < SNAP_THRESHOLD) {
+            displayLat     = snap.lat;
+            displayLng     = snap.lng;
+            displayHeading = snap.heading;
+          }
+        }
+        setUserPos([displayLat, displayLng]);
+        if (displayHeading !== null) {
+          setHeading(displayHeading);
+        } else if (hdg !== null && !isNaN(hdg)) {
+          setHeading(hdg);
+        }
 
         // ── Aanrijdroute-fase: navigeer naar het startpunt ─────────────────
         if (approachPhaseRef.current) {
