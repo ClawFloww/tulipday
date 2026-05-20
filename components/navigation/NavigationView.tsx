@@ -149,6 +149,21 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
     return () => cancelSpeech(); // stop bij unmount
   }, []);
 
+  // Vraag direct een gecachte GPS-positie op zodat de kaart al kan inzoomen
+  // vóór de eerste fix uit watchPosition binnenkomt. NavigateClient heeft net
+  // daarvoor getUserPosition() aangeroepen voor de approach-route, dus de
+  // browser heeft normaal een verse fix beschikbaar in de cache.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos((prev) => prev ?? [pos.coords.latitude, pos.coords.longitude]);
+      },
+      () => {/* geen cached fix → wacht op watchPosition */},
+      { maximumAge: Infinity, timeout: 1000 },
+    );
+  }, []);
+
   const activeStop = navRoute.stops[currentStop] ?? null;
   const isFlower   = activeStop?.category === "flower_field";
   const steps      = navRoute.steps ?? [];
@@ -503,20 +518,23 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
           className="absolute right-3 z-30 flex flex-col gap-2"
           style={{ top: "calc(max(env(safe-area-inset-top), 12px) + 120px)" }}
         >
-          <AnimatePresence>
-            {!locked && userPos && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                type="button"
-                onClick={() => setLocked(true)}
-                className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
-                style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
-                aria-label={t("navigation.recenter")}
-              >
-                <Locate size={18} className="text-tulip-500" />
-              </motion.button>
-            )}
-          </AnimatePresence>
+          {userPos && (
+            <button
+              type="button"
+              onClick={() => setLocked(true)}
+              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+              style={{
+                backgroundColor: locked ? "var(--color-surface-2)" : "#E8102A",
+                border: locked ? "1px solid var(--color-border)" : "1px solid #E8102A",
+              }}
+              aria-label={t("navigation.recenter")}
+            >
+              <Locate
+                size={18}
+                style={{ color: locked ? "var(--color-text-2)" : "#ffffff" }}
+              />
+            </button>
+          )}
 
           <button
             type="button"

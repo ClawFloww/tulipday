@@ -85,42 +85,38 @@ export default function NavigationActionSheet({
         paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
       }}
     >
-      {/* Drag handle */}
+      {/* Eén grote tap-zone — drag handle + ETA-balk gecombineerd */}
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex justify-center pt-2.5 pb-1"
+        className="w-full flex flex-col text-left active:bg-black/[0.04] dark:active:bg-white/[0.04] transition-colors"
         aria-label={expanded ? t("navigation.hide_stops") : t("navigation.show_stops")}
       >
-        <span
-          className="block w-9 h-1 rounded-full"
-          style={{ backgroundColor: "var(--color-border)" }}
-        />
-      </button>
-
-      {/* Collapsed: ETA-balk */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-2 text-left"
-      >
-        <div className="flex items-baseline gap-2 flex-1 min-w-0">
+        <span className="w-full flex justify-center pt-3 pb-1">
           <span
-            className="text-2xl font-extrabold"
-            style={{ color: approachPhase ? "var(--color-text-2)" : "#2D7D46" }}
-          >
-            {etaMinutes} {t("navigation.minute_short")}
+            className="block w-10 h-1.5 rounded-full"
+            style={{ backgroundColor: "var(--color-border)" }}
+          />
+        </span>
+        <span className="w-full flex items-center justify-between px-5 pt-1 pb-3">
+          <span className="flex items-baseline gap-2 flex-1 min-w-0">
+            <span
+              className="text-2xl font-extrabold"
+              style={{ color: approachPhase ? "var(--color-text-2)" : "#2D7D46" }}
+            >
+              {etaMinutes} {t("navigation.minute_short")}
+            </span>
+            <span
+              className="text-sm font-semibold flex-shrink-0"
+              style={{ color: "var(--color-text-3)" }}
+            >
+              · {distanceLabel} · {arrivalTime}
+            </span>
           </span>
-          <span
-            className="text-sm font-semibold flex-shrink-0"
-            style={{ color: "var(--color-text-3)" }}
-          >
-            · {distanceLabel} · {arrivalTime}
-          </span>
-        </div>
-        {expanded
-          ? <ChevronDown size={20} style={{ color: "var(--color-text-3)" }} />
-          : <ChevronUp size={20} style={{ color: "var(--color-text-3)" }} />}
+          {expanded
+            ? <ChevronDown size={22} style={{ color: "var(--color-text-3)" }} />
+            : <ChevronUp   size={22} style={{ color: "var(--color-text-3)" }} />}
+        </span>
       </button>
 
       {/* Expanded: stop card + acties + stoplijst */}
