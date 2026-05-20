@@ -9,14 +9,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import {
   ArrowUp, ArrowLeft, ArrowRight, ArrowUpLeft, ArrowUpRight,
-  RotateCcw, Navigation, Navigation2, Flag, Bike, Car, Footprints,
-  Flower2, Camera, Check, ChevronRight, Layers, Locate, Route as RouteIcon,
+  RotateCcw, Navigation, Flag,
+  Flower2, Layers, Locate, Volume2, VolumeX,
 } from "lucide-react";
 import { haversineDistance } from "@/lib/tulipFields";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
+import {
+  speak as speakInstruction, cancelSpeech,
+  getVoiceEnabled, setVoiceEnabled as persistVoiceEnabled,
+  isVoiceSupported,
+} from "@/lib/speech";
 
-import TopProgressPill from "./TopProgressPill";
+import ManeuverBanner from "./ManeuverBanner";
+import ThenPreview from "./ThenPreview";
+import SpeedIndicator from "./SpeedIndicator";
+import NavigationActionSheet from "./NavigationActionSheet";
 import MapsPickerSheet from "./MapsPickerSheet";
 import PhotoUploadSheet from "@/components/ui/PhotoUploadSheet";
 
@@ -66,12 +74,6 @@ function formatDist(m: number) {
   return `${Math.round(m / 25) * 25} m`;
 }
 
-function formatETA(min: number) {
-  const h = Math.floor(min / 60), m = min % 60;
-  if (h === 0) return `${m} min`;
-  return `${h}u ${m}m`;
-}
-
 // ─── Maneuver-icoon ──────────────────────────────────────────────────────────
 
 function ManeuverIcon({ type, modifier, size = 22 }: { type: string; modifier?: string; size?: number }) {
@@ -113,11 +115,13 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   const [currentApproachStep,  setCurrentApproachStep]  = useState(0);
 
   // UI-staat
-  const [showList,        setShowList]        = useState(false);
+  const [sheetExpanded,   setSheetExpanded]   = useState(false);
   const [showBloom,       setShowBloom]       = useState(false);
   const [showMapsPicker,  setShowMapsPicker]  = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [mapStyle,        setMapStyle]        = useState<MapStyle>("streets");
+  const [voiceEnabled,    setVoiceEnabled]    = useState(false);
+  const [speed,           setSpeed]           = useState<number | null>(null); // m/s
   const [bloomLocal, setBloomLocal] = useState<Record<string, string>>({});
 
   // Refs voor gebruik binnen watchPosition (vermijdt opnieuw aanmaken)
@@ -136,6 +140,12 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   useEffect(() => { currentStepRef.current         = currentStep; },       [currentStep]);
   useEffect(() => { approachPhaseRef.current       = approachPhase; },     [approachPhase]);
   useEffect(() => { currentApproachStepRef.current = currentApproachStep; }, [currentApproachStep]);
+
+  // Laad opgeslagen spraak-voorkeur bij mount
+  useEffect(() => {
+    if (isVoiceSupported()) setVoiceEnabled(getVoiceEnabled());
+    return () => cancelSpeech(); // stop bij unmount
+  }, []);
 
   const activeStop = navRoute.stops[currentStop] ?? null;
   const isFlower   = activeStop?.category === "flower_field";
@@ -167,6 +177,8 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         setGpsStatus("active");
         setUserPos([lat, lng]);
         if (hdg !== null && !isNaN(hdg)) setHeading(hdg);
+        // Snelheid in m/s — null als GPS geen snelheid levert (bv. eerste fix)
+        setSpeed(pos.coords.speed);
 
         // ── Aanrijdroute-fase: navigeer naar het startpunt ─────────────────
         if (approachPhaseRef.current) {
@@ -256,6 +268,34 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // watchPosition één keer starten; refs zorgen voor actuele waarden
 
+  // ── Spraak-instructie bij step-wissel ──────────────────────────────────────
+  // Bouwt een korte zin uit het OSRM step-type/modifier en spreekt hem uit
+  // via Web Speech API. Cancel-on-new gedrag voorkomt overlap.
+  function buildVoiceText(step: NavStep): string {
+    const street = step.streetName || "";
+    if (step.type === "arrive")            return t("navigation.voice_arrive");
+    if (step.type === "depart")            return t("navigation.voice_depart", { street });
+    switch (step.modifier) {
+      case "left":         return t("navigation.voice_left",         { street });
+      case "sharp left":   return t("navigation.voice_sharp_left",   { street });
+      case "slight left":  return t("navigation.voice_slight_left",  { street });
+      case "right":        return t("navigation.voice_right",        { street });
+      case "sharp right":  return t("navigation.voice_sharp_right",  { street });
+      case "slight right": return t("navigation.voice_slight_right", { street });
+      case "uturn":        return t("navigation.voice_uturn");
+      default:             return t("navigation.voice_continue",     { street });
+    }
+  }
+
+  useEffect(() => {
+    if (!voiceEnabled) return;
+    const step = approachPhase ? activeApproachStep : activeStep;
+    if (!step) return;
+    speakInstruction(buildVoiceText(step), locale);
+    // buildVoiceText gebruikt t() — t verandert niet tijdens een sessie
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, currentApproachStep, approachPhase, voiceEnabled]);
+
   // ── Acties ─────────────────────────────────────────────────────────────────
 
   function handleMarkArrived(idx: number) {
@@ -304,44 +344,66 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
     );
   }
 
-  const ModeIcon      = navRoute.mode === "bike" ? Bike : navRoute.mode === "car" ? Car : Footprints;
   const reportedBloom = activeStop ? bloomLocal[activeStop.id] : null;
 
-  // ── Inhoud voor de bovenste voortgang-pil ────────────────────────────────
-  // Drie content-modi: aanrijdroute / hoofdroute met turn-by-turn step /
-  // hoofdroute zonder step (initiële weergave of tussen stops in).
-  const stopOfTotal = t("navigation.stop_of_total", { current: currentStop + 1, total: navRoute.stops.length });
-  let pillIcon: React.ReactNode;
-  let pillTitle: string;
-  let pillSubtitle: string;
+  // ── Inhoud voor de ManeuverBanner + ThenPreview ──────────────────────────
+  let maneuverIconNode: React.ReactNode;
+  let maneuverStreet:   string;
+  let maneuverDistance: string;
 
   if (approachPhase) {
-    pillIcon = activeApproachStep
-      ? <ManeuverIcon type={activeApproachStep.type} modifier={activeApproachStep.modifier} size={18} />
-      : <Navigation size={18} />;
-    pillTitle = activeApproachStep?.streetName || t("navigation.to_start");
-    const distLabel = distToStart !== null
+    maneuverIconNode = activeApproachStep
+      ? <ManeuverIcon type={activeApproachStep.type} modifier={activeApproachStep.modifier} size={32} />
+      : <Navigation size={32} />;
+    maneuverStreet = activeApproachStep?.streetName || t("navigation.to_start");
+    maneuverDistance = distToStart !== null
       ? formatDist(distToStart)
       : activeApproachStep
         ? formatDist(activeApproachStep.distance)
         : t("navigation.approach_calculated");
-    pillSubtitle = `${distLabel} · ${t("navigation.then_begins_named", { name: navRoute.name })}`;
   } else if (activeStep) {
-    pillIcon = <ManeuverIcon type={activeStep.type} modifier={activeStep.modifier} size={18} />;
-    pillTitle = activeStep.streetName || activeStop?.name || navRoute.name;
-    const distLabel = distToStop !== null
-      ? formatDist(distToStop)
-      : formatDist(activeStep.distance);
-    pillSubtitle = `${distLabel} · ${stopOfTotal}`;
+    maneuverIconNode = <ManeuverIcon type={activeStep.type} modifier={activeStep.modifier} size={32} />;
+    maneuverStreet   = activeStep.streetName || activeStop?.name || navRoute.name;
+    maneuverDistance = distToStop !== null ? formatDist(distToStop) : formatDist(activeStep.distance);
   } else {
-    pillIcon = <Navigation2 size={18} />;
-    pillTitle = activeStop
-      ? t("navigation.next_stop_named", { name: activeStop.name })
-      : navRoute.name;
-    const distLabel = distToStop !== null
+    maneuverIconNode = <Navigation size={32} />;
+    maneuverStreet   = activeStop?.name ?? navRoute.name;
+    maneuverDistance = distToStop !== null
       ? formatDist(distToStop)
       : gpsStatus === "waiting" ? t("navigation.locating") : "—";
-    pillSubtitle = `${distLabel} · ${stopOfTotal}`;
+  }
+
+  // ThenPreview: volgende OSRM step (of volgende stop, of approach → route)
+  const nextStep    = approachPhase
+    ? approachSteps[currentApproachStep + 1]
+    : steps[currentStep + 1];
+  const nextStop    = navRoute.stops[currentStop + 1];
+  let thenIconNode: React.ReactNode | null = null;
+  let thenText:     string | null = null;
+  if (nextStep) {
+    thenIconNode = <ManeuverIcon type={nextStep.type} modifier={nextStep.modifier} size={14} />;
+    thenText     = nextStep.streetName || t("navigation.continue_label");
+  } else if (!approachPhase && nextStop) {
+    thenIconNode = <Flag size={14} />;
+    thenText     = nextStop.name;
+  } else if (approachPhase) {
+    thenIconNode = <Flag size={14} />;
+    thenText     = navRoute.name;
+  }
+
+  // Onderkant — afgeleide waarden voor de ActionSheet
+  const arrivalTime = (() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + etaMinutes);
+    return now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  })();
+
+  function handleToggleVoice() {
+    if (!isVoiceSupported()) return;
+    const next = !voiceEnabled;
+    setVoiceEnabled(next);
+    persistVoiceEnabled(next);
+    if (!next) cancelSpeech();
   }
 
   return (
@@ -377,19 +439,23 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         )}
       </AnimatePresence>
 
-      {/* ── Voortgang-pil (boven) ────────────────────────────────────────── */}
+      {/* ── ManeuverBanner + ThenPreview (boven) ─────────────────────────── */}
       <div className="absolute top-0 left-0 right-0 z-20 px-3"
            style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
-        <TopProgressPill
-          icon={pillIcon}
-          title={pillTitle}
-          subtitle={pillSubtitle}
-          stops={navRoute.stops}
-          currentIdx={currentStop}
-          visited={visited}
+        <ManeuverBanner
+          icon={maneuverIconNode}
+          distanceLabel={maneuverDistance}
+          streetName={maneuverStreet}
           approachPhase={approachPhase}
           onClose={() => router.back()}
         />
+        {thenText && thenIconNode && (
+          <ThenPreview
+            icon={thenIconNode}
+            label={t("navigation.after_that_label")}
+            text={thenText}
+          />
+        )}
       </div>
 
       {/* ── Kaart ───────────────────────────────────────────────────────── */}
@@ -407,182 +473,93 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
           mapStyle={mapStyle}
         />
 
-        {/* Recenter-knop (verschijnt als gebruiker kaart heeft verschoven) */}
-        <AnimatePresence>
-          {!locked && userPos && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-              type="button"
-              onClick={() => setLocked(true)}
-              className="absolute top-4 right-3 z-30 w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
-              style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
-            >
-              <Locate size={18} className="text-tulip-500" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Kaart-lagen toggle (rechts) */}
-        <button
-          type="button"
-          onClick={() => setMapStyle((s) => (s === "streets" ? "satellite" : "streets"))}
-          className="absolute top-24 right-3 z-30 w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
-          style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
-          aria-label={t("navigation.layers_toggle")}
+        {/* Floating column rechts: Recenter / Layers / Volume / Bloei */}
+        <div
+          className="absolute right-3 z-30 flex flex-col gap-2"
+          style={{ top: "calc(max(env(safe-area-inset-top), 12px) + 120px)" }}
         >
-          <Layers size={18} style={{ color: mapStyle === "satellite" ? "#E8102A" : "var(--color-text-2)" }} />
-        </button>
-      </div>
+          <AnimatePresence>
+            {!locked && userPos && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                type="button"
+                onClick={() => setLocked(true)}
+                className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+                style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+                aria-label={t("navigation.recenter")}
+              >
+                <Locate size={18} className="text-tulip-500" />
+              </motion.button>
+            )}
+          </AnimatePresence>
 
-      {/* ── Bottom sheet — focus op huidige stop + acties ──────────────── */}
-      <motion.div
-        initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-        className="absolute bottom-0 left-0 right-0 z-20 rounded-t-3xl shadow-2xl"
-        style={{
-          backgroundColor: "var(--color-surface-2)",
-          borderTop: "1px solid var(--color-border)",
-          paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
-        }}
-      >
-        {/* Drag handle — togglet stoplijst */}
-        <button
-          type="button"
-          onClick={() => setShowList((v) => !v)}
-          className="w-full flex justify-center pt-2.5 pb-1"
-          aria-label={showList ? t("navigation.hide_stops") : t("navigation.show_stops")}
-        >
-          <span className="block w-9 h-1 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
-        </button>
-
-        {/* Stop card */}
-        <div className="px-5 pb-3">
-          <p className="text-[11px] font-extrabold tracking-wider uppercase text-tulip-500 mb-1">
-            {approachPhase ? t("navigation.to_start") : t("navigation.next_stop_label")}
-          </p>
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="text-lg font-extrabold truncate" style={{ color: "var(--color-text)" }}>
-              {approachPhase ? navRoute.name : (activeStop?.name ?? navRoute.name)}
-            </p>
-            <p className="text-sm font-bold flex-shrink-0" style={{ color: "var(--color-text-3)" }}>
-              {approachPhase
-                ? (distToStart !== null ? formatDist(distToStart) : "—")
-                : (distToStop  !== null ? formatDist(distToStop)  : `${formatETA(etaMinutes)} · ${formatDist(distRemaining)}`)}
-            </p>
-          </div>
-
-          {/* Bloeistatus-regel (alleen bollenvelden) */}
-          {isFlower && !approachPhase && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs" style={{ color: "var(--color-text-2)" }}>
-              <span
-                className="block w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor: reportedBloom === "in_bloom" || activeStop?.bloom_status === "peak" || activeStop?.bloom_status === "blooming"
-                    ? "#2D7D46"
-                    : reportedBloom === "fading" || activeStop?.bloom_status === "early"
-                      ? "#FF9800"
-                      : reportedBloom === "finished" || activeStop?.bloom_status === "ending"
-                        ? "#9E9E9E"
-                        : "var(--color-border)",
-                }}
-              />
-              <span>
-                {reportedBloom === "in_bloom" ? t("navigation.reported_in_bloom")
-                  : reportedBloom === "fading" ? t("navigation.reported_fading")
-                  : reportedBloom === "finished" ? t("navigation.reported_finished")
-                  : t("navigation.bloom_unknown")}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Primary CTA — Navigeer met kaart-app */}
-        <div className="px-3 pb-2">
           <button
             type="button"
-            onClick={() => setShowMapsPicker(true)}
-            className="w-full bg-tulip-500 text-white py-3.5 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-            style={{ boxShadow: "0 6px 18px rgba(232,16,42,0.32)" }}
+            onClick={() => setMapStyle((s) => (s === "streets" ? "satellite" : "streets"))}
+            className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+            style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+            aria-label={t("navigation.layers_toggle")}
           >
-            <Navigation2 size={18} />
-            {t("navigation.navigate_with_maps")}
+            <Layers size={18} style={{ color: mapStyle === "satellite" ? "#E8102A" : "var(--color-text-2)" }} />
           </button>
-        </div>
 
-        {/* Secondary actions */}
-        <div className="grid grid-cols-4 gap-2 px-3 pb-3">
-          <ActionButton
-            icon={<Flower2 size={18} className="text-tulip-500" />}
-            label={t("navigation.action_bloom")}
-            disabled={!isFlower || approachPhase}
-            onClick={() => setShowBloom(true)}
-          />
-          <ActionButton
-            icon={<Camera size={18} />}
-            label={t("navigation.action_photo")}
-            disabled={!activeStop || approachPhase}
-            onClick={() => setShowPhotoUpload(true)}
-          />
-          <ActionButton
-            icon={<Check size={18} />}
-            label={t("common.check_in")}
-            disabled={approachPhase}
-            onClick={() => handleMarkArrived(currentStop)}
-          />
-          <ActionButton
-            icon={<RouteIcon size={18} />}
-            label={t("navigation.action_all_stops")}
-            onClick={() => setShowList((v) => !v)}
-            active={showList}
-          />
-        </div>
-
-        {/* Modus-indicator klein */}
-        <div className="flex items-center justify-center gap-1.5 pb-3 text-[11px]" style={{ color: "var(--color-text-3)" }}>
-          <ModeIcon size={11} />
-          <span>{formatDist(distRemaining)} · ~{formatETA(etaMinutes)}</span>
-        </div>
-
-        {/* Expandable stoplijst */}
-        <AnimatePresence initial={false}>
-          {showList && (
-            <motion.div
-              key="stoplist"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden"
-              style={{ borderTop: "1px solid var(--color-border)" }}
+          {isVoiceSupported() && (
+            <button
+              type="button"
+              onClick={handleToggleVoice}
+              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+              style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+              aria-label={voiceEnabled ? t("navigation.voice_off") : t("navigation.voice_on")}
             >
-              <div className="max-h-[40vh] overflow-y-auto py-2">
-                {navRoute.stops.map((stop, idx) => {
-                  const isVisited = visited.has(idx);
-                  const isActive  = idx === currentStop;
-                  return (
-                    <div key={stop.id}
-                         className="flex items-center gap-3 px-5 py-3"
-                         style={{
-                           backgroundColor: isActive ? "var(--color-surface-3)" : "transparent",
-                           borderLeft: isActive ? "3px solid #E8102A" : "3px solid transparent",
-                           opacity: isVisited ? 0.6 : 1,
-                         }}>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold flex-shrink-0"
-                           style={{ backgroundColor: isVisited ? "#2D7D46" : isActive ? "#E8102A" : "var(--color-border)" }}>
-                        {isVisited ? <Check size={13} /> : idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{stop.name}</p>
-                        {isActive && <p className="text-[11px] font-bold text-tulip-500">{t("navigation.navigate_now")}</p>}
-                      </div>
-                      {!isVisited && !isActive && <ChevronRight size={14} style={{ color: "var(--color-text-3)" }} />}
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
+              {voiceEnabled
+                ? <Volume2 size={18} className="text-tulip-500" />
+                : <VolumeX size={18} style={{ color: "var(--color-text-3)" }} />}
+            </button>
           )}
-        </AnimatePresence>
-      </motion.div>
+
+          {isFlower && !approachPhase && (
+            <button
+              type="button"
+              onClick={() => setShowBloom(true)}
+              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+              style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+              aria-label={t("navigation.report_bloom")}
+            >
+              <Flower2 size={18} className="text-tulip-500" />
+            </button>
+          )}
+        </div>
+
+        {/* SpeedIndicator linksonder */}
+        <div
+          className="absolute left-3 z-30"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
+        >
+          <SpeedIndicator speedMps={speed} />
+        </div>
+      </div>
+
+      {/* ── Bottom action sheet (collapsed ETA / expanded acties+stops) ── */}
+      <NavigationActionSheet
+        etaMinutes={etaMinutes}
+        distanceLabel={formatDist(distRemaining)}
+        arrivalTime={arrivalTime}
+        expanded={sheetExpanded}
+        onToggle={() => setSheetExpanded((v) => !v)}
+        activeStop={activeStop}
+        approachPhase={approachPhase}
+        routeName={navRoute.name}
+        stops={navRoute.stops}
+        currentIdx={currentStop}
+        visited={visited}
+        isFlower={isFlower}
+        reportedBloom={reportedBloom ?? null}
+        onReportBloom={() => setShowBloom(true)}
+        onTakePhoto={() => setShowPhotoUpload(true)}
+        onMarkArrived={() => handleMarkArrived(currentStop)}
+        onOpenMapsPicker={() => setShowMapsPicker(true)}
+        t={t}
+      />
 
       {/* ── Bloei-melden modal (verhuisd uit floating widget) ─────────── */}
       <AnimatePresence>
@@ -663,31 +640,3 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   );
 }
 
-// ─── Compacte secundaire actie-knop ─────────────────────────────────────────
-
-function ActionButton({
-  icon, label, onClick, disabled, active,
-}: {
-  icon:     React.ReactNode;
-  label:    string;
-  onClick:  () => void;
-  disabled?: boolean;
-  active?:   boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-transform active:scale-95 disabled:opacity-40 disabled:active:scale-100"
-      style={{
-        backgroundColor: active ? "var(--color-surface-3)" : "var(--color-surface-3)",
-        color: "var(--color-text)",
-        outline: active ? "1.5px solid #E8102A" : "none",
-      }}
-    >
-      {icon}
-      <span className="truncate max-w-full">{label}</span>
-    </button>
-  );
-}
