@@ -14,6 +14,11 @@ const STYLE_URLS = {
   satellite: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
 };
 
+// Navigatie-default: street-level zoom met flinke tilt zodat het 3D-effect
+// duidelijk is. Vergelijkbaar met Google Maps tijdens turn-by-turn.
+const NAV_ZOOM  = 17.5;
+const NAV_PITCH = 55;
+
 export type MapStyle = "streets" | "satellite";
 
 export interface NavStop {
@@ -103,6 +108,7 @@ export default function NavigationMap({
   const mapRef           = useRef<maplibregl.Map | null>(null);
   const userMarkerRef    = useRef<maplibregl.Marker | null>(null);
   const initDone         = useRef(false);
+  const firstFixDone     = useRef(false); // eerste GPS-fix: snelle fly-to ipv smooth easeTo
   const lockedRef        = useRef(locked);
   const onUserPanRef     = useRef(onUserPan);
   // Refs voor de geometriedata zodat re-add na setStyle de actuele lijnen ziet
@@ -305,18 +311,33 @@ export default function NavigationMap({
 
     userMarkerRef.current.setRotation(heading);
 
-    // Volg gebruiker als kaart vergrendeld is
+    // Volg gebruiker als kaart vergrendeld is. Eerste fix: snelle flyTo van
+    // het overzichts-zoomlevel (13) naar street-level (NAV_ZOOM). Volgende
+    // fixes: smooth easeTo zodat de kaart vloeiend meebeweegt.
     if (lockedRef.current && map.isStyleLoaded()) {
-      map.easeTo({
-        center:   lngLat,
-        bearing:  heading,
-        pitch:    50,
-        zoom:     16.5,
-        // Padding: gebruiker staat in het onderste 1/3 van het scherm
-        padding:  { top: 280, bottom: 60, left: 60, right: 60 },
-        duration: 1000,
-        easing:   (t) => 1 - Math.pow(1 - t, 3), // ease-out cubic
-      });
+      const padding = { top: 280, bottom: 60, left: 60, right: 60 };
+      if (!firstFixDone.current) {
+        firstFixDone.current = true;
+        map.flyTo({
+          center:   lngLat,
+          bearing:  heading,
+          pitch:    NAV_PITCH,
+          zoom:     NAV_ZOOM,
+          padding,
+          duration: 900,
+          essential: true,
+        });
+      } else {
+        map.easeTo({
+          center:   lngLat,
+          bearing:  heading,
+          pitch:    NAV_PITCH,
+          zoom:     NAV_ZOOM,
+          padding,
+          duration: 1000,
+          easing:   (t) => 1 - Math.pow(1 - t, 3), // ease-out cubic
+        });
+      }
     }
   }, [userPos, heading]);
 
@@ -329,10 +350,10 @@ export default function NavigationMap({
       map.flyTo({
         center:   lngLat,
         bearing:  heading,
-        pitch:    50,
-        zoom:     16.5,
+        pitch:    NAV_PITCH,
+        zoom:     NAV_ZOOM,
         padding:  { top: 280, bottom: 60, left: 60, right: 60 },
-        duration: 1200,
+        duration: 1000,
       });
     }
   }, [locked]); // eslint-disable-line react-hooks/exhaustive-deps
