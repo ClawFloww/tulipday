@@ -91,7 +91,7 @@ function ManeuverIcon({ type, modifier, size = 22 }: { type: string; modifier?: 
 // ─── Hoofd-component ─────────────────────────────────────────────────────────
 
 const ARRIVAL_RADIUS = 80; // meter
-const SNAP_THRESHOLD = 30; // meter — binnen deze afstand snappen we de gebruiker-dot aan de route
+const SNAP_THRESHOLD = 20; // meter — binnen deze afstand snappen we de gebruiker-dot aan de route
 
 export default function NavigationView({ navRoute, locale }: { navRoute: NavRoute; locale: string }) {
   const router = useRouter();
