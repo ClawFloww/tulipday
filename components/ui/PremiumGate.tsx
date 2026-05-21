@@ -22,19 +22,40 @@ export function PremiumGate({ children }: Props) {
       <div className="pointer-events-none select-none blur-sm opacity-60">
         {children}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-2xl z-10 px-6 py-8 text-center">
-        <div className="w-12 h-12 rounded-full bg-tulip-50 flex items-center justify-center mb-3">
-          <Lock size={22} className="text-tulip-500" />
-        </div>
-        <p className="text-sm font-extrabold text-gray-900 mb-1">Premium feature</p>
-        <p className="text-xs text-gray-500 mb-4">From €2,99/month or €9,99/season</p>
-        <a
-          href="/premium"
-          className="px-5 py-2.5 rounded-xl bg-tulip-500 text-white text-sm font-bold hover:bg-tulip-600 active:scale-95 transition-all"
+
+      {/* Rode seizoenspas-banner — zelfde stijl als /premium pagina */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center px-3">
+        <div
+          className="w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl text-center"
+          style={{ backgroundColor: "#E8102A", color: "#ffffff" }}
         >
-          Upgrade
-        </a>
+          <div className="px-5 pt-5 pb-4">
+            <div className="w-11 h-11 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-3">
+              <Lock size={20} className="text-white" />
+            </div>
+            <p className="text-[11px] font-extrabold tracking-wider uppercase text-white/80 mb-2">
+              Seizoenspas 2026
+            </p>
+            <p className="text-3xl font-extrabold leading-none">€4,99</p>
+            <p className="text-xs text-white/80 mt-1">heel tulpenseizoen</p>
+          </div>
+          <a
+            href="/premium"
+            className="block w-full py-3 bg-white text-sm font-extrabold active:scale-[0.99] transition-transform"
+            style={{ color: "#E8102A" }}
+          >
+            Activeer seizoenspas
+          </a>
+        </div>
       </div>
+
+      {/* Vroegboekers-notitie onder de card, klein */}
+      <p
+        className="absolute left-0 right-0 bottom-2 text-center text-[10px] font-semibold z-10 px-4"
+        style={{ color: "var(--color-text-3)" }}
+      >
+        🌱 Vroegboeker: €2,99 voor bestaande gebruikers in feb 2027
+      </p>
     </div>
   );
 }
