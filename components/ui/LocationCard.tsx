@@ -45,20 +45,18 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
           </p>
         )}
 
-        {location.photo_score != null && (
-          <div className="flex items-center gap-0.5 pt-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                size={10}
-                style={{
-                  color: i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
-                  fill:  i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
-                }}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-0.5 pt-0.5 h-3" aria-hidden={location.photo_score == null}>
+          {location.photo_score != null && Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              size={10}
+              style={{
+                color: i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
+                fill:  i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
+              }}
+            />
+          ))}
+        </div>
       </div>
     </button>
   );
