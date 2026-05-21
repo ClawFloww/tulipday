@@ -2,13 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
-import { isPremium } from "@/lib/premium";
+import {
+  isPremium,
+  formatPriceEur,
+  CURRENT_SEASON_YEAR,
+  CURRENT_SEASON_PRICE,
+  EARLY_BIRD_YEAR,
+  EARLY_BIRD_PRICE,
+  EARLY_BIRD_FROM_MONTH,
+} from "@/lib/premium";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   children: React.ReactNode;
 }
 
 export function PremiumGate({ children }: Props) {
+  const { t } = useT();
   const [premium, setPremium] = useState(true); // default true to avoid flash
 
   useEffect(() => {
@@ -34,17 +44,19 @@ export function PremiumGate({ children }: Props) {
               <Lock size={20} className="text-white" />
             </div>
             <p className="text-[11px] font-extrabold tracking-wider uppercase text-white/80 mb-2">
-              Seizoenspas 2026
+              {t("premium.gate_eyebrow", { year: CURRENT_SEASON_YEAR })}
             </p>
-            <p className="text-3xl font-extrabold leading-none">€4,99</p>
-            <p className="text-xs text-white/80 mt-1">heel tulpenseizoen</p>
+            <p className="text-3xl font-extrabold leading-none">
+              {formatPriceEur(CURRENT_SEASON_PRICE)}
+            </p>
+            <p className="text-xs text-white/80 mt-1">{t("premium.gate_period")}</p>
           </div>
           <a
             href="/premium"
             className="block w-full py-3 bg-white text-sm font-extrabold active:scale-[0.99] transition-transform"
             style={{ color: "#E8102A" }}
           >
-            Activeer seizoenspas
+            {t("premium.gate_activate")}
           </a>
         </div>
       </div>
@@ -54,7 +66,11 @@ export function PremiumGate({ children }: Props) {
         className="absolute left-0 right-0 bottom-2 text-center text-[10px] font-semibold z-10 px-4"
         style={{ color: "var(--color-text-3)" }}
       >
-        🌱 Vroegboeker: €2,99 voor bestaande gebruikers in feb 2027
+        {t("premium.gate_early_bird", {
+          price: formatPriceEur(EARLY_BIRD_PRICE),
+          month: EARLY_BIRD_FROM_MONTH,
+          year:  EARLY_BIRD_YEAR,
+        })}
       </p>
     </div>
   );

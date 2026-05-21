@@ -545,13 +545,17 @@
     "feature_exclusive_routes": "Rutas exclusivas",
     "card_label_exclusive": "Rutas excl.",
     "card_label_offline": "Modo sin conexión",
-    "season_pass_label": "Pase de Temporada 2026",
+    "season_pass_label": "Pase de Temporada {year}",
     "season_full_period": "toda la temporada de tulipanes",
-    "valid_until": "⏳ hasta el 31 de mayo de 2026",
+    "valid_until": "⏳ hasta el 31 de mayo de {year}",
     "activate_cta": "Activar pase de temporada",
     "early_bird_label": "Precio anticipado próxima temporada:",
-    "early_bird_body": "Como usuario existente tendrás acceso por 2,99 € en febrero de 2027.",
+    "early_bird_body": "Como usuario existente tendrás acceso por {price} en {month} de {year}.",
     "continue_free": "Continuar con la versión gratuita",
-    "payment_footer": "iDEAL y tarjeta · Temporada de tulipanes abril–mayo 2026"
+    "payment_footer": "iDEAL y tarjeta · Temporada de tulipanes abril–mayo {year}",
+    "gate_eyebrow": "Pase de Temporada {year}",
+    "gate_period": "toda la temporada de tulipanes",
+    "gate_activate": "Activar pase de temporada",
+    "gate_early_bird": "🌱 Anticipado: {price} para usuarios existentes en {month} de {year}"
   }
 }

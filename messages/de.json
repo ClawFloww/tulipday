@@ -545,13 +545,17 @@
     "feature_exclusive_routes": "Exklusive Routen",
     "card_label_exclusive": "Excl. Routen",
     "card_label_offline": "Offline-Modus",
-    "season_pass_label": "Saisonpass 2026",
+    "season_pass_label": "Saisonpass {year}",
     "season_full_period": "ganze Tulpensaison",
-    "valid_until": "⏳ bis 31. Mai 2026",
+    "valid_until": "⏳ bis 31. Mai {year}",
     "activate_cta": "Saisonpass aktivieren",
     "early_bird_label": "Frühbucherpreis nächste Saison:",
-    "early_bird_body": "Als bestehender Nutzer erhalten Sie im Februar 2027 Zugang für €2,99.",
+    "early_bird_body": "Als bestehender Nutzer erhalten Sie im {month} {year} Zugang für {price}.",
     "continue_free": "Mit der kostenlosen Version fortfahren",
-    "payment_footer": "iDEAL & Kreditkarte · Tulpensaison April–Mai 2026"
+    "payment_footer": "iDEAL & Kreditkarte · Tulpensaison April–Mai {year}",
+    "gate_eyebrow": "Saisonpass {year}",
+    "gate_period": "ganze Tulpensaison",
+    "gate_activate": "Saisonpass aktivieren",
+    "gate_early_bird": "🌱 Frühbucher: {price} für bestehende Nutzer im {month} {year}"
   }
 }

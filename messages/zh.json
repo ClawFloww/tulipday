@@ -545,13 +545,17 @@
     "feature_exclusive_routes": "独家路线",
     "card_label_exclusive": "独家路线",
     "card_label_offline": "离线模式",
-    "season_pass_label": "2026 季票",
+    "season_pass_label": "{year} 季票",
     "season_full_period": "整个郁金香季",
-    "valid_until": "⏳ 至 2026 年 5 月 31 日",
+    "valid_until": "⏳ 至 {year} 年 5 月 31 日",
     "activate_cta": "激活季票",
     "early_bird_label": "下一季早鸟价:",
-    "early_bird_body": "作为现有用户,您将在 2027 年 2 月以 €2,99 的价格获得访问权限。",
+    "early_bird_body": "作为现有用户,您将在 {year} 年 {month} 以 {price} 的价格获得访问权限。",
     "continue_free": "继续使用免费版",
-    "payment_footer": "iDEAL 和信用卡 · 2026 年 4–5 月郁金香季"
+    "payment_footer": "iDEAL 和信用卡 · {year} 年 4–5 月郁金香季",
+    "gate_eyebrow": "{year} 季票",
+    "gate_period": "整个郁金香季",
+    "gate_activate": "激活季票",
+    "gate_early_bird": "🌱 早鸟:现有用户 {year} 年 {month} 享 {price}"
   }
 }

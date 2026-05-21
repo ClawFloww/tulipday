@@ -545,13 +545,17 @@
     "feature_exclusive_routes": "Exclusieve routes",
     "card_label_exclusive": "Excl. routes",
     "card_label_offline": "Offline mode",
-    "season_pass_label": "Seizoenspas 2026",
+    "season_pass_label": "Seizoenspas {year}",
     "season_full_period": "heel tulpenseizoen",
-    "valid_until": "⏳ t/m 31 mei 2026",
+    "valid_until": "⏳ t/m 31 mei {year}",
     "activate_cta": "Activeer seizoenspas",
     "early_bird_label": "Volgend seizoen vroegboekersprijs:",
-    "early_bird_body": "Als bestaande gebruiker krijg je in februari 2027 toegang voor €2,99.",
+    "early_bird_body": "Als bestaande gebruiker krijg je in {month} {year} toegang voor {price}.",
     "continue_free": "Doorgaan met gratis versie",
-    "payment_footer": "iDEAL & creditcard · Tulpenseizoen april–mei 2026"
+    "payment_footer": "iDEAL & creditcard · Tulpenseizoen april–mei {year}",
+    "gate_eyebrow": "Seizoenspas {year}",
+    "gate_period": "heel tulpenseizoen",
+    "gate_activate": "Activeer seizoenspas",
+    "gate_early_bird": "🌱 Vroegboeker: {price} voor bestaande gebruikers in {month} {year}"
   }
 }

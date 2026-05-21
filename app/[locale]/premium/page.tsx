@@ -5,6 +5,14 @@ import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { getOrCreateSessionId } from "@/lib/session";
 import { useT } from "@/lib/i18n-context";
+import {
+  CURRENT_SEASON_YEAR,
+  CURRENT_SEASON_PRICE,
+  EARLY_BIRD_YEAR,
+  EARLY_BIRD_PRICE,
+  EARLY_BIRD_FROM_MONTH,
+  formatPriceEur,
+} from "@/lib/premium";
 
 const FEATURE_DEFS = [
   { labelKey: "premium.feature_10_locations",     free: true,  season: true },
@@ -118,15 +126,19 @@ export default function PremiumPage() {
           {/* Prijs */}
           <div className="flex items-start justify-between mb-4 gap-3">
             <div>
-              <p className="text-[9.5px] font-bold uppercase tracking-widest text-white/60 mb-1">{t("premium.season_pass_label")}</p>
+              <p className="text-[9.5px] font-bold uppercase tracking-widest text-white/60 mb-1">
+                {t("premium.season_pass_label", { year: CURRENT_SEASON_YEAR })}
+              </p>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[42px] font-extrabold text-white leading-none tracking-tight">€4,99</span>
+                <span className="text-[42px] font-extrabold text-white leading-none tracking-tight">
+                  {formatPriceEur(CURRENT_SEASON_PRICE)}
+                </span>
               </div>
               <p className="text-xs text-white/60 mt-0.5">{t("premium.season_full_period")}</p>
             </div>
             <div className="shrink-0 mt-1 px-3 py-1.5 rounded-full text-[10.5px] font-medium text-white/85"
                  style={{ backgroundColor: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.2)" }}>
-              {t("premium.valid_until")}
+              {t("premium.valid_until", { year: CURRENT_SEASON_YEAR })}
             </div>
           </div>
 
@@ -158,7 +170,11 @@ export default function PremiumPage() {
           <span className="text-[17px] flex-shrink-0 mt-0.5">🌱</span>
           <p className="text-[11.5px] leading-relaxed" style={{ color: "var(--color-text-3)" }}>
             <span className="font-semibold" style={{ color: "var(--color-text-2)" }}>{t("premium.early_bird_label")}</span>{" "}
-            {t("premium.early_bird_body")}
+            {t("premium.early_bird_body", {
+              price: formatPriceEur(EARLY_BIRD_PRICE),
+              month: EARLY_BIRD_FROM_MONTH,
+              year:  EARLY_BIRD_YEAR,
+            })}
           </p>
         </div>
 
@@ -172,7 +188,7 @@ export default function PremiumPage() {
         </button>
 
         <p className="text-center text-[11px] pb-2" style={{ color: "var(--color-text-3)" }}>
-          {t("premium.payment_footer")}
+          {t("premium.payment_footer", { year: CURRENT_SEASON_YEAR })}
         </p>
 
       </div>

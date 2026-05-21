@@ -545,13 +545,17 @@
     "feature_exclusive_routes": "Itinéraires exclusifs",
     "card_label_exclusive": "Itin. excl.",
     "card_label_offline": "Mode hors ligne",
-    "season_pass_label": "Pass Saison 2026",
+    "season_pass_label": "Pass Saison {year}",
     "season_full_period": "toute la saison des tulipes",
-    "valid_until": "⏳ jusqu'au 31 mai 2026",
+    "valid_until": "⏳ jusqu'au 31 mai {year}",
     "activate_cta": "Activer le pass saison",
     "early_bird_label": "Tarif lève-tôt la saison prochaine :",
-    "early_bird_body": "En tant qu'utilisateur existant, vous y aurez accès pour 2,99 € en février 2027.",
+    "early_bird_body": "En tant qu'utilisateur existant, vous y aurez accès pour {price} en {month} {year}.",
     "continue_free": "Continuer avec la version gratuite",
-    "payment_footer": "iDEAL & carte bancaire · Saison des tulipes avril–mai 2026"
+    "payment_footer": "iDEAL & carte bancaire · Saison des tulipes avril–mai {year}",
+    "gate_eyebrow": "Pass Saison {year}",
+    "gate_period": "toute la saison des tulipes",
+    "gate_activate": "Activer le pass saison",
+    "gate_early_bird": "🌱 Lève-tôt : {price} pour les utilisateurs existants en {month} {year}"
   }
 }
