@@ -32,7 +32,7 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
            style={{ color: "var(--color-primary)" }}>
           {t(`category.${location.category}`)}
         </p>
-        <h3 className="text-sm font-bold leading-tight line-clamp-2 min-h-[2lh]"
+        <h3 className="text-sm font-bold leading-tight line-clamp-2 min-h-10"
             style={{ color: "var(--color-text)" }}>
           {location.title}
         </h3>
