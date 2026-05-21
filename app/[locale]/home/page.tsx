@@ -17,6 +17,7 @@ import WeatherCard from "@/components/weather/WeatherCard";
 import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
 import { CorsoLiveBanner } from "@/components/corso/CorsoLiveBanner";
+import { PremiumPromoBanner } from "@/components/ui/PremiumPromoBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppTour } from "@/components/ui/AppTour";
 
@@ -345,6 +346,9 @@ export default function HomePage() {
 
           {/* Bloemencorso live banner */}
           <CorsoLiveBanner />
+
+          {/* Premium promo — alleen zichtbaar voor niet-premium gebruikers */}
+          <PremiumPromoBanner locale={locale} />
 
           <Section
             title={t("home.best_blooms")}
