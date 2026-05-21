@@ -1130,7 +1130,9 @@ export default function MapView() {
         type: "geojson",
         data: locationsToGeoJSON(locationsRef.current, activeFilterRef.current, userCoordsRef.current),
         cluster: true,
-        clusterMaxZoom: 13,
+        // Lager dan voorheen (was 13) zodat individuele bollenveld-stippen al
+        // bij dorpsniveau-zoom zichtbaar zijn i.p.v. pas bij stadsniveau.
+        clusterMaxZoom: 11,
         clusterRadius: 50,
       });
 
