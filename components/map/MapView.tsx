@@ -1386,8 +1386,13 @@ export default function MapView() {
     <div className="fixed inset-0 flex flex-col">
 
       {/* ── Filter chips (floating) ── */}
-      <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4
-                      bg-gradient-to-b from-white/95 via-white/80 to-transparent">
+      <div
+        className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4"
+        style={{
+          background:
+            "linear-gradient(to bottom, var(--color-surface) 0%, color-mix(in srgb, var(--color-surface) 70%, transparent) 60%, transparent 100%)",
+        }}
+      >
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {filters.map((f) => {
             const isActive = activeFilter === f.id;
@@ -1396,13 +1401,21 @@ export default function MapView() {
                 key={f.id}
                 onClick={() => handleFilter(f.id)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
-                  border transition-all duration-200 active:scale-95
-                  ${isActive
-                    ? "bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200"
-                    : "bg-white border-gray-200 text-gray-700 hover:border-rose-300"
-                  }
+                  transition-all duration-200 active:scale-95
                   ${f.id === "nearby" && locating ? "opacity-60" : ""}
                 `}
+                style={isActive
+                  ? {
+                      backgroundColor: "#E8102A",
+                      color: "#ffffff",
+                      border: "1.5px solid #E8102A",
+                      boxShadow: "0 4px 12px rgba(232,16,42,0.32)",
+                    }
+                  : {
+                      backgroundColor: "var(--color-surface-2)",
+                      color: "var(--color-text)",
+                      border: "1.5px solid var(--color-border)",
+                    }}
               >
                 <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
                 {f.label}
