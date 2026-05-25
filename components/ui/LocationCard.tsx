@@ -3,10 +3,19 @@
 import Image from "next/image";
 import { Location } from "@/lib/types";
 import { BloomBadge } from "./BloomBadge";
+import { LocationStatusBadge } from "./LocationStatusBadge";
 import { MapPin, Star } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import type { LocationPartnerStatus } from "@/hooks/useLocationStatuses";
 
-export function LocationCard({ location, onClick }: { location: Location; onClick?: () => void }) {
+interface LocationCardProps {
+  location: Location;
+  onClick?: () => void;
+  /** Recente partner-status (< 24u oud); wordt als badge naast de cover getoond. */
+  status?: LocationPartnerStatus;
+}
+
+export function LocationCard({ location, onClick, status }: LocationCardProps) {
   const { t } = useT();
   const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=600";
 
@@ -23,6 +32,11 @@ export function LocationCard({ location, onClick }: { location: Location; onClic
         {location.bloom_status && (
           <div className="absolute bottom-2 left-2">
             <BloomBadge status={location.bloom_status} />
+          </div>
+        )}
+        {status && (
+          <div className="absolute bottom-2 right-2">
+            <LocationStatusBadge status={status} />
           </div>
         )}
       </div>

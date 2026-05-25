@@ -18,6 +18,7 @@ import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
 import { CorsoLiveBanner } from "@/components/corso/CorsoLiveBanner";
 import { PremiumPromoBanner } from "@/components/ui/PremiumPromoBanner";
+import { useLocationStatuses } from "@/hooks/useLocationStatuses";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppTour } from "@/components/ui/AppTour";
 
@@ -227,6 +228,16 @@ export default function HomePage() {
     prefs, loading, error, searchResults, nearMeLoading, userCoords, handleNearMe,
   } = useHomeData({ searchQuery: debouncedSearch });
 
+  // Partner-statussen voor alle locaties die op deze pagina worden getoond.
+  // Eén batch-fetch i.p.v. N+1 per card.
+  const allLocationIds = [
+    ...(searchResults ?? []).map((l) => l.id),
+    ...bestBlooms.map((l) => l.id),
+    ...recommended.map((l) => l.id),
+    ...photoSpots.map((l) => l.id),
+  ];
+  const partnerStatuses = useLocationStatuses(allLocationIds);
+
   useEffect(() => { setPremium(isPremium()); }, []);
 
   useEffect(() => {
@@ -306,7 +317,7 @@ export default function HomePage() {
               <p className="text-sm text-[var(--color-text-3)]">{t("home.no_locations_found")}</p>
             ) : (
               searchResults.map((loc) => (
-                <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
               ))
             )}
           </div>
@@ -359,7 +370,7 @@ export default function HomePage() {
               : bestBlooms.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_peak_blooms")}</p>
               : (premium ? bestBlooms : bestBlooms.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
 
@@ -372,7 +383,7 @@ export default function HomePage() {
               : recommended.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.nothing_found")}</p>
               : (premium ? recommended : recommended.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
 
@@ -400,7 +411,7 @@ export default function HomePage() {
               : photoSpots.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_photo_spots")}</p>
               : (premium ? photoSpots : photoSpots.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
                 ))}
           </Section>
 
