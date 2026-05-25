@@ -9,8 +9,8 @@ const handleI18nRouting = createMiddleware({
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip locale routing for splash screen and admin
-  if (pathname === "/" || pathname.startsWith("/admin")) {
+  // Skip locale routing for splash screen, admin en partner portal
+  if (pathname === "/" || pathname.startsWith("/admin") || pathname.startsWith("/partner")) {
     return NextResponse.next();
   }
 
