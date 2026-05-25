@@ -16,9 +16,23 @@ export default function PartnerAuthCallback() {
     let cancelled = false;
 
     async function finalize() {
-      // Geef supabase-js een tick om de URL-hash/query te lezen en de
-      // sessie in localStorage te schrijven.
-      await new Promise((r) => setTimeout(r, 300));
+      // PKCE-flow: Supabase stuurt ?code=... in de query. We wisselen die
+      // expliciet voor een sessie i.p.v. te wachten tot detectSessionInUrl
+      // het impliciet doet (was niet betrouwbaar genoeg).
+      try {
+        const url  = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
+        }
+      } catch {
+        // exchange-fout zelf negeren — onderstaande getSession-check
+        // valt anders alsnog terug op no_session.
+      }
+
+      // Hash-based magic links worden door supabase-js automatisch
+      // gedetecteerd in localStorage; een korte tick geeft 'm tijd.
+      await new Promise((r) => setTimeout(r, 200));
 
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled) return;
