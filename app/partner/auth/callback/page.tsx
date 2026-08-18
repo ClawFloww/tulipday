@@ -30,11 +30,18 @@ export default function PartnerAuthCallback() {
         // valt anders alsnog terug op no_session.
       }
 
-      // Hash-based magic links worden door supabase-js automatisch
-      // gedetecteerd in localStorage; een korte tick geeft 'm tijd.
-      await new Promise((r) => setTimeout(r, 200));
-
-      const { data: { session } } = await supabase.auth.getSession();
+      // Hash-based links (uitnodigingen vanuit admin komen via de Supabase
+      // verify-endpoint terug met #access_token=...) worden door supabase-js
+      // asynchroon uit de URL gelezen. Eén korte tick is daarvoor te krap:
+      // op een trage verbinding zou een geldige uitnodiging dan als
+      // "verlopen" eindigen. Daarom pollen we tot ~3s.
+      let session = null;
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) { session = data.session; break; }
+        if (cancelled) return;
+        await new Promise((r) => setTimeout(r, 200));
+      }
       if (cancelled) return;
 
       if (!session?.user) {
