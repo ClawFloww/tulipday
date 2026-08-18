@@ -14,13 +14,14 @@ import {
   adminGetAllHomepagePicks, adminSetHomepagePicks,
 } from "./actions";
 import { adminGetPhotos, adminGetPendingCount, adminApprovePhoto, adminRejectPhoto, adminEnsurePhotoBucket } from "./photo-actions";
+import { PartnersSection } from "@/components/admin/PartnersSection";
 import { LocationPhoto, PhotoStatus } from "@/lib/types";
 import { getOpeningStatus } from "@/lib/openingHours";
 import { getAdminClient } from "@/lib/supabase-admin-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "locations" | "routes" | "home" | "photos" | "bloom" | "analytics";
+type Tab = "locations" | "routes" | "home" | "photos" | "bloom" | "partners" | "analytics";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Rec = Record<string, any>;
 
@@ -1589,6 +1590,7 @@ const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: "home",      label: "Home",      emoji: "⭐"  },
   { id: "bloom",     label: "Bloei",     emoji: "🌷"  },
   { id: "photos",    label: "Foto's",    emoji: "📸"  },
+  { id: "partners",  label: "Partners",  emoji: "🤝"  },
   { id: "analytics", label: "Stats",     emoji: "📊"  },
 ];
 
@@ -1653,6 +1655,7 @@ export default function AdminPage() {
         {tab === "home"      && <HomeSection      toast={showToast} />}
         {tab === "bloom"     && <BloomSection     toast={showToast} />}
         {tab === "photos"    && <PhotosSection    toast={showToast} />}
+        {tab === "partners"  && <PartnersSection  toast={showToast} />}
         {tab === "analytics" && <AnalyticsSection />}
       </div>
     </div>

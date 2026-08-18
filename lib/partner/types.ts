@@ -89,3 +89,49 @@ export interface CurrentBloomStatus {
   source:      BloomSource;
   updated_at:  string;
 }
+
+// ─── Admin-view types ─────────────────────────────────────────────────────────
+// Vormen die app/admin/partner-actions.ts teruggeeft aan het admin-paneel.
+// Ze staan hier en niet in het actions-bestand zelf, omdat een "use server"-
+// module uitsluitend async functies mag exporteren.
+
+export interface AdminPartnerLocation {
+  id:          string;
+  location_id: string;
+  category:    PartnerCategory;
+  title:       string;
+  address:     string | null;
+}
+
+export interface AdminPartnerUser {
+  id:         string;
+  user_id:    string;
+  role:       string;
+  email:      string;
+  created_at: string;
+  /** null zolang de partner de uitnodiging nog niet heeft geaccepteerd */
+  last_sign_in_at: string | null;
+}
+
+export interface AdminPartner {
+  id:            string;
+  name:          string;
+  contact_email: string;
+  contact_phone: string | null;
+  kvk_number:    string | null;
+  tier:          PartnerTier;
+  active:        boolean;
+  created_at:    string;
+  locations:     AdminPartnerLocation[];
+  users:         AdminPartnerUser[];
+}
+
+export interface AdminPartnerUpdate {
+  id:         string;
+  kind:       "bloom" | "operational";
+  status:     string;
+  crowd:      string | null;
+  notes:      string | null;
+  created_at: string;
+  title:      string;
+}
