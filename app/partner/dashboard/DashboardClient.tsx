@@ -40,7 +40,12 @@ interface Props {
 }
 
 export function DashboardClient({ session }: Props) {
-  const loc = session.partnerLocations[0];
+  // Een partner kan meerdere locaties beheren (bv. een horecaketen met twee
+  // vestigingen). Standaard staat de eerste geselecteerd; bij één locatie
+  // tonen we de kiezer niet.
+  const locations = session.partnerLocations;
+  const [selectedId, setSelectedId] = useState(locations[0]?.id ?? "");
+  const loc = locations.find((l) => l.id === selectedId) ?? locations[0];
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [op,    setOp]    = useState<CurrentOperationalStatus | null>(null);
@@ -50,6 +55,10 @@ export function DashboardClient({ session }: Props) {
 
   const refresh = useCallback(async () => {
     if (!loc) return;
+    // Reset allebei, zodat er bij het wisselen van locatie geen status van de
+    // vorige locatie blijft staan terwijl de nieuwe nog laadt.
+    setBloom(null);
+    setOp(null);
     if (isBloom) {
       setBloom(await getCurrentBloomStatus(loc.location_id));
     } else {
@@ -89,14 +98,53 @@ export function DashboardClient({ session }: Props) {
         <p className="text-xl font-extrabold mb-1" style={{ color: "var(--color-text)" }}>
           👋 Hallo, {session.partner.name}
         </p>
-        {loc.location && (
-          <p className="text-sm" style={{ color: "var(--color-text-2)" }}>
-            📍 {loc.location.title}
-          </p>
+        {locations.length > 1 ? (
+          <>
+            <p className="text-sm mb-2" style={{ color: "var(--color-text-2)" }}>
+              Welke locatie wil je bijwerken?
+            </p>
+            {/* Horizontaal scrollbare kiezer — past ook bij 5+ vestigingen op 390px */}
+            <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-hide">
+              {locations.map((l) => {
+                const active = l.id === loc.id;
+                return (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => setSelectedId(l.id)}
+                    aria-pressed={active}
+                    className="shrink-0 px-3.5 py-2 rounded-full text-sm font-bold transition-transform active:scale-95"
+                    style={
+                      active
+                        ? { backgroundColor: "#E8102A", color: "#fff" }
+                        : {
+                            backgroundColor: "var(--color-surface-3)",
+                            color: "var(--color-text-2)",
+                            border: "1px solid var(--color-border)",
+                          }
+                    }
+                  >
+                    {l.location?.title ?? "Locatie"}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs mt-2" style={{ color: "var(--color-text-3)" }}>
+              🏷️ {CATEGORY_LABEL[loc.category] ?? loc.category}
+            </p>
+          </>
+        ) : (
+          <>
+            {loc.location && (
+              <p className="text-sm" style={{ color: "var(--color-text-2)" }}>
+                📍 {loc.location.title}
+              </p>
+            )}
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
+              🏷️ {CATEGORY_LABEL[loc.category] ?? loc.category}
+            </p>
+          </>
         )}
-        <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
-          🏷️ {CATEGORY_LABEL[loc.category] ?? loc.category}
-        </p>
 
         {/* Huidige status */}
         <div className="mt-6">
@@ -160,6 +208,7 @@ export function DashboardClient({ session }: Props) {
               <div className="px-5 pb-5 pt-2">
                 {isBloom ? (
                   <BloomUpdateForm
+                    key={loc.id}
                     partnerLocationId={loc.id}
                     locationId={loc.location_id}
                     userId={session.userId}
@@ -167,6 +216,7 @@ export function DashboardClient({ session }: Props) {
                   />
                 ) : (
                   <OperationalUpdateForm
+                    key={loc.id}
                     partnerLocationId={loc.id}
                     userId={session.userId}
                     onDone={handleUpdated}
