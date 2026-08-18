@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Maximize2 } from "lucide-react";
+import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
 export interface MiniMapStop {
   lat: number;
@@ -17,7 +18,6 @@ interface Props {
   onExpand?: () => void;
 }
 
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 function createNumberedPin(label: string, color: string): string {
   const w = 30, h = 38;
@@ -48,7 +48,7 @@ export function RouteMiniMap({ stops, accentColor = "#f43f5e", onExpand }: Props
 
     const map = new maplibregl.Map({
       container: divRef.current,
-      style: MAP_STYLE,
+      style: MAP_STYLE_STREETS,
       center: [stops[0].lng, stops[0].lat],
       zoom: 11,
       interactive: false,

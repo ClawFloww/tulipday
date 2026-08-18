@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RouteStop } from "@/lib/types";
+import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
 export type MapLocation = {
   id:                string;
@@ -40,7 +41,6 @@ export const CATEGORY_LABEL: Record<string, string> = {
   bike_rental:  "Fietsverhuur",
 };
 
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 interface Props {
   points?:          [number, number][] | null;
@@ -69,7 +69,7 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
 
     const map = new maplibregl.Map({
       container:   containerRef.current,
-      style:       MAP_STYLE,
+      style:       MAP_STYLE_STREETS,
       center:      routeCoords[0],
       zoom:        12,
       interactive: true,

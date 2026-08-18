@@ -7,11 +7,11 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { MAP_STYLE_SATELLITE, MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
-const MAPTILER_KEY = "SeaEiJkthxx3KNUCV0aI";
 const STYLE_URLS = {
-  streets:   `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
-  satellite: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
+  streets:   MAP_STYLE_STREETS,
+  satellite: MAP_STYLE_SATELLITE,
 };
 
 // Navigatie-default: street-level zoom met flinke tilt zodat het 3D-effect

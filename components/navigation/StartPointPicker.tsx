@@ -13,8 +13,8 @@ import { Check, X, MapPin } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 
 import type { NavStop } from "./NavigationView";
+import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 interface Props {
   routeName:        string;
@@ -50,7 +50,7 @@ export default function StartPointPicker({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style:     MAP_STYLE,
+      style:     MAP_STYLE_STREETS,
       center,
       zoom:      13,
       attributionControl: false,

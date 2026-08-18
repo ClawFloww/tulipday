@@ -7,8 +7,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-react";
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
+import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 
 function fmtDur(sec: number) {
   const min = Math.round(sec / 60);
@@ -58,7 +58,7 @@ export default function SharedRoutePage() {
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style:     MAP_STYLE,
+      style:     MAP_STYLE_STREETS,
       center:    waypoints[0],
       zoom:      12,
       interactive: true,

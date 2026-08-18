@@ -13,11 +13,11 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { saveCustomRoute } from "@/lib/customRoutes";
+import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
-const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json?key=SeaEiJkthxx3KNUCV0aI";
 const SOURCE_ID      = "locations";
 const DRAW_SOURCE_ID = "draw-route";
 
@@ -1115,7 +1115,7 @@ export default function MapView() {
 
     const map = new maplibregl.Map({
       container: mapDivRef.current,
-      style: MAP_STYLE,
+      style: MAP_STYLE_STREETS,
       center: BOLLENSTREEK_CENTER,
       zoom: 11,
     });
