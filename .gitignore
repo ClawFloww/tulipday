@@ -36,3 +36,6 @@ yarn-error.log*
 next-env.d.ts
 ios/
 android/
+
+# Tijdelijke stash van scripts/build-mobile.mjs
+/.mobile-build-stash/
