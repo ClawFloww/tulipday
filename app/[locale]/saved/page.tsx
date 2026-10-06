@@ -9,7 +9,7 @@ import {
   Share2, Check,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { getOrCreateSessionId } from "@/lib/session";
+import { ensureUser } from "@/lib/auth";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { Location, Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
@@ -349,9 +349,13 @@ export default function SavedPage() {
 
   const loadSaved = useCallback(async () => {
     setLoading(true);
-    const sessionId = getOrCreateSessionId();
-    const { data: saved } = await supabase.from("saved_items").select("id, item_type, item_id")
-      .eq("session_id", sessionId).order("created_at", { ascending: false });
+    // Bezoek aan Opgeslagen = intentie: maak zo nodig een account aan, zodat
+    // eerder (op session_id) opgeslagen items via de claim meeverhuizen
+    const userId = await ensureUser();
+    const { data: saved } = userId
+      ? await supabase.from("saved_items").select("id, item_type, item_id")
+          .eq("user_id", userId).order("created_at", { ascending: false })
+      : { data: null };
 
     if (!saved || saved.length === 0) {
       setLocEntries([]); setRouteEntries([]); setLoading(false); return;

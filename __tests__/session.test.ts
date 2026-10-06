@@ -4,7 +4,7 @@
  * Kritiekheid: HOOG
  * - getOrCreateSessionId wordt gebruikt voor ALLE opgeslagen items en de premium check.
  *   Als dit breekt kunnen gebruikers niets opslaan en valt de premium gate weg.
- * - isPremium bepaalt of premium features zichtbaar zijn.
+ * - isPremium (cache van de server-status) bepaalt of premium features zichtbaar zijn.
  *   Een false negative vergrendelt betalende gebruikers; een false positive geeft
  *   gratis toegang aan niet-betalende gebruikers.
  * - Beide functies moeten graceful omgaan met SSR (window undefined).
@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getOrCreateSessionId } from "@/lib/session";
-import { isPremium, FREE_LOCATION_LIMIT, FREE_ROUTE_LIMIT } from "@/lib/premium";
+import { isPremium, CURRENT_SEASON_YEAR, FREE_LOCATION_LIMIT, FREE_ROUTE_LIMIT } from "@/lib/premium";
 
 // ── getOrCreateSessionId ──────────────────────────────────────────────────────
 
@@ -76,21 +76,18 @@ describe("isPremium", () => {
     expect(isPremium()).toBe(false);
   });
 
-  it("geeft true als localStorage 'tulipday_premium' = 'true' bevat", () => {
-    localStorage.setItem("tulipday_premium", "true");
+  it("geeft true als de cache het huidige seizoen bevat", () => {
+    localStorage.setItem("tulipday_premium_season", String(CURRENT_SEASON_YEAR));
     expect(isPremium()).toBe(true);
   });
 
-  it("geeft false als localStorage 'tulipday_premium' = 'false' bevat", () => {
-    localStorage.setItem("tulipday_premium", "false");
+  it("geeft false voor een cache van een ander seizoen", () => {
+    localStorage.setItem("tulipday_premium_season", String(CURRENT_SEASON_YEAR - 1));
     expect(isPremium()).toBe(false);
   });
 
-  it("geeft false voor een willekeurige andere waarde", () => {
-    localStorage.setItem("tulipday_premium", "yes");
-    expect(isPremium()).toBe(false);
-
-    localStorage.setItem("tulipday_premium", "1");
+  it("geeft geen premium op basis van de oude, onbeveiligde vlag", () => {
+    localStorage.setItem("tulipday_premium", "true");
     expect(isPremium()).toBe(false);
   });
 

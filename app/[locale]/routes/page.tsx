@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { routePath } from "@/lib/links";
-import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
+import { isPremium, refreshPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
 import { PremiumGate } from "@/components/ui/PremiumGate";
 import { useWeather } from "@/hooks/useWeather";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -342,7 +342,7 @@ export default function RoutesPage() {
   const [filters,   setFilters]   = useState<FilterState>(DEFAULT_FILTERS);
   const [showSheet, setShowSheet] = useState(false);
 
-  useEffect(() => { setPremium(isPremium()); }, []);
+  useEffect(() => { setPremium(isPremium()); refreshPremium().then(setPremium); }, []);
 
   useEffect(() => {
     supabase.from("routes").select("*").eq("is_active", true)

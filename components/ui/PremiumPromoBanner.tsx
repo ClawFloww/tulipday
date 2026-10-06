@@ -10,6 +10,7 @@ import { ChevronRight, Lock } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import {
   isPremium,
+  refreshPremium,
   formatPriceEur,
   CURRENT_SEASON_YEAR,
   CURRENT_SEASON_PRICE,
@@ -25,6 +26,7 @@ export function PremiumPromoBanner({ locale }: Props) {
 
   useEffect(() => {
     setPremium(isPremium());
+    refreshPremium().then(setPremium);
   }, []);
 
   if (premium) return null;

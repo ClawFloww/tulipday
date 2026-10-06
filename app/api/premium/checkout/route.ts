@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
+import { CURRENT_SEASON_YEAR } from "@/lib/premium";
+
+// Prijs staat server-side vast; de client kan geen eigen price meesturen
+const SEASON_PRICE_ID = "price_1TQ3MiCMTdZLUsIufuuGl3vb";
 
 export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -7,19 +12,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
 
-  const stripe = new Stripe(secretKey);
-  const { priceId, sessionId, locale = "nl" } = await req.json();
+  // Koppel de aankoop aan het (eventueel anonieme) Supabase-account
+  const token = req.headers.get("authorization")?.replace(/^Bearer /, "");
+  if (!token) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
+  const sb = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+  const { data: { user } } = await sb.auth.getUser(token);
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const { locale = "nl" } = await req.json().catch(() => ({}));
   const origin = req.headers.get("origin") ?? "https://tulipday.online";
 
+  const stripe = new Stripe(secretKey);
   const session = await stripe.checkout.sessions.create({
-    mode:                "payment",
+    mode:                 "payment",
     payment_method_types: ["card", "ideal"],
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/${locale}/premium/success?session_id={CHECKOUT_SESSION_ID}&app_session=${sessionId}`,
-    cancel_url:  `${origin}/${locale}/premium`,
-    metadata:    { app_session_id: sessionId, locale },
-    locale:      locale === "nl" ? "nl" : "en",
+    line_items:           [{ price: SEASON_PRICE_ID, quantity: 1 }],
+    client_reference_id:  user.id,
+    customer_email:       user.email || undefined,
+    success_url:          `${origin}/${locale}/premium/success`,
+    cancel_url:           `${origin}/${locale}/premium`,
+    metadata:             { user_id: user.id, season: String(CURRENT_SEASON_YEAR), locale },
+    locale:               locale === "nl" ? "nl" : "en",
   });
 
   return NextResponse.json({ url: session.url });

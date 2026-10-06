@@ -14,7 +14,7 @@ import { useT } from "@/lib/i18n-context";
 import { publicUrl, resolveParam } from "@/lib/links";
 import { isCurrentlyOpen, getWeekSchedule } from "@/lib/openingHours";
 import type { DayKey } from "@/lib/openingHours";
-import { getOrCreateSessionId } from "@/lib/session";
+import { currentUserId, ensureUser } from "@/lib/auth";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { track } from "@/lib/analytics";
 import PhotoUploadSheet from "@/components/ui/PhotoUploadSheet";
@@ -79,23 +79,27 @@ export default function LocationDetailPage() {
 
   useEffect(() => {
     if (!location) return;
-    const sessionId = getOrCreateSessionId();
-    supabase.from("saved_items").select("id")
-      .eq("session_id", sessionId).eq("item_type", "location").eq("item_id", location.id)
-      .maybeSingle().then(({ data }) => setSaved(!!data));
+    currentUserId().then(async (userId) => {
+      if (!userId) return;
+      const { data } = await supabase.from("saved_items").select("id")
+        .eq("user_id", userId).eq("item_type", "location").eq("item_id", location.id)
+        .maybeSingle();
+      setSaved(!!data);
+    });
   }, [location]);
 
   async function handleSave() {
     if (!location || saving) return;
     setSaving(true);
-    const sessionId = getOrCreateSessionId();
+    const userId = await ensureUser();
+    if (!userId) { setSaving(false); return; }
     if (saved) {
       await supabase.from("saved_items").delete()
-        .eq("session_id", sessionId).eq("item_type", "location").eq("item_id", location.id);
+        .eq("user_id", userId).eq("item_type", "location").eq("item_id", location.id);
       setSaved(false);
       track("save", { location_id: location.id, action: "unsave" });
     } else {
-      await supabase.from("saved_items").insert({ session_id: sessionId, item_type: "location", item_id: location.id });
+      await supabase.from("saved_items").insert({ item_type: "location", item_id: location.id });
       setSaved(true);
       track("save", { location_id: location.id, action: "save" });
     }

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { getOrCreateSessionId } from "@/lib/session";
+import { ensureUser } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
 import { apiUrl } from "@/lib/links";
 import {
@@ -35,34 +36,34 @@ const CARD_FEATURE_DEFS = [
   { emoji: "🔭", labelKey: "premium.feature_street_view"   },
 ];
 
-const SEASON_PRICE_ID = "price_1TQ3MiCMTdZLUsIufuuGl3vb";
-
 export default function PremiumPage() {
   const router = useRouter();
   const { t, locale } = useT();
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   async function handleCheckout() {
     setBusy(true);
+    setFailed(false);
     try {
+      // De aankoop wordt aan het account gekoppeld; de server leest de gebruiker uit het token
+      await ensureUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("no session");
+
       const res = await fetch(apiUrl("/api/premium/checkout"), {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ priceId: SEASON_PRICE_ID, sessionId: getOrCreateSessionId() }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body:    JSON.stringify({ locale }),
       });
-      const { url, error } = await res.json();
-      if (error || !url) { activateDemo(); return; }
+      const { url } = await res.json();
+      if (!res.ok || !url) throw new Error("checkout failed");
       window.location.href = url;
     } catch {
-      activateDemo();
+      setFailed(true);
     } finally {
       setBusy(false);
     }
-  }
-
-  function activateDemo() {
-    localStorage.setItem("tulipday_premium", "true");
-    router.push(`/${locale}/home`);
   }
 
   return (
@@ -163,6 +164,11 @@ export default function PremiumPage() {
             {busy && <Loader2 size={15} className="animate-spin" />}
             {t("premium.activate_cta")}
           </button>
+          {failed && (
+            <p role="alert" className="mt-2 text-center text-[12px] font-semibold text-white">
+              {t("premium.checkout_error")}
+            </p>
+          )}
         </div>
 
         {/* Vroegboekers-banner */}

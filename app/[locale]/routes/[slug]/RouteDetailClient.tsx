@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, resolveParam } from "@/lib/links";
-import { getOrCreateSessionId } from "@/lib/session";
+import { currentUserId, ensureUser } from "@/lib/auth";
 import {
   RouteInteractiveMap,
   type MapLocation,
@@ -141,22 +141,26 @@ export default function RouteDetailClient() {
 
   useEffect(() => {
     if (!route) return;
-    const sessionId = getOrCreateSessionId();
-    supabase.from("saved_items").select("id")
-      .eq("session_id", sessionId).eq("item_type", "route").eq("item_id", route.id)
-      .maybeSingle().then(({ data }) => setSaved(!!data));
+    currentUserId().then(async (userId) => {
+      if (!userId) return;
+      const { data } = await supabase.from("saved_items").select("id")
+        .eq("user_id", userId).eq("item_type", "route").eq("item_id", route.id)
+        .maybeSingle();
+      setSaved(!!data);
+    });
   }, [route]);
 
   async function handleSave() {
     if (!route || saving) return;
     setSaving(true);
-    const sessionId = getOrCreateSessionId();
+    const userId = await ensureUser();
+    if (!userId) { setSaving(false); return; }
     if (saved) {
       await supabase.from("saved_items").delete()
-        .eq("session_id", sessionId).eq("item_type", "route").eq("item_id", route.id);
+        .eq("user_id", userId).eq("item_type", "route").eq("item_id", route.id);
       setSaved(false);
     } else {
-      await supabase.from("saved_items").insert({ session_id: sessionId, item_type: "route", item_id: route.id });
+      await supabase.from("saved_items").insert({ item_type: "route", item_id: route.id });
       setSaved(true);
     }
     setSaving(false);

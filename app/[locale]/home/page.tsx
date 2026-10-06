@@ -10,7 +10,7 @@ import { RouteCard } from "@/components/ui/RouteCard";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
 import { SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT } from "@/lib/constants";
-import { isPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
+import { isPremium, refreshPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
 import { useWeather } from "@/hooks/useWeather";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useHomeData } from "@/hooks/useHomeData";
@@ -239,7 +239,7 @@ export default function HomePage() {
   ];
   const partnerStatuses = useLocationStatuses(allLocationIds);
 
-  useEffect(() => { setPremium(isPremium()); }, []);
+  useEffect(() => { setPremium(isPremium()); refreshPremium().then(setPremium); }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

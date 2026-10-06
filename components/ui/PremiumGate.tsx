@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import {
   isPremium,
+  refreshPremium,
   formatPriceEur,
   CURRENT_SEASON_YEAR,
   CURRENT_SEASON_PRICE,
@@ -23,6 +24,7 @@ export function PremiumGate({ children }: Props) {
 
   useEffect(() => {
     setPremium(isPremium());
+    refreshPremium().then(setPremium);
   }, []);
 
   if (premium) return <>{children}</>;
