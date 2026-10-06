@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-react";
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
 import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
+import { publicUrl, resolveParam } from "@/lib/links";
 
 
 function fmtDur(sec: number) {
@@ -21,8 +22,10 @@ function fmtDist(m: number) {
 }
 
 export default function SharedRoutePage() {
-  const { shareId } = useParams<{ shareId: string }>();
-  const router      = useRouter();
+  const params       = useParams<{ shareId: string; locale: string }>();
+  const searchParams = useSearchParams();
+  const shareId      = resolveParam(params.shareId, searchParams, "shareId");
+  const router       = useRouter();
 
   const [route,    setRoute]   = useState<SharedRoute | null>(null);
   const [loading,  setLoading] = useState(true);
@@ -106,7 +109,8 @@ export default function SharedRoutePage() {
   }, [route]);
 
   async function handleShare() {
-    const url = window.location.href;
+    if (!shareId) return;
+    const url = publicUrl(`/${params.locale}/route/custom/${shareId}`);
     if (typeof navigator.share === "function") {
       try { await navigator.share({ title: route?.name ?? "TulipDay Route", url }); return; } catch { /* cancelled */ }
     }
@@ -142,7 +146,7 @@ export default function SharedRoutePage() {
         <span className="text-5xl">🗺️</span>
         <h1 className="text-xl font-extrabold text-gray-900">Route niet gevonden</h1>
         <p className="text-sm text-gray-500">Deze link is verlopen of ongeldig.</p>
-        <button onClick={() => router.push("/")} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
+        <button onClick={() => router.push(`/${params.locale}/home`)} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
           Naar TulipDay
         </button>
       </div>
@@ -236,7 +240,7 @@ export default function SharedRoutePage() {
             {saved ? "Opgeslagen!" : "Sla op op mijn apparaat"}
           </button>
           <button
-            onClick={() => router.push("/map")}
+            onClick={() => router.push(`/${params.locale}/map`)}
             className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
           >
             <MapPin size={15} />

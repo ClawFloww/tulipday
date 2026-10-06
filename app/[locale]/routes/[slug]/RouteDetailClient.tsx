@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Bike, Car, Footprints, Camera, Users, Clock, MapPin, Heart, Loader2, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteStop, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
+import { locationPath, resolveParam } from "@/lib/links";
 import { getOrCreateSessionId } from "@/lib/session";
 import {
   RouteInteractiveMap,
@@ -71,7 +72,10 @@ function isNearRoute(loc: MapLocation, routePts: [number, number][], maxKm: numb
 // ── Hoofdcomponent ────────────────────────────────────────────────────────────
 
 export default function RouteDetailClient() {
-  const { slug, locale } = useParams<{ slug: string; locale: string }>();
+  const params           = useParams<{ slug: string; locale: string }>();
+  const searchParams     = useSearchParams();
+  const slug             = resolveParam(params.slug, searchParams, "slug");
+  const locale           = params.locale;
   const router           = useRouter();
   const { t }    = useT();
 
@@ -427,7 +431,7 @@ export default function RouteDetailClient() {
             )}
 
             <button
-              onClick={() => router.push(`/${locale}/locations/${selectedLocation.slug}`)}
+              onClick={() => router.push(locationPath(locale, selectedLocation.slug))}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white bg-tulip-500 hover:bg-tulip-600 active:scale-[0.98] transition-all"
             >
               Bekijk locatie <ChevronRight size={16} />

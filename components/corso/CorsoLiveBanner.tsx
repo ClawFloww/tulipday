@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isCorsoVisible } from "@/lib/corsoData";
+import { useT } from "@/lib/i18n-context";
 
 export function CorsoLiveBanner() {
   const router = useRouter();
+  const { locale } = useT();
   const [photoCount, setPhotoCount] = useState<number | null>(null);
 
   // Haal actueel aantal foto's op
@@ -45,7 +47,7 @@ export function CorsoLiveBanner() {
   return (
     <div className="mx-4 mb-6">
       <button
-        onClick={() => router.push("/corso")}
+        onClick={() => router.push(`/${locale}/corso`)}
         className="w-full px-5 py-4 rounded-2xl text-white flex items-center justify-between gap-3 shadow-md active:scale-95 transition-all"
         style={{ background: "linear-gradient(135deg, #F0306A 0%, #FF6B9D 100%)" }}
       >

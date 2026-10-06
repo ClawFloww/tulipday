@@ -16,7 +16,7 @@ const TABS: { id: Tab; icon: React.ReactNode; href: string }[] = [
 
 export function BottomNav({ active }: { active: Tab }) {
   const router = useRouter();
-  const { t } = useT();
+  const { t, locale } = useT();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb"
@@ -27,7 +27,7 @@ export function BottomNav({ active }: { active: Tab }) {
           return (
             <button
               key={tab.id}
-              onClick={() => router.push(tab.href)}
+              onClick={() => router.push(`/${locale}${tab.href}`)}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors duration-150
                 ${isActive ? "text-tulip-500" : ""}`}
               style={!isActive ? { color: "var(--color-text-3)" } : {}}

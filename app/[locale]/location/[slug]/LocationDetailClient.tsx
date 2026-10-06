@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowLeft, MapPin, Star, Heart, Navigation, Loader2,
@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Location, AccessType, Category } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
+import { publicUrl, resolveParam } from "@/lib/links";
 import { isCurrentlyOpen, getWeekSchedule } from "@/lib/openingHours";
 import type { DayKey } from "@/lib/openingHours";
 import { getOrCreateSessionId } from "@/lib/session";
@@ -46,9 +47,11 @@ function InfoCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
 }
 
 export default function LocationDetailPage() {
-  const { slug } = useParams<{ slug: string }>();
-  const router   = useRouter();
-  const { t }    = useT();
+  const params       = useParams<{ slug: string; locale: string }>();
+  const searchParams = useSearchParams();
+  const slug         = resolveParam(params.slug, searchParams, "slug");
+  const router       = useRouter();
+  const { t }        = useT();
 
   const [location, setLocation] = useState<Location | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -107,7 +110,7 @@ export default function LocationDetailPage() {
 
   async function handleShare() {
     if (!location) return;
-    const url = window.location.href;
+    const url = publicUrl(`/${params.locale}/location/${location.slug}`);
     const shareData = {
       title: location.title,
       text: location.short_description ?? t("location.share_text", { title: location.title }),

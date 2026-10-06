@@ -1,5 +1,7 @@
 "use client";
 
+import { apiUrl } from "@/lib/links";
+
 export async function registerPushSubscription(locale = "nl"): Promise<boolean> {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
 
@@ -16,7 +18,7 @@ export async function registerPushSubscription(locale = "nl"): Promise<boolean> 
     applicationServerKey: urlBase64ToUint8Array(vapidKey),
   });
 
-  const res = await fetch("/api/push/subscribe", {
+  const res = await fetch(apiUrl("/api/push/subscribe"), {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ subscription: sub.toJSON(), locale }),
@@ -31,7 +33,7 @@ export async function unregisterPushSubscription(): Promise<void> {
   if (!reg) return;
   const sub = await reg.pushManager.getSubscription();
   if (sub) {
-    await fetch("/api/push/subscribe", {
+    await fetch(apiUrl("/api/push/subscribe"), {
       method:  "DELETE",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ endpoint: sub.endpoint }),

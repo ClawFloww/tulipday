@@ -8,6 +8,7 @@ import { Location } from "@/lib/types";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { useT } from "@/lib/i18n-context";
+import { locationPath, routePath } from "@/lib/links";
 import { SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT } from "@/lib/constants";
 import { isPremium, FREE_LOCATION_LIMIT } from "@/lib/premium";
 import { useWeather } from "@/hooks/useWeather";
@@ -317,7 +318,7 @@ export default function HomePage() {
               <p className="text-sm text-[var(--color-text-3)]">{t("home.no_locations_found")}</p>
             ) : (
               searchResults.map((loc) => (
-                <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
+                <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(locationPath(locale, loc.slug))} />
               ))
             )}
           </div>
@@ -370,7 +371,7 @@ export default function HomePage() {
               : bestBlooms.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_peak_blooms")}</p>
               : (premium ? bestBlooms : bestBlooms.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(locationPath(locale, loc.slug))} />
                 ))}
           </Section>
 
@@ -383,7 +384,7 @@ export default function HomePage() {
               : recommended.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.nothing_found")}</p>
               : (premium ? recommended : recommended.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(locationPath(locale, loc.slug))} />
                 ))}
           </Section>
 
@@ -391,14 +392,14 @@ export default function HomePage() {
             title={prefs
               ? `${TRANSPORT_LABEL[prefs.transport] ?? "🗺"}-routes · ${TIME_LABEL[prefs.time] ?? ""}`
               : t("home.popular_routes")}
-            onSeeAll={() => router.push("/routes")}
+            onSeeAll={() => router.push(`/${locale}/routes`)}
           >
             {loading
               ? Array.from({ length: SKELETON_ROUTE_COUNT }).map((_, i) => <SkeletonCard key={i} wide />)
               : recommendedRoutes.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_routes")}</p>
               : recommendedRoutes.map((route) => (
-                  <RouteCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
+                  <RouteCard key={route.id} route={route} onClick={() => router.push(routePath(locale, route.slug))} />
                 ))}
           </Section>
 
@@ -411,7 +412,7 @@ export default function HomePage() {
               : photoSpots.length === 0
               ? <p className="text-sm text-[var(--color-text-3)] pl-1">{t("home.no_photo_spots")}</p>
               : (premium ? photoSpots : photoSpots.slice(0, FREE_LOCATION_LIMIT)).map((loc) => (
-                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(`/location/${loc.slug}`)} />
+                  <LocationCard key={loc.id} location={loc} status={partnerStatuses.get(loc.id)} onClick={() => router.push(locationPath(locale, loc.slug))} />
                 ))}
           </Section>
 
@@ -419,7 +420,7 @@ export default function HomePage() {
             <div className="mx-4 mb-6 px-5 py-4 rounded-2xl bg-tulip-50 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-tulip-700 flex-1">🌷 Unlock all locations, routes &amp; bloom alerts</p>
               <a
-                href="/premium"
+                href={`/${locale}/premium`}
                 className="flex-shrink-0 px-4 py-2 rounded-xl bg-tulip-500 text-white text-xs font-bold hover:bg-tulip-600 active:scale-95 transition-all"
               >
                 Go Premium
@@ -439,7 +440,7 @@ export default function HomePage() {
             onClose={() => setSeeAll(null)}
             onNavigate={(slug) => {
               setSeeAll(null);
-              router.push(`/location/${slug}`);
+              router.push(locationPath(locale, slug));
             }}
           />
         )}

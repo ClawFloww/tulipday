@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { corsPreflight, withCors } from "@/lib/cors";
 
 function getServiceClient() {
   return createClient(
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest) {
   if (stopId) query = query.eq("stop_id", stopId);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+  if (error) return withCors(req, NextResponse.json({ error: error.message }, { status: 500 }));
+  return withCors(req, NextResponse.json(data ?? []));
 }
 
 export async function POST(req: NextRequest) {
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); }
-  catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+  catch { return withCors(req, NextResponse.json({ error: "Invalid JSON" }, { status: 400 })); }
 
   const { image_url, caption, stop_id, stop_naam, lat, lng } = body as {
     image_url: string; caption?: string;
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!image_url || !stop_id || !stop_naam) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    return withCors(req, NextResponse.json({ error: "Missing required fields" }, { status: 400 }));
   }
 
   const sb = getServiceClient();
@@ -55,6 +56,10 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
+  if (error) return withCors(req, NextResponse.json({ error: error.message }, { status: 500 }));
+  return withCors(req, NextResponse.json(data, { status: 201 }));
+}
+
+export function OPTIONS(req: NextRequest) {
+  return corsPreflight(req);
 }

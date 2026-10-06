@@ -5,6 +5,7 @@ import { Camera, MapPin, Loader2, CheckCircle, ChevronDown, X } from "lucide-rea
 import Image from "next/image";
 import { CORSO_ROUTE, nearestStop, CorsoStop } from "@/lib/corsoData";
 import { supabase } from "@/lib/supabase";
+import { apiUrl } from "@/lib/links";
 import imageCompression from "browser-image-compression";
 
 const MAX_CAPTION = 140;
@@ -74,7 +75,7 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
       const imageUrl = urlData.publicUrl;
 
       // Save to DB via API (server captures IP)
-      const res = await fetch("/api/corso/photos", {
+      const res = await fetch(apiUrl("/api/corso/photos"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function PremiumGate({ children }: Props) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [premium, setPremium] = useState(true); // default true to avoid flash
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export function PremiumGate({ children }: Props) {
             <p className="text-xs text-white/80 mt-1">{t("premium.gate_period")}</p>
           </div>
           <a
-            href="/premium"
+            href={`/${locale}/premium`}
             className="block w-full py-3 bg-white text-sm font-extrabold active:scale-[0.99] transition-transform"
             style={{ color: "#E8102A" }}
           >

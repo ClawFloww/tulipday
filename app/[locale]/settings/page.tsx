@@ -142,7 +142,7 @@ function PushToggle() {
 }
 
 export default function SettingsPage() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const router = useRouter();
 
   const etiquetteRows = [
@@ -181,7 +181,7 @@ export default function SettingsPage() {
           label="TulipDay Premium"
           accent="text-tulip-500"
           right={<span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">Upgrade →</span>}
-          onClick={() => router.push("/premium")}
+          onClick={() => router.push(`/${locale}/premium`)}
         />
 
         {/* Weergave-sectie met thema-toggle */}

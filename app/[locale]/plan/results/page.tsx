@@ -9,6 +9,7 @@ import Image from "next/image";
 import { ArrowLeft, Bike, Car, Footprints, Clock, MapPin, Play } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
+import { locationPath } from "@/lib/links";
 import { scoreLocation } from "@/lib/planner/scoring";
 import { buildOptimalRoute } from "@/lib/planner/routeOptimizer";
 import { PLANNER_PROFILE_KEY } from "@/lib/planner/types";
@@ -282,7 +283,7 @@ export default function PlanResultsPage() {
                       {isLast ? "✓" : idx + 1}
                     </span>
                     <button
-                      onClick={() => stop.slug && router.push(`/${locale}/location/${stop.slug}`)}
+                      onClick={() => stop.slug && router.push(locationPath(locale, stop.slug))}
                       className="text-sm font-bold leading-snug text-left"
                       style={{ color: "var(--color-text)" }}
                     >

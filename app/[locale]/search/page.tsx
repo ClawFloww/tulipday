@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowLeft, Search, MapPin, Route, X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
+import { locationPath, routePath } from "@/lib/links";
 import type { Location, Route as RouteType } from "@/lib/types";
 
 interface SearchResults {
@@ -135,7 +136,7 @@ export default function SearchPage() {
               {results.locations.map((loc) => (
                 <button
                   key={loc.id}
-                  onClick={() => router.push(`/${locale}/location/${loc.slug}`)}
+                  onClick={() => router.push(locationPath(locale, loc.slug))}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl text-left active:scale-[0.98] transition-all"
                   style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
                 >
@@ -182,7 +183,7 @@ export default function SearchPage() {
               {results.routes.map((route) => (
                 <button
                   key={route.id}
-                  onClick={() => router.push(`/${locale}/routes/${route.slug}`)}
+                  onClick={() => router.push(routePath(locale, route.slug))}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl text-left active:scale-[0.98] transition-all"
                   style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
                 >

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CORSO_ROUTE, CorsoStop } from "@/lib/corsoData";
+import { apiUrl } from "@/lib/links";
 import Image from "next/image";
 import { X, MapPin } from "lucide-react";
 
@@ -29,7 +30,7 @@ export function CorsoMap() {
   // Fetch photo counts per stop
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/corso/photos", { cache: "no-store" });
+      const res = await fetch(apiUrl("/api/corso/photos"), { cache: "no-store" });
       if (!res.ok) return;
       const photos: CorsoPhoto[] = await res.json();
 

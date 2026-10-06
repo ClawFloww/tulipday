@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { getOrCreateSessionId } from "@/lib/session";
 import { useT } from "@/lib/i18n-context";
+import { apiUrl } from "@/lib/links";
 import {
   CURRENT_SEASON_YEAR,
   CURRENT_SEASON_PRICE,
@@ -38,13 +39,13 @@ const SEASON_PRICE_ID = "price_1TQ3MiCMTdZLUsIufuuGl3vb";
 
 export default function PremiumPage() {
   const router = useRouter();
-  const { t } = useT();
+  const { t, locale } = useT();
   const [busy, setBusy] = useState(false);
 
   async function handleCheckout() {
     setBusy(true);
     try {
-      const res = await fetch("/api/premium/checkout", {
+      const res = await fetch(apiUrl("/api/premium/checkout"), {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ priceId: SEASON_PRICE_ID, sessionId: getOrCreateSessionId() }),
@@ -61,7 +62,7 @@ export default function PremiumPage() {
 
   function activateDemo() {
     localStorage.setItem("tulipday_premium", "true");
-    router.push("/home");
+    router.push(`/${locale}/home`);
   }
 
   return (

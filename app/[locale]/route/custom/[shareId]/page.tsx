@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import SharedRouteClient from "./SharedRouteClient";
 
 export function generateStaticParams() {
@@ -5,5 +6,10 @@ export function generateStaticParams() {
 }
 
 export default function Page() {
-  return <SharedRouteClient />;
+  // useSearchParams vereist een Suspense-grens bij statische export
+  return (
+    <Suspense>
+      <SharedRouteClient />
+    </Suspense>
+  );
 }

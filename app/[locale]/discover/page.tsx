@@ -11,6 +11,7 @@ import type { Location }  from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { useT } from "@/lib/i18n-context";
+import { locationPath } from "@/lib/links";
 
 const BATCH_SIZE  = 20;   // per fetch
 const REFILL_AT   = 5;    // laad nieuwe batch als er nog ≤ 5 kaarten zijn
@@ -137,7 +138,7 @@ export default function DiscoverPage() {
     setDismissed((prev)  => { const s = new Set(prev); s.add(id); return s; });
     // Navigeer naar locatiepagina na korte delay
     if (field?.slug) {
-      setTimeout(() => router.push(`/${locale}/location/${field.slug}`), 400);
+      setTimeout(() => router.push(locationPath(locale, field.slug)), 400);
     }
   }
 

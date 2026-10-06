@@ -12,6 +12,7 @@ import { BloomBadge } from "@/components/ui/BloomBadge";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { locationPath, routePath } from "@/lib/links";
 import { saveCustomRoute } from "@/lib/customRoutes";
 import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
 
@@ -775,7 +776,7 @@ function PreviewCard({
 
 export default function MapView() {
   const router = useRouter();
-  const { t }  = useT();
+  const { t, locale } = useT();
   const mapDivRef   = useRef<HTMLDivElement>(null);
   const mapRef      = useRef<maplibregl.Map | null>(null);
   const mapReadyRef = useRef(false);
@@ -1620,8 +1621,8 @@ export default function MapView() {
           canAddToMap={Object.keys(routeSlots).length < 3}
           onToggleMap={() => toggleRouteOnMap(selectedMapRoute)}
           onClose={() => setSelectedMapRoute(null)}
-          onDetails={() => router.push(`/routes/${selectedMapRoute.slug}`)}
-          onStart={() => router.push(`/navigate?slug=${selectedMapRoute.slug}`)}
+          onDetails={() => router.push(routePath(locale, selectedMapRoute.slug))}
+          onStart={() => router.push(`/${locale}/navigate?slug=${selectedMapRoute.slug}`)}
         />
       )}
 
@@ -1630,7 +1631,7 @@ export default function MapView() {
         <PreviewCard
           location={selected}
           onClose={() => setSelected(null)}
-          onNavigate={() => router.push(`/location/${selected.slug}`)}
+          onNavigate={() => router.push(locationPath(locale, selected.slug))}
           t={t}
         />
       )}

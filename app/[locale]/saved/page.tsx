@@ -13,6 +13,7 @@ import { getOrCreateSessionId } from "@/lib/session";
 import { BloomBadge } from "@/components/ui/BloomBadge";
 import { Location, Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
+import { locationPath, publicUrl, routePath } from "@/lib/links";
 import { getCustomRoutes, deleteCustomRoute, updateCustomRoute, type CustomRoute } from "@/lib/customRoutes";
 import { shareCustomRoute } from "@/lib/sharedRoutes";
 
@@ -63,12 +64,11 @@ function ShareButton({ url, title }: { url: string; title?: string }) {
 function LocationRow({ location, savedId, onDelete, onNavigate }: {
   location: Location; savedId: string; onDelete: (id: string) => void; onNavigate: () => void;
 }) {
+  const { locale } = useT();
   const [deleting, setDeleting] = useState(false);
   const [leaving,  setLeaving]  = useState(false);
   const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=400";
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/location/${location.slug}`
-    : `/location/${location.slug}`;
+  const shareUrl = publicUrl(`/${locale}/location/${location.slug}`);
 
   async function handleDelete() {
     setDeleting(true);
@@ -114,14 +114,12 @@ function LocationRow({ location, savedId, onDelete, onNavigate }: {
 function RouteRow({ route, savedId, onDelete, onNavigate }: {
   route: Route; savedId: string; onDelete: (id: string) => void; onNavigate: () => void;
 }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [deleting, setDeleting] = useState(false);
   const [leaving,  setLeaving]  = useState(false);
   const fallback = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400";
   const type = route.route_type as RouteType | undefined;
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/routes/${route.slug}`
-    : `/routes/${route.slug}`;
+  const shareUrl = publicUrl(`/${locale}/routes/${route.slug}`);
 
   async function handleDelete() {
     setDeleting(true);
@@ -180,6 +178,7 @@ function fmtDist(m: number) {
 }
 
 function CustomRouteRow({ route, onDelete }: { route: CustomRoute; onDelete: (id: string) => void }) {
+  const { locale } = useT();
   const [leaving,  setLeaving]  = useState(false);
   const [sharing,  setSharing]  = useState(false);
   const [shareId,  setShareId]  = useState(route.shareId ?? null);
@@ -202,7 +201,7 @@ function CustomRouteRow({ route, onDelete }: { route: CustomRoute; onDelete: (id
       updateCustomRoute(route.id, { shareId: sid });
       setSharing(false);
     }
-    const url = `${window.location.origin}/route/custom/${sid}`;
+    const url = publicUrl(`/${locale}/route/custom/${sid}`);
     if (typeof navigator.share === "function") {
       try { await navigator.share({ title: route.name, url }); return; } catch { /* cancelled */ }
     }
@@ -338,7 +337,7 @@ interface SavedEntry { savedId: string; itemId: string }
 
 export default function SavedPage() {
   const router = useRouter();
-  const { t }  = useT();
+  const { t, locale } = useT();
 
   const [tab, setTab]         = useState<Tab>("locations");
   const [loading, setLoading] = useState(true);
@@ -447,7 +446,7 @@ export default function SavedPage() {
       <div className="px-4 pt-4 space-y-3">
         {tab === "custom" ? (
           customRoutes.length === 0 ? (
-            <EmptyState tab="custom" onBrowse={() => router.push("/map")} />
+            <EmptyState tab="custom" onBrowse={() => router.push(`/${locale}/map`)} />
           ) : (
             customRoutes.map((route) => (
               <CustomRouteRow
@@ -461,26 +460,26 @@ export default function SavedPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
         ) : tab === "locations" ? (
           locEntries.length === 0 ? (
-            <EmptyState tab="locations" onBrowse={() => router.push("/home")} />
+            <EmptyState tab="locations" onBrowse={() => router.push(`/${locale}/home`)} />
           ) : (
             locEntries.map(({ savedId, itemId }) => {
               const loc = locations[itemId];
               if (!loc) return null;
               return <LocationRow key={savedId} location={loc} savedId={savedId}
                 onDelete={(id) => setLocEntries((p) => p.filter((e) => e.savedId !== id))}
-                onNavigate={() => router.push(`/location/${loc.slug}`)} />;
+                onNavigate={() => router.push(locationPath(locale, loc.slug))} />;
             })
           )
         ) : (
           routeEntries.length === 0 ? (
-            <EmptyState tab="routes" onBrowse={() => router.push("/routes")} />
+            <EmptyState tab="routes" onBrowse={() => router.push(`/${locale}/routes`)} />
           ) : (
             routeEntries.map(({ savedId, itemId }) => {
               const route = routes[itemId];
               if (!route) return null;
               return <RouteRow key={savedId} route={route} savedId={savedId}
                 onDelete={(id) => setRouteEntries((p) => p.filter((e) => e.savedId !== id))}
-                onNavigate={() => router.push(`/routes/${route.slug}`)} />;
+                onNavigate={() => router.push(routePath(locale, route.slug))} />;
             })
           )
         )}

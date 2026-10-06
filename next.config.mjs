@@ -10,6 +10,9 @@ const nextConfig = {
   // Web (Vercel) gebruikt server rendering zodat Server Actions werken
   ...(isMobile ? { output: "export", trailingSlash: true } : {}),
 
+  // Laat client-code weten of dit de app-build is (zie lib/links.ts)
+  env: { NEXT_PUBLIC_BUILD_TARGET: isMobile ? "mobile" : "web" },
+
   images: {
     unoptimized: isMobile, // Capacitor heeft geen image optimizer
     remotePatterns: [

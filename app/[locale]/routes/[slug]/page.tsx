@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import RouteDetailClient from "./RouteDetailClient";
@@ -47,5 +48,10 @@ export async function generateMetadata(
 }
 
 export default function Page() {
-  return <RouteDetailClient />;
+  // useSearchParams vereist een Suspense-grens bij statische export
+  return (
+    <Suspense>
+      <RouteDetailClient />
+    </Suspense>
+  );
 }

@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
+import { routePath } from "@/lib/links";
 import { isPremium, FREE_ROUTE_LIMIT } from "@/lib/premium";
 import { PremiumGate } from "@/components/ui/PremiumGate";
 import { useWeather } from "@/hooks/useWeather";
@@ -331,7 +332,7 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
 
 export default function RoutesPage() {
   const router   = useRouter();
-  const { t }    = useT();
+  const { t, locale } = useT();
   const location = useUserLocation();
   const weather  = useWeather(location.coords);
 
@@ -359,7 +360,7 @@ export default function RoutesPage() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <button
-            onClick={() => router.push("/home")}
+            onClick={() => router.push(`/${locale}/home`)}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 tap-scale"
             style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
           >
@@ -461,13 +462,13 @@ export default function RoutesPage() {
         ) : (
           <>
             {filtered.slice(0, FREE_ROUTE_LIMIT).map((route) => (
-              <RouteListCard key={route.id} route={route} onClick={() => router.push(`/routes/${route.slug}`)} />
+              <RouteListCard key={route.id} route={route} onClick={() => router.push(routePath(locale, route.slug))} />
             ))}
             {filtered.length > FREE_ROUTE_LIMIT && (
               <PremiumGate>
                 <div className="space-y-4">
                   {filtered.slice(FREE_ROUTE_LIMIT).map((route) => (
-                    <RouteListCard key={route.id} route={route} onClick={premium ? () => router.push(`/routes/${route.slug}`) : () => {}} />
+                    <RouteListCard key={route.id} route={route} onClick={premium ? () => router.push(routePath(locale, route.slug)) : () => {}} />
                   ))}
                 </div>
               </PremiumGate>
