@@ -22,6 +22,11 @@ export function ensureUser(): Promise<string | null> {
   return pending;
 }
 
+/** Vergeet het gecachte account-id (na inloggen, uitloggen of verwijderen). */
+export function resetUserCache(): void {
+  pending = null;
+}
+
 /**
  * Voor alleen-lezen: het id van een bestaande sessie, zonder op het web voor
  * elke bezoeker (en bot) een account aan te maken. In de app krijgt iedere

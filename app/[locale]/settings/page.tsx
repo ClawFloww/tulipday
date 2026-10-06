@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import {
   Globe, Info, Mail, ShieldCheck, Flower2, Monitor,
-  ChevronDown, ChevronUp, ExternalLink, Check, Crown, Bell, BellOff, Loader2,
+  ChevronDown, ChevronUp, ExternalLink, Check, Crown, Bell, BellOff, Loader2, UserRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getAccount } from "@/lib/account";
 import { useT, type Locale } from "@/lib/i18n-context";
 import { registerPushSubscription, unregisterPushSubscription, isPushSubscribed } from "@/lib/pushClient";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -141,6 +142,32 @@ function PushToggle() {
   );
 }
 
+function AccountRow() {
+  const { t, locale } = useT();
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    getAccount().then((account) => {
+      setSignedIn(!!account && !account.isAnonymous);
+      setEmail(account?.email ?? null);
+    });
+  }, []);
+
+  return (
+    <SettingsRow
+      icon={<UserRound size={18} />}
+      label={signedIn && email ? email : t("settings.account_label")}
+      accent="text-tulip-500"
+      right={!signedIn
+        ? <span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">{t("settings.account_signin")}</span>
+        : undefined}
+      onClick={() => router.push(`/${locale}/account`)}
+    />
+  );
+}
+
 export default function SettingsPage() {
   const { t, locale } = useT();
   const router = useRouter();
@@ -174,6 +201,9 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pt-5 space-y-2">
+
+        <SectionLabel label={t("settings.account_label")} />
+        <AccountRow />
 
         <SectionLabel label="Premium" />
         <SettingsRow
