@@ -12,7 +12,7 @@ Instructies voor Claude Code. Lees dit bestand volledig voordat je iets wijzigt.
 
 - **Framework**: Next.js 14 (App Router), TypeScript strict mode
 - **Database**: Supabase (PostgreSQL + Storage + Realtime)
-- **Kaarten**: MapLibre GL met OpenFreeMap-vectortegels (licht/donker, geen API-key); MapTiler alleen nog in de navigatiekaart
+- **Kaarten**: MapLibre GL met OpenFreeMap-vectortegels (Positron, altijd licht, geen API-key); MapTiler alleen nog in de navigatiekaart
 - **Routing**: BRouter (veldpaden) + OSRM (wegnavigatie)
 - **Stijl**: Tailwind CSS + CSS custom properties voor theming
 - **Mobile**: Capacitor voor iOS/Android builds
@@ -99,9 +99,9 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - Bloeistatus melden onderweg
 
 ### Kaart (`components/map/`, `lib/map*.ts`)
-- **Stijl** (`lib/mapStyle.ts`): `mapStyleUrl()` + `watchMapTheme(map, onThemeChange)` direct na `new maplibregl.Map`. Wisselt mee met `.dark`, behoudt eigen GeoJSON-lagen, valt terug op Positron als de donkere stijl niet laadt. Eigen tekstlagen gebruiken `MAP_FONT_BOLD` (OpenFreeMap levert alleen Noto Sans).
-- **Routelijnen** (`lib/mapLayers.ts`): altijd via `addRouteLayers` + `setRouteLines` (één bron per kaart, casing, richtingspijlen, start/finish). `selected: true` = merkrood, anders gedimd. Na een thema-wissel `applyRouteTheme`.
-- **Iconen** (`lib/mapIcons.ts`): `await addMapIcons(map)` vóór symboollagen; categoriemarkers zijn `pin-<category>`. Kleuren als hex in `CATEGORY_COLOR`/`MAP_PRIMARY` (MapLibre leest geen CSS-variabelen).
+- **Stijl** (`lib/mapStyle.ts`): `style: MAP_STYLE` + `tintMap(map)` direct na `new maplibregl.Map`. De kaart blijft **altijd licht**, ook in dark mode (keuze van de eigenaar). Eigen tekstlagen gebruiken `MAP_FONT_BOLD` (OpenFreeMap levert alleen Noto Sans).
+- **Routelijnen** (`lib/mapLayers.ts`): altijd via `addRouteLayers` + `setRouteLines` (één bron per kaart, casing, richtingspijlen, start/finish). `selected: true` = merkrood, anders gedimd.
+- **Iconen** (`lib/mapIcons.ts`): `addMapIcons(map)` ná het toevoegen van de lagen en zonder erop te wachten; symbolen verschijnen zodra de iconen er zijn. Categoriemarkers zijn `pin-<category>`, met een gekleurde cirkellaag eronder als vangnet. Kleuren als hex in `CATEGORY_COLOR`/`MAP_PRIMARY` (MapLibre leest geen CSS-variabelen).
 - **Sheets boven de kaart**: `LocationSheet` en `RouteSheet` op `BottomSheet` met `modal={false}`, zodat de kaart bedienbaar blijft.
 - **Camera**: `fitBounds` met padding voor filterbalk en sheet; voor één punt `easeTo` met `offset` (padding in `easeTo` blijft op de kaart hangen).
 - Routegeometrie uit Supabase wordt ongewijzigd getekend (al BRouter-gesnapt); niet opnieuw via OSRM snappen.

@@ -9,8 +9,8 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RouteStop } from "@/lib/types";
 import { addMapIcons } from "@/lib/mapIcons";
-import { addRouteLayers, applyRouteTheme, setRouteLines } from "@/lib/mapLayers";
-import { isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { addRouteLayers, setRouteLines } from "@/lib/mapLayers";
+import { MAP_STYLE, tintMap } from "@/lib/mapStyle";
 
 export type MapLocation = {
   id:                string;
@@ -72,22 +72,21 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
 
     const map = new maplibregl.Map({
       container:   containerRef.current,
-      style:       mapStyleUrl(),
+      style:       MAP_STYLE,
       center:      routeCoords[0],
       zoom:        12,
       interactive: true,
     });
 
-    const stopThemeWatch = watchMapTheme(map, (dark) => applyRouteTheme(map, "route", dark));
+    tintMap(map);
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
-    map.on("load", async () => {
+    map.on("load", () => {
       // Routelijn met rand, richtingspijlen en start/finish
       if (routeCoords.length > 1) {
-        await addMapIcons(map);
-        if (!mapRef.current) return;
-        addRouteLayers(map, "route", isDarkTheme());
+        addRouteLayers(map, "route");
         setRouteLines(map, "route", [{ id: "route", coords: routeCoords, selected: true }]);
+        addMapIcons(map).catch((err) => console.error("Kaarticonen laden mislukt", err));
       }
 
       // Genummerde stops
@@ -169,7 +168,7 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
     }
 
     mapRef.current = map;
-    return () => { stopThemeWatch(); map.remove(); mapRef.current = null; };
+    return () => { map.remove(); mapRef.current = null; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

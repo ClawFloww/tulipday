@@ -8,8 +8,8 @@ import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
 import { addMapIcons } from "@/lib/mapIcons";
-import { addRouteLayers, applyRouteTheme, setRouteLines } from "@/lib/mapLayers";
-import { isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { addRouteLayers, setRouteLines } from "@/lib/mapLayers";
+import { MAP_STYLE, tintMap } from "@/lib/mapStyle";
 import { publicUrl, resolveParam } from "@/lib/links";
 
 
@@ -63,14 +63,14 @@ export default function SharedRoutePage() {
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style:     mapStyleUrl(),
+      style:     MAP_STYLE,
       center:    waypoints[0],
       zoom:      12,
       interactive: true,
     });
-    const stopThemeWatch = watchMapTheme(map, (dark) => applyRouteTheme(map, "route", dark));
+    tintMap(map);
 
-    map.on("load", async () => {
+    map.on("load", () => {
       // Waypoint markers
       waypoints.forEach(([lng, lat], i) => {
         const el = document.createElement("div");
@@ -87,11 +87,10 @@ export default function SharedRoutePage() {
 
       // Lijn tussen punten
       if (waypoints.length > 1) {
-        await addMapIcons(map);
-        if (!mapRef.current) return;
         // Onder de genummerde markers, die als DOM-elementen boven de kaart liggen
-        addRouteLayers(map, "route", isDarkTheme());
+        addRouteLayers(map, "route");
         setRouteLines(map, "route", [{ id: "route", coords: waypoints, selected: true }]);
+        addMapIcons(map).catch((err) => console.error("Kaarticonen laden mislukt", err));
       }
 
       // Fit bounds
@@ -103,7 +102,7 @@ export default function SharedRoutePage() {
     });
 
     mapRef.current = map;
-    return () => { stopThemeWatch(); map.remove(); mapRef.current = null; };
+    return () => { map.remove(); mapRef.current = null; };
   }, [route]);
 
   async function handleShare() {

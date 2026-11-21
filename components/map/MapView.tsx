@@ -12,9 +12,9 @@ import { isCurrentlyOpen } from "@/lib/openingHours";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
 import { saveCustomRoute } from "@/lib/customRoutes";
-import { MAP_PRIMARY, addMapIcons } from "@/lib/mapIcons";
-import { addRouteLayers, applyRouteTheme, boundsOf, routeLayerIds, setRouteLines } from "@/lib/mapLayers";
-import { MAP_FONT_BOLD, isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { CATEGORY_COLOR, MAP_PRIMARY, addMapIcons } from "@/lib/mapIcons";
+import { addRouteLayers, boundsOf, routeLayerIds, setRouteLines } from "@/lib/mapLayers";
+import { MAP_FONT_BOLD, MAP_STYLE, tintMap } from "@/lib/mapStyle";
 import { LocationSheet } from "@/components/map/LocationSheet";
 import { RouteSheet, type RouteSheetDetail, type SheetRoute } from "@/components/map/RouteSheet";
 
@@ -165,6 +165,7 @@ function locationsToGeoJSON(
         bloom_status: loc.bloom_status,
         address:      loc.address,
         image_url:    loc.image_url,
+        color:        CATEGORY_COLOR[loc.category] ?? CATEGORY_COLOR.parking,
         // Voor horeca: null = geen data, true = open, false = gesloten
         is_open:      loc.category === "food" ? isCurrentlyOpen(loc.opening_hours) : null,
       },
@@ -717,26 +718,20 @@ export default function MapView() {
 
     const map = new maplibregl.Map({
       container: mapDivRef.current,
-      style: mapStyleUrl(),
+      style: MAP_STYLE,
       center: BOLLENSTREEK_CENTER,
       zoom: 11,
     });
 
     mapRef.current = map;
-    const stopThemeWatch = watchMapTheme(map, (dark) => {
-      applyRouteTheme(map, ROUTES_SOURCE_ID, dark);
-      applyRouteTheme(map, DRAW_SOURCE_ID, dark);
-    });
+    tintMap(map);
 
-    map.on("load", async () => {
-      await addMapIcons(map);
-      if (mapRef.current !== map) return;
+    map.on("load", () => {
       mapReadyRef.current = true;
 
       // ── Routes (onder de locatiemarkers) ──
-      const dark = isDarkTheme();
-      addRouteLayers(map, ROUTES_SOURCE_ID, dark);
-      addRouteLayers(map, DRAW_SOURCE_ID, dark);
+      addRouteLayers(map, ROUTES_SOURCE_ID);
+      addRouteLayers(map, DRAW_SOURCE_ID);
 
       // ── Location source + layers ──
       map.addSource(SOURCE_ID, {
@@ -794,6 +789,20 @@ export default function MapView() {
           "circle-radius": 24,
           "circle-stroke-width": 2,
           "circle-stroke-color": MAP_PRIMARY,
+        },
+      });
+
+      // Gekleurde stip als vangnet; het icoon hieronder dekt hem af zodra het geladen is
+      map.addLayer({
+        id: "unclustered-dot",
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": ["get", "color"],
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 10, 14, 13],
+          "circle-stroke-width": 2.5,
+          "circle-stroke-color": "#FFFFFF",
         },
       });
 
@@ -864,6 +873,7 @@ export default function MapView() {
         const loc = locationsRef.current.find((l) => l.id === props.id);
         if (loc) selectLocationRef.current(loc);
       };
+      map.on("click", "unclustered-dot",      handlePointClick);
       map.on("click", "unclustered-point",    handlePointClick);
       map.on("click", "unclustered-bloom-dot", handlePointClick);
 
@@ -871,7 +881,7 @@ export default function MapView() {
       const routeHit = routeLayerIds(ROUTES_SOURCE_ID).hit;
       map.on("click", routeHit, (e) => {
         if (drawModeRef.current) return;
-        const onPoint = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point"] });
+        const onPoint = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-dot", "unclustered-point"] });
         if (onPoint.length > 0) return;
         const id = e.features?.[0]?.properties?.id;
         const route = mapRoutesRef.current.find((r) => r.id === id);
@@ -916,16 +926,18 @@ export default function MapView() {
         }
 
         // Normal mode: sluit de locatiesheet bij een tik op een lege plek
-        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point", "unclustered-bloom-dot", routeHit] });
+        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-dot", "unclustered-point", "unclustered-bloom-dot", routeHit] });
         if (hit.length === 0) setSelected(null);
       });
 
       updateSource();
       syncRouteLines();
+
+      // Iconen na de lagen: faalt het laden, dan blijven stippen en lijnen zichtbaar
+      addMapIcons(map).catch((err) => console.error("Kaarticonen laden mislukt", err));
     });
 
     return () => {
-      stopThemeWatch();
       mapReadyRef.current = false;
       userMarkerRef.current?.remove();
       userMarkerRef.current = null;

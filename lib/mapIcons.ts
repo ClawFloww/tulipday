@@ -103,8 +103,8 @@ function loadIcons(): Promise<Map<string, HTMLImageElement>> {
 }
 
 /**
- * Voegt alle kaarticonen toe aan de kaart, ook opnieuw na een stijlwissel
- * (die gooit eigen afbeeldingen weg). Resolvet zodra de iconen klaar zijn.
+ * Voegt alle kaarticonen toe aan de kaart (en opnieuw als MapLibre er een mist).
+ * Lagen hoeven hier niet op te wachten: symbolen verschijnen zodra de iconen er zijn.
  */
 export async function addMapIcons(map: maplibregl.Map): Promise<void> {
   const icons = await loadIcons();

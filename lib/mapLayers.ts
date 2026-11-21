@@ -13,11 +13,9 @@ export type RouteLine = {
   selected?: boolean;
 };
 
-// MapLibre leest geen CSS-variabelen; waarden volgen app/globals.css
-const THEME = {
-  light: { casing: "#FFFFFF", dimmed: "#8C8C88" },
-  dark:  { casing: "#1A1A18", dimmed: "#6C6C68" },
-} as const;
+// MapLibre leest geen CSS-variabelen; gedimd volgt --color-text-3
+const CASING = "#FFFFFF";
+const DIMMED = "#8C8C88";
 
 const SELECTED: maplibregl.ExpressionSpecification = ["boolean", ["get", "selected"], false];
 
@@ -31,10 +29,9 @@ export const routeLayerIds = (sourceId: string) => ({
 
 const endsSourceId = (sourceId: string) => `${sourceId}-ends`;
 
-/** Voegt bron en lagen toe. Iconen moeten al via addMapIcons geladen zijn. */
-export function addRouteLayers(map: maplibregl.Map, sourceId: string, dark: boolean, beforeId?: string) {
+/** Voegt bron en lagen toe. Pijlen en start/finish verschijnen zodra addMapIcons klaar is. */
+export function addRouteLayers(map: maplibregl.Map, sourceId: string, beforeId?: string) {
   const ids = routeLayerIds(sourceId);
-  const theme = dark ? THEME.dark : THEME.light;
   const empty: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
   map.addSource(sourceId, { type: "geojson", data: empty });
@@ -44,7 +41,7 @@ export function addRouteLayers(map: maplibregl.Map, sourceId: string, dark: bool
     id: ids.casing, type: "line", source: sourceId,
     layout: { "line-join": "round", "line-cap": "round", "line-sort-key": ["case", SELECTED, 1, 0] },
     paint: {
-      "line-color": theme.casing,
+      "line-color": CASING,
       "line-width": ["interpolate", ["linear"], ["zoom"],
         10, ["case", SELECTED, 7, 4.5],
         16, ["case", SELECTED, 13, 8]],
@@ -56,7 +53,7 @@ export function addRouteLayers(map: maplibregl.Map, sourceId: string, dark: bool
     id: ids.line, type: "line", source: sourceId,
     layout: { "line-join": "round", "line-cap": "round", "line-sort-key": ["case", SELECTED, 1, 0] },
     paint: {
-      "line-color": ["case", SELECTED, MAP_PRIMARY, theme.dimmed],
+      "line-color": ["case", SELECTED, MAP_PRIMARY, DIMMED],
       "line-width": ["interpolate", ["linear"], ["zoom"],
         10, ["case", SELECTED, 4, 2.5],
         16, ["case", SELECTED, 8, 5]],
@@ -130,15 +127,6 @@ export function setRouteLines(map: maplibregl.Map, sourceId: string, lines: Rout
     }
   }
   ends.setData({ type: "FeatureCollection", features: endFeatures });
-}
-
-/** Na een thema-wissel: rand en gedimde kleur aanpassen. */
-export function applyRouteTheme(map: maplibregl.Map, sourceId: string, dark: boolean) {
-  const ids = routeLayerIds(sourceId);
-  const theme = dark ? THEME.dark : THEME.light;
-  if (!map.getLayer(ids.casing)) return;
-  map.setPaintProperty(ids.casing, "line-color", theme.casing);
-  map.setPaintProperty(ids.line, "line-color", ["case", SELECTED, MAP_PRIMARY, theme.dimmed]);
 }
 
 /** Bounds van een reeks [lng, lat]-punten, of null bij een lege reeks. */
