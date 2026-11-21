@@ -1,5 +1,6 @@
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { Toaster } from "@/components/ui/Toast";
 
 export function generateStaticParams() {
   return ["en", "nl", "de", "fr", "zh", "es"].map((locale) => ({ locale }));
@@ -16,6 +17,7 @@ export default function LocaleLayout({
       {/* PageTransition herkeyert bij elke routewisseling → fade-in animatie */}
       <PageTransition>{children}</PageTransition>
       <BottomNavigation />
+      <Toaster />
     </>
   );
 }
