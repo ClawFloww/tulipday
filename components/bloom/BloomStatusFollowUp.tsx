@@ -128,7 +128,7 @@ export default function BloomStatusFollowUp({
                   {mockPhotoAdded ? (
                     <Check size={20} className="text-green-600 flex-shrink-0" />
                   ) : (
-                    <Camera size={20} className="flex-shrink-0" style={{ color: "#E8527A" }} />
+                    <Camera size={20} className="flex-shrink-0" style={{ color: "var(--color-primary)" }} />
                   )}
                   <div>
                     <p className={`font-bold text-sm ${mockPhotoAdded ? "text-green-700" : "text-gray-800"}`}>
@@ -188,7 +188,7 @@ export default function BloomStatusFollowUp({
                           className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl
                                      focus:outline-none focus:ring-2 focus:border-transparent
                                      resize-none"
-                          style={{ ["--tw-ring-color" as string]: "#E8527A" }}
+                          style={{ ["--tw-ring-color" as string]: "var(--color-primary)" }}
                         />
                         <p className="text-xs text-gray-400 text-right mt-1">
                           {reviewText.length}/120
@@ -214,7 +214,7 @@ export default function BloomStatusFollowUp({
                 onClick={handleKlaar}
                 className="w-full py-4 rounded-2xl text-white text-sm font-extrabold
                            transition-colors"
-                style={{ backgroundColor: "#E8527A", minHeight: 52 }}
+                style={{ backgroundColor: "var(--color-primary)", minHeight: 52 }}
               >
                 {t("common.done")}
               </motion.button>

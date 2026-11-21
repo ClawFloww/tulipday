@@ -39,8 +39,8 @@ export default function RouteAlternativeSuggestion({
           className="rounded-2xl overflow-hidden border bg-tulip-50 border-tulip-100 dark:bg-tulip-900/20 dark:border-tulip-800"
         >
           <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-            <Sparkles size={13} className="text-[#E8527A]" />
-            <p className="text-xs font-extrabold text-[#E8527A]">
+            <Sparkles size={13} className="text-primary" />
+            <p className="text-xs font-extrabold text-primary">
               Betere bloeiroute beschikbaar
             </p>
           </div>

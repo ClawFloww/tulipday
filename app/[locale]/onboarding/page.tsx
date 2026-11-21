@@ -336,7 +336,7 @@ export default function OnboardingPage() {
                 className="w-full py-4 rounded-2xl text-white font-extrabold text-base
                            active:scale-[0.97] transition-all"
                 style={{
-                  backgroundColor: allAccepted ? "#E8527A" : "var(--color-surface-3)",
+                  backgroundColor: allAccepted ? "var(--color-primary)" : "var(--color-surface-3)",
                   color:            allAccepted ? "white"   : "var(--color-text-3)",
                   cursor:           allAccepted ? "pointer" : "not-allowed",
                 }}
@@ -402,7 +402,7 @@ export default function OnboardingPage() {
                 onClick={() => setPlannerActive(true)}
                 className="w-full py-4 rounded-2xl text-white font-extrabold text-base
                            active:scale-[0.97] transition-transform"
-                style={{ backgroundColor: "#E8527A" }}
+                style={{ backgroundColor: "var(--color-primary)" }}
               >
                 Start
               </button>

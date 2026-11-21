@@ -94,7 +94,7 @@ export default function BloomDemoPage() {
           style={{ backgroundColor: "#FAFAF7" }}
         >
           <span className="text-xs font-semibold text-gray-400">9:41</span>
-          <span className="text-xs font-semibold" style={{ color: "#E8527A" }}>
+          <span className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>
             TulipDay · Bloom Demo
           </span>
           <span className="text-xs font-semibold text-gray-400">●●●</span>
@@ -111,7 +111,7 @@ export default function BloomDemoPage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                style={{ backgroundColor: "#FEF0F3" }}
+                style={{ backgroundColor: "var(--color-primary-subtle)" }}
               >
                 📍
               </div>
@@ -121,7 +121,7 @@ export default function BloomDemoPage() {
               </div>
               <span
                 className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#FEF0F3", color: "#E8527A" }}
+                style={{ backgroundColor: "var(--color-primary-subtle)", color: "var(--color-primary)" }}
               >
                 Dichtbij
               </span>
@@ -147,7 +147,7 @@ export default function BloomDemoPage() {
                 <button
                   onClick={() => { setStep("prompt"); setSelectedStatus(null); }}
                   className="mt-1 text-xs font-semibold px-4 py-2 rounded-xl"
-                  style={{ backgroundColor: "#E8527A", color: "white" }}
+                  style={{ backgroundColor: "var(--color-primary)", color: "white" }}
                 >
                   Opnieuw proberen
                 </button>
@@ -258,7 +258,7 @@ export default function BloomDemoPage() {
             <button
               onClick={() => setShowNotifPrefs(false)}
               className="w-full mt-4 py-3 rounded-2xl text-white text-sm font-bold"
-              style={{ backgroundColor: "#E8527A" }}
+              style={{ backgroundColor: "var(--color-primary)" }}
             >
               Opslaan
             </button>

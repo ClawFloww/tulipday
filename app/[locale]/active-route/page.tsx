@@ -88,7 +88,7 @@ function ArrivalBanner({
                  style={{ backgroundColor: "var(--color-surface-3)" }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ backgroundColor: "#E8527A" }}
+                style={{ backgroundColor: "var(--color-primary)" }}
                 initial={{ width: 0 }}
                 animate={{ width: `${uploadProgress}%` }}
                 transition={{ duration: 0.3 }}
@@ -105,7 +105,7 @@ function ArrivalBanner({
             <button
               onClick={onPhoto}
               className="w-full py-4 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-              style={{ backgroundColor: "#E8527A" }}
+              style={{ backgroundColor: "var(--color-primary)" }}
             >
               <Camera size={18} /> {t("active_route.checkin_with_photo")}
             </button>
@@ -160,7 +160,7 @@ function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () =
       </motion.p>
       <motion.p
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-        className="text-base font-extrabold mb-10" style={{ color: "#E8527A" }}
+        className="text-base font-extrabold mb-10" style={{ color: "var(--color-primary)" }}
       >
         {route.distanceKm} km · ±{route.estimatedMinutes} min
       </motion.p>
@@ -171,7 +171,7 @@ function FinishedScreen({ route, onHome }: { route: GeneratedRoute; onHome: () =
         <button
           onClick={onHome}
           className="w-full py-4 rounded-2xl text-white font-extrabold text-base active:scale-[0.97] transition-transform"
-          style={{ backgroundColor: "#E8527A" }}
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           {t("common.back_home")}
         </button>
@@ -332,7 +332,7 @@ export default function ActiveRoutePage() {
             <div key={i} className="w-2 h-2 rounded-full transition-colors"
                  style={{
                    backgroundColor: visited.has(i) ? "#2D7D46"
-                                  : i === activeIdx ? "#E8527A"
+                                  : i === activeIdx ? "var(--color-primary)"
                                   : "var(--color-border)",
                  }} />
           ))}
@@ -357,13 +357,13 @@ export default function ActiveRoutePage() {
                 className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all"
                 style={{
                   backgroundColor: isActive ? "var(--color-surface-2)" : "var(--color-surface-3)",
-                  border: isActive ? "1.5px solid #E8527A" : "1.5px solid transparent",
+                  border: isActive ? "1.5px solid var(--color-primary)" : "1.5px solid transparent",
                 }}
               >
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-extrabold"
                   style={{
-                    backgroundColor: isVisited ? "#2D7D46" : isActive ? "#E8527A" : "var(--color-border)",
+                    backgroundColor: isVisited ? "#2D7D46" : isActive ? "var(--color-primary)" : "var(--color-border)",
                   }}
                 >
                   {isVisited ? <Check size={14} /> : idx + 1}
@@ -372,13 +372,13 @@ export default function ActiveRoutePage() {
                   <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>
                     {field.name}
                   </p>
-                  {isActive  && <p className="text-xs font-semibold" style={{ color: "#E8527A" }}>{t("active_route.next_stop")}</p>}
+                  {isActive  && <p className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>{t("active_route.next_stop")}</p>}
                   {isVisited && <p className="text-xs" style={{ color: "var(--color-text-3)" }}>{t("active_route.visited")}</p>}
                 </div>
                 {isActive && (
                   <button onClick={() => navigateTo(idx)}
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white active:scale-90 transition-transform"
-                          style={{ backgroundColor: "#E8527A" }}>
+                          style={{ backgroundColor: "var(--color-primary)" }}>
                     <Navigation size={15} />
                   </button>
                 )}
@@ -399,7 +399,7 @@ export default function ActiveRoutePage() {
         <button
           onClick={() => navigateTo(activeIdx)}
           className="w-full py-4 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-          style={{ backgroundColor: "#E8527A" }}
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           <Navigation size={18} /> {t("active_route.navigate_to_stop", { n: activeIdx + 1 })}
         </button>

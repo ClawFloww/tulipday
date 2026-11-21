@@ -115,7 +115,7 @@ export default function RouteMapPreview({ route, statuses = [], className = "" }
           <polyline
             points={polyline}
             fill="none"
-            stroke="#E8527A"
+            stroke="var(--color-primary)"
             strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -134,7 +134,7 @@ export default function RouteMapPreview({ route, statuses = [], className = "" }
                 cx={pt.x}
                 cy={pt.y}
                 r={inBloom ? 5 : 3.5}
-                fill={inBloom ? "#E8527A" : "#8C8C8C"}
+                fill={inBloom ? "var(--color-primary)" : "#8C8C8C"}
               />
             </g>
           );

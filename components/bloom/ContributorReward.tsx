@@ -44,7 +44,7 @@ export default function ContributorReward({
             onClick={onDismiss}
             className="flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl
                        text-white text-sm font-bold whitespace-nowrap"
-            style={{ backgroundColor: "#E8527A" }}
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
             <Heart size={18} fill="white" className="flex-shrink-0 animate-pulse" />
             <span>

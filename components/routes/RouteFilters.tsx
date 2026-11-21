@@ -32,8 +32,8 @@ function Pill({
       onClick={onClick}
       className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-bold border transition-all
         ${active
-          ? "bg-[#E8527A] border-[#E8527A] text-white shadow-sm"
-          : "border-[var(--color-border)] hover:border-[#E8527A] hover:text-[#E8527A]"
+          ? "bg-primary border-primary text-white shadow-sm"
+          : "border-[var(--color-border)] hover:border-primary hover:text-primary"
         }`}
       style={!active ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)", minHeight: 36 } : { minHeight: 36 }}
     >
@@ -140,7 +140,7 @@ export default function RouteFilters({ filters, onChange, onGenerate, isLoading 
         disabled={isLoading}
         className="w-full py-3.5 rounded-2xl text-white text-sm font-extrabold
                    transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
-        style={{ backgroundColor: "#E8527A", minHeight: 52 }}
+        style={{ backgroundColor: "var(--color-primary)", minHeight: 52 }}
       >
         {isLoading ? (
           <>

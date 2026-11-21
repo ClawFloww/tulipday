@@ -128,7 +128,7 @@ export default function RouteListScreen({ initialFilters, statuses: initialStatu
             <button
               onClick={regenerate}
               className="flex items-center gap-2 mt-2 px-5 py-3 rounded-2xl text-white text-sm font-bold"
-              style={{ backgroundColor: "#E8527A" }}
+              style={{ backgroundColor: "var(--color-primary)" }}
             >
               <RefreshCw size={15} /> Opnieuw proberen
             </button>
@@ -207,7 +207,7 @@ export default function RouteListScreen({ initialFilters, statuses: initialStatu
                             >
                               <span
                                 className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold flex-shrink-0"
-                                style={{ backgroundColor: "#FEF0F3", color: "#E8527A" }}
+                                style={{ backgroundColor: "var(--color-primary-subtle)", color: "var(--color-primary)" }}
                               >
                                 {i + 1}
                               </span>

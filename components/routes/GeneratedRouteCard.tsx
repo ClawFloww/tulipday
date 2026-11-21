@@ -44,7 +44,7 @@ export default function GeneratedRouteCard({
       onClick={onClick}
       className={`w-full text-left rounded-2xl overflow-hidden transition-all
         ${isSelected
-          ? "ring-2 ring-[#E8527A] shadow-lg"
+          ? "ring-2 ring-primary shadow-lg"
           : "shadow-card hover:shadow-card-hover"
         }`}
       style={{ backgroundColor: "var(--color-surface-2)" }}
@@ -58,7 +58,7 @@ export default function GeneratedRouteCard({
           <div className="flex items-center gap-2 mb-1">
             <span
               className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#FEF0F3", color: "#E8527A" }}
+              style={{ backgroundColor: "var(--color-primary-subtle)", color: "var(--color-primary)" }}
             >
               <Bike size={10} /> Fiets
             </span>
@@ -75,7 +75,7 @@ export default function GeneratedRouteCard({
         </div>
         <ChevronRight
           size={18}
-          className={`flex-shrink-0 mt-1 transition-transform ${isSelected ? "rotate-90 text-[#E8527A]" : ""}`}
+          className={`flex-shrink-0 mt-1 transition-transform ${isSelected ? "rotate-90 text-primary" : ""}`}
         style={!isSelected ? { color: "var(--color-text-3)" } : {}}
         />
       </div>
@@ -97,7 +97,7 @@ export default function GeneratedRouteCard({
         {bloomingOnRoute > 0 && (
           <span
             className="text-[10px] font-extrabold px-2 py-0.5 rounded-full ml-auto"
-            style={{ backgroundColor: "#FEF0F3", color: "#E8527A" }}
+            style={{ backgroundColor: "var(--color-primary-subtle)", color: "var(--color-primary)" }}
           >
             🌷 {bloomingOnRoute} in bloei
           </span>
@@ -128,7 +128,7 @@ export default function GeneratedRouteCard({
       <div className="px-4 pb-4">
         <div
           className="w-full py-2.5 rounded-xl text-white text-sm font-bold text-center"
-          style={{ backgroundColor: "#E8527A" }}
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           Start bij {route.startLocation.label} →
         </div>

@@ -275,7 +275,7 @@ export const STATUS_CONFIG: Record<
   in_bloom: {
     emoji: "🌷",
     label: "Vol in bloei",
-    bg: "#FEF0F3",
+    bg: "var(--color-primary-subtle)",
     text: "#B5003A",
     border: "#F7A8BF",
   },

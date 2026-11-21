@@ -27,10 +27,10 @@ function ToggleRow({ icon, title, description, enabled, onToggle }: ToggleRowPro
     <div className="flex items-center gap-4 py-4">
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: enabled ? "#FEF0F3" : "#F5F5F5" }}
+        style={{ backgroundColor: enabled ? "var(--color-primary-subtle)" : "#F5F5F5" }}
         aria-hidden="true"
       >
-        <span style={{ color: enabled ? "#E8527A" : "#9CA3AF" }}>
+        <span style={{ color: enabled ? "var(--color-primary)" : "#9CA3AF" }}>
           {icon}
         </span>
       </div>
@@ -48,7 +48,7 @@ function ToggleRow({ icon, title, description, enabled, onToggle }: ToggleRowPro
         onClick={onToggle}
         className="relative flex-shrink-0 w-12 h-6 rounded-full transition-colors"
         style={{
-          backgroundColor: enabled ? "#E8527A" : "#E5E7EB",
+          backgroundColor: enabled ? "var(--color-primary)" : "#E5E7EB",
           minWidth: 48,
           minHeight: 48,
           display: "flex",

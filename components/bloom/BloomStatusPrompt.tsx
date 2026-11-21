@@ -66,7 +66,7 @@ export default function BloomStatusPrompt({
               <div className="flex items-start justify-between mb-1">
                 <div className="flex-1 pr-3">
                   <p className="text-xs font-semibold uppercase tracking-wide"
-                     style={{ color: "#E8527A" }}>
+                     style={{ color: "var(--color-primary)" }}>
                     {t("bloom_prompt.header_label")}
                   </p>
                   <h2 className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">

@@ -108,7 +108,7 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
               .map((s, i) => ({
                 lngLat: [s.locations.longitude as number, s.locations.latitude as number] as [number, number],
                 label:  String(i + 1),
-                color:  i === 0 ? "#2D7D46" : i === stops.length - 1 ? "#E8102A" : "#E8527A",
+                color:  i === 0 ? "#2D7D46" : i === stops.length - 1 ? "#E8102A" : "#E8102A",
               }))
           : routeCoords.length > 1
           ? [

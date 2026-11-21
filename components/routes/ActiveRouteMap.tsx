@@ -60,14 +60,14 @@ export default function ActiveRouteMap({
         {poly && <polyline points={poly} fill="none" stroke="white"
                            strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" opacity={0.45} />}
         {/* Route lijn */}
-        {poly && <polyline points={poly} fill="none" stroke="#E8527A"
+        {poly && <polyline points={poly} fill="none" stroke="var(--color-primary)"
                            strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />}
 
         {/* Bollenveld-markers */}
         {fieldPts.map((pt, idx) => {
           const isVisited = visitedIds.has(idx);
           const isActive  = idx === activeIdx;
-          const fill  = isVisited ? "#2D7D46" : isActive ? "#E8527A" : "#9CA3AF";
+          const fill  = isVisited ? "#2D7D46" : isActive ? "var(--color-primary)" : "#9CA3AF";
           const r     = isActive ? 13 : 10;
           return (
             <g key={route.fields[idx].id}>
