@@ -265,6 +265,9 @@
     "browse_routes": "浏览路线 →"
   },
   "account": {
+    "signed_in_toast": "你已登录",
+    "signed_out_toast": "你已退出登录",
+    "deleted_toast": "你的账户已删除",
     "back": "返回",
     "title": "账户",
     "subtitle": "在所有设备上同步你的数据",
@@ -296,6 +299,20 @@
     "delete_failed": "删除失败。请检查网络连接后重试。"
   },
   "settings": {
+    "section_premium": "季票",
+    "premium_row": "TulipDay 季票",
+    "premium_view": "查看",
+    "premium_active": "已激活",
+    "section_appearance": "外观",
+    "theme_title": "主题",
+    "theme_desc": "浅色、深色或跟随手机",
+    "theme_light": "浅色",
+    "theme_dark": "深色",
+    "theme_system": "系统",
+    "push_title": "花期提醒",
+    "push_on": "已开启 — 点按关闭",
+    "push_off": "郁金香盛开时通知你",
+    "privacy_full": "完整隐私政策",
     "account_label": "账户",
     "account_signin": "登录",
     "title": "设置",

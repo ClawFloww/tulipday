@@ -265,6 +265,9 @@
     "browse_routes": "Routen durchsuchen →"
   },
   "account": {
+    "signed_in_toast": "Du bist angemeldet",
+    "signed_out_toast": "Du bist abgemeldet",
+    "deleted_toast": "Dein Konto wurde gelöscht",
     "back": "Zurück",
     "title": "Konto",
     "subtitle": "Deine Daten auf all deinen Geräten",
@@ -296,6 +299,20 @@
     "delete_failed": "Löschen hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut."
   },
   "settings": {
+    "section_premium": "Saisonpass",
+    "premium_row": "TulipDay Saisonpass",
+    "premium_view": "Ansehen",
+    "premium_active": "Aktiv",
+    "section_appearance": "Darstellung",
+    "theme_title": "Design",
+    "theme_desc": "Hell, dunkel oder wie dein Handy",
+    "theme_light": "Hell",
+    "theme_dark": "Dunkel",
+    "theme_system": "System",
+    "push_title": "Blüte-Alarme",
+    "push_on": "An — tippen zum Ausschalten",
+    "push_off": "Benachrichtigung, wenn Tulpen in voller Blüte stehen",
+    "privacy_full": "Vollständige Datenschutzerklärung",
     "account_label": "Konto",
     "account_signin": "Anmelden",
     "title": "Einstellungen",

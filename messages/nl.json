@@ -265,6 +265,9 @@
     "browse_routes": "Bekijk routes →"
   },
   "account": {
+    "signed_in_toast": "Je bent ingelogd",
+    "signed_out_toast": "Je bent uitgelogd",
+    "deleted_toast": "Je account is verwijderd",
     "back": "Terug",
     "title": "Account",
     "subtitle": "Je gegevens op al je apparaten",
@@ -296,6 +299,20 @@
     "delete_failed": "Verwijderen is niet gelukt. Controleer je verbinding en probeer het opnieuw."
   },
   "settings": {
+    "section_premium": "Seizoenspas",
+    "premium_row": "TulipDay Seizoenspas",
+    "premium_view": "Bekijk",
+    "premium_active": "Actief",
+    "section_appearance": "Weergave",
+    "theme_title": "Thema",
+    "theme_desc": "Licht, donker of volg je telefoon",
+    "theme_light": "Licht",
+    "theme_dark": "Donker",
+    "theme_system": "Systeem",
+    "push_title": "Bloei-meldingen",
+    "push_on": "Aan — tik om uit te zetten",
+    "push_off": "Krijg een melding als tulpen in volle bloei staan",
+    "privacy_full": "Volledige privacyverklaring",
     "account_label": "Account",
     "account_signin": "Inloggen",
     "title": "Instellingen",

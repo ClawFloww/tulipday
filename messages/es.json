@@ -265,6 +265,9 @@
     "browse_routes": "Explorar rutas →"
   },
   "account": {
+    "signed_in_toast": "Has iniciado sesión",
+    "signed_out_toast": "Has cerrado sesión",
+    "deleted_toast": "Tu cuenta ha sido eliminada",
     "back": "Atrás",
     "title": "Cuenta",
     "subtitle": "Tus datos en todos tus dispositivos",
@@ -296,6 +299,20 @@
     "delete_failed": "No se pudo eliminar. Comprueba tu conexión e inténtalo de nuevo."
   },
   "settings": {
+    "section_premium": "Pase de temporada",
+    "premium_row": "Pase de temporada TulipDay",
+    "premium_view": "Ver",
+    "premium_active": "Activo",
+    "section_appearance": "Apariencia",
+    "theme_title": "Tema",
+    "theme_desc": "Claro, oscuro o como tu teléfono",
+    "theme_light": "Claro",
+    "theme_dark": "Oscuro",
+    "theme_system": "Sistema",
+    "push_title": "Alertas de floración",
+    "push_on": "Activado — toca para desactivar",
+    "push_off": "Recibe un aviso cuando los tulipanes estén en plena floración",
+    "privacy_full": "Política de privacidad completa",
     "account_label": "Cuenta",
     "account_signin": "Iniciar sesión",
     "title": "Ajustes",

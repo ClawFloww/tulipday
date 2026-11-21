@@ -265,6 +265,9 @@
     "browse_routes": "Browse routes →"
   },
   "account": {
+    "signed_in_toast": "You're signed in",
+    "signed_out_toast": "You're signed out",
+    "deleted_toast": "Your account has been deleted",
     "back": "Back",
     "title": "Account",
     "subtitle": "Your data on all your devices",
@@ -296,6 +299,20 @@
     "delete_failed": "Deleting didn't work. Check your connection and try again."
   },
   "settings": {
+    "section_premium": "Season pass",
+    "premium_row": "TulipDay Season Pass",
+    "premium_view": "View",
+    "premium_active": "Active",
+    "section_appearance": "Appearance",
+    "theme_title": "Theme",
+    "theme_desc": "Light, dark or follow your phone",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "push_title": "Bloom alerts",
+    "push_on": "On — tap to turn off",
+    "push_off": "Get notified when tulips are in full bloom",
+    "privacy_full": "Full privacy policy",
     "account_label": "Account",
     "account_signin": "Sign in",
     "title": "Settings",

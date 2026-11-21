@@ -1,80 +1,116 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Globe, Info, Mail, ShieldCheck, Flower2, Monitor,
-  ChevronDown, ChevronUp, ExternalLink, Check, Crown, Bell, BellOff, Loader2, UserRound,
+  Globe, Info, Mail, ShieldCheck, Flower2, Monitor, Settings,
+  ChevronDown, ChevronRight, Check, Crown, Bell, BellOff, Loader2, UserRound, FileText,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { getAccount } from "@/lib/account";
+import { tap } from "@/lib/haptics";
 import { useT, type Locale } from "@/lib/i18n-context";
+import { isPremium, refreshPremium } from "@/lib/premium";
 import { registerPushSubscription, unregisterPushSubscription, isPushSubscribed } from "@/lib/pushClient";
+import { Badge } from "@/components/ui/Badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-function Accordion({ icon, title, accent = "text-gray-600", children }: {
+const LANGUAGES: { locale: Locale; label: string }[] = [
+  { locale: "nl", label: "Nederlands" },
+  { locale: "en", label: "English"    },
+  { locale: "de", label: "Deutsch"    },
+  { locale: "fr", label: "Français"   },
+  { locale: "es", label: "Español"    },
+  { locale: "zh", label: "中文"        },
+];
+
+const CONTACT_EMAIL = "hello@tulipday.online";
+
+function Accordion({ icon, title, accent = "text-ink-2", children }: {
   icon: React.ReactNode; title: string; accent?: string; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-surface-2 rounded-2xl shadow-card overflow-hidden">
-      <button onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-surface-3 transition-colors">
+    <div className="bg-surface-2 rounded-2xl shadow-card border border-line overflow-hidden">
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open}
+        className="w-full flex items-center gap-3 px-4 min-h-[56px] text-left hover:bg-surface-3 transition-colors duration-fast
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">
         <span className={`flex-shrink-0 ${accent}`}>{icon}</span>
-        <span className="flex-1 text-sm font-bold" style={{ color: "var(--color-text)" }}>{title}</span>
-        <span className="flex-shrink-0" style={{ color: "var(--color-text-3)" }}>
-          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </span>
+        <span className="flex-1 text-[15px] font-bold text-ink">{title}</span>
+        <ChevronDown size={18} className={`flex-shrink-0 text-ink-3 transition-transform duration-base ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && (
-        <div className="px-4 pb-5 border-t border-[var(--color-border)]">
-          <div className="pt-4 text-sm leading-relaxed space-y-3"
-               style={{ color: "var(--color-text-2)" }}>
-            {children}
-          </div>
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-5 pt-4 border-t border-line text-body leading-relaxed space-y-3 text-ink-2">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function SettingsRow({ icon, label, accent = "text-gray-500", right, onClick }: {
-  icon: React.ReactNode; label: string; accent?: string; right?: React.ReactNode; onClick?: () => void;
+function SettingsRow({ icon, label, description, accent = "text-ink-2", right, onClick }: {
+  icon: React.ReactNode; label: string; description?: string; accent?: string; right?: React.ReactNode; onClick?: () => void;
 }) {
   return (
     <button onClick={onClick} disabled={!onClick}
-      className="w-full bg-surface-2 rounded-2xl shadow-card flex items-center gap-3 px-4 py-4
-                 hover:bg-surface-3 active:scale-[0.99] transition-all disabled:cursor-default disabled:active:scale-100">
+      className="w-full bg-surface-2 rounded-2xl shadow-card border border-line flex items-center gap-3 px-4 min-h-[56px] py-3
+                 hover:bg-surface-3 active:scale-[0.99] transition-[transform,background-color] duration-fast
+                 disabled:cursor-default disabled:active:scale-100
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
       <span className={`flex-shrink-0 ${accent}`}>{icon}</span>
-      <span className="flex-1 text-sm font-bold text-left" style={{ color: "var(--color-text)" }}>{label}</span>
+      <span className="flex-1 min-w-0 text-left">
+        <span className="block text-[15px] font-bold text-ink truncate">{label}</span>
+        {description && <span className="block text-caption text-ink-3 mt-0.5">{description}</span>}
+      </span>
       {right && <span className="flex-shrink-0">{right}</span>}
+      {onClick && !right && <ChevronRight size={18} className="flex-shrink-0 text-ink-3" aria-hidden />}
     </button>
   );
 }
 
+function SectionLabel({ label }: { label: string }) {
+  return <p className="text-caption font-extrabold uppercase tracking-widest px-1 pt-4 pb-1 text-ink-3">{label}</p>;
+}
+
 function LanguageSetting() {
   const { t, locale, setLocale } = useT();
+  const router   = useRouter();
+  const pathname = usePathname();
+
+  function choose(l: Locale) {
+    if (l === locale) return;
+    tap();
+    setLocale(l);
+    // Ook de taal in de URL bijwerken, anders blijven pagina's met de oude taalcode linken
+    router.replace(pathname.replace(/^\/[a-z]{2}(?=\/|$)/, `/${l}`));
+  }
 
   return (
-    <div className="bg-surface-2 rounded-2xl shadow-card overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--color-border)]">
-        <Globe size={18} className="text-tulip-500 flex-shrink-0" />
-        <span className="text-sm font-bold flex-1" style={{ color: "var(--color-text)" }}>{t("settings.language")}</span>
-        <span className="text-[11px] font-medium" style={{ color: "var(--color-text-3)" }}>
-          {locale === "en" ? "English" : "Nederlands"}
-        </span>
+    <div className="bg-surface-2 rounded-2xl shadow-card border border-line overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-line">
+        <Globe size={18} className="text-primary flex-shrink-0" />
+        <span className="text-[15px] font-bold flex-1 text-ink">{t("settings.language")}</span>
       </div>
-      <div className="p-2 flex gap-2">
-        {(["en", "nl"] as Locale[]).map((l) => {
+      <div role="radiogroup" aria-label={t("settings.language")} className="grid grid-cols-2 gap-2 p-2">
+        {LANGUAGES.map(({ locale: l, label }) => {
           const active = locale === l;
           return (
-            <button key={l} onClick={() => setLocale(l)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold
-                          border-2 transition-all duration-200 active:scale-[0.97]
-                          ${active ? "bg-tulip-500 border-tulip-500 text-white" : "bg-surface-3 border-[var(--color-border)] hover:border-tulip-400"}`}
-              style={{ color: active ? "white" : "var(--color-text-2)" }}>
-              <span className="text-base">{l === "en" ? "🇬🇧" : "🇳🇱"}</span>
-              {l === "en" ? "English" : "Nederlands"}
-              {active && <Check size={14} className="text-white/80" />}
+            <button key={l} role="radio" aria-checked={active} onClick={() => choose(l)}
+              className={`flex items-center justify-between gap-2 min-h-touch px-3.5 rounded-xl text-label border transition-colors duration-fast
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                          ${active ? "bg-primary-subtle border-primary text-primary" : "bg-surface-3 border-transparent text-ink-2"}`}>
+              {label}
+              {active && <Check size={15} aria-hidden />}
             </button>
           );
         })}
@@ -83,16 +119,8 @@ function LanguageSetting() {
   );
 }
 
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <p className="text-[11px] font-extrabold uppercase tracking-widest px-1 pt-2 pb-1"
-       style={{ color: "var(--color-text-3)" }}>
-      {label}
-    </p>
-  );
-}
-
 function PushToggle() {
+  const { t, locale } = useT();
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading]       = useState(false);
   const [supported, setSupported]   = useState(false);
@@ -112,31 +140,30 @@ function PushToggle() {
       await unregisterPushSubscription();
       setSubscribed(false);
     } else {
-      const ok = await registerPushSubscription();
+      const ok = await registerPushSubscription(locale);
       setSubscribed(ok);
     }
     setLoading(false);
   }
 
   return (
-    <button onClick={toggle} disabled={loading}
-      className="w-full bg-surface-2 rounded-2xl shadow-card flex items-center gap-3 px-4 py-4 hover:bg-surface-3 active:scale-[0.99] transition-all">
-      <span className={subscribed ? "text-tulip-500" : "text-[var(--color-text-3)]"}>
+    <button onClick={toggle} disabled={loading} role="switch" aria-checked={subscribed}
+      className="w-full bg-surface-2 rounded-2xl shadow-card border border-line flex items-center gap-3 px-4 min-h-[64px] py-3
+                 hover:bg-surface-3 active:scale-[0.99] transition-[transform,background-color] duration-fast
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+      <span className={subscribed ? "text-primary" : "text-ink-3"}>
         {subscribed ? <Bell size={18} /> : <BellOff size={18} />}
       </span>
-      <div className="flex-1 text-left">
-        <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Bloei-meldingen</p>
-        <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
-          {subscribed ? "Actief — tik om uit te zetten" : "Ontvang alerts als tulpen in volle bloei zijn"}
-        </p>
-      </div>
+      <span className="flex-1 text-left">
+        <span className="block text-[15px] font-bold text-ink">{t("settings.push_title")}</span>
+        <span className="block text-caption mt-0.5 text-ink-3">{subscribed ? t("settings.push_on") : t("settings.push_off")}</span>
+      </span>
       {loading
-        ? <Loader2 size={16} className="animate-spin" style={{ color: "var(--color-text-3)" }} />
-        : <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 ${subscribed ? "bg-tulip-500" : ""}`}
-               style={!subscribed ? { backgroundColor: "var(--color-surface-3)" } : {}}>
-            <div className={`w-4 h-4 rounded-full shadow transition-transform ${subscribed ? "translate-x-5 bg-white" : "translate-x-0"}`}
-                 style={!subscribed ? { backgroundColor: "var(--color-text-3)" } : {}} />
-          </div>
+        ? <Loader2 size={16} className="animate-spin text-ink-3" />
+        : <span className={`w-11 h-6 rounded-full transition-colors duration-base flex items-center px-1 ${subscribed ? "bg-primary" : "bg-surface-3"}`}>
+            <span className={`w-4 h-4 rounded-full shadow-sm transition-transform duration-base ease-out-soft
+                              ${subscribed ? "translate-x-5 bg-white" : "translate-x-0 bg-ink-3"}`} />
+          </span>
       }
     </button>
   );
@@ -159,17 +186,35 @@ function AccountRow() {
     <SettingsRow
       icon={<UserRound size={18} />}
       label={signedIn && email ? email : t("settings.account_label")}
-      accent="text-tulip-500"
-      right={!signedIn
-        ? <span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">{t("settings.account_signin")}</span>
-        : undefined}
+      accent="text-primary"
+      right={!signedIn ? <Badge tone="primary">{t("settings.account_signin")}</Badge> : undefined}
       onClick={() => router.push(`/${locale}/account`)}
     />
   );
 }
 
-export default function SettingsPage() {
+function PremiumRow() {
   const { t, locale } = useT();
+  const router = useRouter();
+  const [premium, setPremium] = useState(false);
+
+  useEffect(() => { setPremium(isPremium()); refreshPremium().then(setPremium); }, []);
+
+  return (
+    <SettingsRow
+      icon={<Crown size={18} />}
+      label={t("settings.premium_row")}
+      accent="text-primary"
+      right={premium
+        ? <Badge tone="success">{t("settings.premium_active")}</Badge>
+        : <Badge tone="primary">{t("settings.premium_view")}</Badge>}
+      onClick={() => router.push(`/${locale}/premium`)}
+    />
+  );
+}
+
+export default function SettingsPage() {
+  const { t } = useT();
   const router = useRouter();
 
   const etiquetteRows = [
@@ -186,42 +231,35 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
+    <div className="min-h-screen bg-surface pb-safe-nav">
 
-      <div className="px-5 pt-12 pb-5" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-tulip-50 flex items-center justify-center">
-            <span className="text-xl">🌷</span>
+      <header className="px-5 pt-safe bg-surface-2 border-b border-line">
+        <div className="flex items-center gap-3 pt-6 pb-5">
+          <div className="w-10 h-10 rounded-full bg-primary-subtle flex items-center justify-center">
+            <Settings size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-bold text-[var(--color-text)] leading-tight">{t("settings.title")}</h1>
-            <p className="text-xs text-[var(--color-text-3)]">{t("settings.subtitle")}</p>
+            <h1 className="text-title text-ink">{t("settings.title")}</h1>
+            <p className="text-caption text-ink-3">{t("settings.subtitle")}</p>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="px-4 pt-5 space-y-2">
+      <div className="px-4 pt-1 pb-6 space-y-2">
 
         <SectionLabel label={t("settings.account_label")} />
         <AccountRow />
 
-        <SectionLabel label="Premium" />
-        <SettingsRow
-          icon={<Crown size={18} />}
-          label="TulipDay Premium"
-          accent="text-tulip-500"
-          right={<span className="text-xs font-bold text-tulip-500 bg-tulip-50 px-2.5 py-1 rounded-full">Upgrade →</span>}
-          onClick={() => router.push(`/${locale}/premium`)}
-        />
+        <SectionLabel label={t("settings.section_premium")} />
+        <PremiumRow />
 
-        {/* Weergave-sectie met thema-toggle */}
-        <SectionLabel label="Weergave" />
-        <div className="bg-surface-2 rounded-2xl shadow-card px-4 py-4">
+        <SectionLabel label={t("settings.section_appearance")} />
+        <div className="bg-surface-2 rounded-2xl shadow-card border border-line px-4 py-4">
           <div className="flex items-center gap-3 mb-3">
-            <Monitor size={18} className="text-tulip-500 flex-shrink-0" />
+            <Monitor size={18} className="text-primary flex-shrink-0" />
             <div>
-              <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Donkere modus</p>
-              <p className="text-xs" style={{ color: "var(--color-text-3)" }}>Kies licht, donker of volg het systeem</p>
+              <p className="text-[15px] font-bold text-ink">{t("settings.theme_title")}</p>
+              <p className="text-caption text-ink-3">{t("settings.theme_desc")}</p>
             </div>
           </div>
           <ThemeToggle />
@@ -233,15 +271,13 @@ export default function SettingsPage() {
 
         <SectionLabel label={t("settings.section_about")} />
 
-        <Accordion icon={<Info size={18} />} title={t("settings.about_title")} accent="text-tulip-500">
+        <Accordion icon={<Info size={18} />} title={t("settings.about_title")} accent="text-primary">
           <p>{t("settings.about_p1")}</p>
           <p>{t("settings.about_p2")}</p>
           <p>{t("settings.about_p3")}</p>
           <div className="pt-1 flex flex-wrap gap-2">
             {(["about_tag_season", "about_tag_version", "about_tag_made"] as const).map((key) => (
-              <span key={key} className="text-[11px] bg-tulip-50 text-tulip-600 font-semibold px-2.5 py-1 rounded-full">
-                {t(`settings.${key}`)}
-              </span>
+              <Badge key={key} tone="primary">{t(`settings.${key}`)}</Badge>
             ))}
           </div>
         </Accordion>
@@ -249,46 +285,50 @@ export default function SettingsPage() {
         <SettingsRow
           icon={<Mail size={18} />}
           label={t("settings.contact")}
-          accent="text-forest-500"
-          right={
-            <span className="flex items-center gap-1 text-xs" style={{ color: "var(--color-text-3)" }}>
-              hello@tulipday.online <ExternalLink size={11} />
-            </span>
-          }
-          onClick={() => window.open("mailto:hello@tulipday.online", "_blank")}
+          description={CONTACT_EMAIL}
+          accent="text-success"
+          // window.location i.p.v. window.open: opent in de app-WebView de mail-app
+          onClick={() => { window.location.href = `mailto:${CONTACT_EMAIL}`; }}
         />
 
         <SectionLabel label={t("settings.section_legal")} />
 
-        <Accordion icon={<ShieldCheck size={18} />} title={t("settings.privacy_title")} accent="text-forest-500">
+        <Accordion icon={<ShieldCheck size={18} />} title={t("settings.privacy_title")} accent="text-success">
           <p>{t("settings.privacy_p1")}</p>
           <p>
-            <strong style={{ color: "var(--color-text)" }}>{t("settings.privacy_what_store")}</strong>{" "}
+            <strong className="text-ink">{t("settings.privacy_what_store")}</strong>{" "}
             {t("settings.privacy_what_store_body")}
           </p>
           <p>
-            <strong style={{ color: "var(--color-text)" }}>{t("settings.privacy_not_store")}</strong>{" "}
+            <strong className="text-ink">{t("settings.privacy_not_store")}</strong>{" "}
             {t("settings.privacy_not_store_body")}
           </p>
           <p>{t("settings.privacy_p4")}</p>
           <p>{t("settings.privacy_p5")}</p>
         </Accordion>
 
+        <SettingsRow
+          icon={<FileText size={18} />}
+          label={t("settings.privacy_full")}
+          accent="text-success"
+          onClick={() => router.push("/privacy")}
+        />
+
         <SectionLabel label={t("settings.section_etiquette")} />
 
-        <Accordion icon={<Flower2 size={18} />} title={t("settings.etiquette_title")} accent="text-tulip-500">
-          <p className="font-bold text-[#1A1A1A] mb-1">{t("settings.etiquette_intro")}</p>
+        <Accordion icon={<Flower2 size={18} />} title={t("settings.etiquette_title")} accent="text-primary">
+          <p className="font-bold text-ink mb-1">{t("settings.etiquette_intro")}</p>
           {etiquetteRows.map(({ emoji, key }) => (
             <div key={key} className="flex items-start gap-3">
-              <span className="text-base leading-none mt-0.5 flex-shrink-0">{emoji}</span>
-              <p className="text-sm leading-snug">{t(`settings.${key}`)}</p>
+              <span className="text-base leading-none mt-0.5 flex-shrink-0" aria-hidden>{emoji}</span>
+              <p className="leading-snug">{t(`settings.${key}`)}</p>
             </div>
           ))}
         </Accordion>
 
-        <div className="pt-4 pb-2 text-center space-y-1">
-          <p className="text-[11px] font-medium" style={{ color: "var(--color-text-3)" }}>{t("settings.footer_version")}</p>
-          <p className="text-[11px]" style={{ color: "var(--color-text-3)" }}>{t("settings.footer_copyright", { year: new Date().getFullYear() })}</p>
+        <div className="pt-6 pb-2 text-center space-y-1 text-caption text-ink-3">
+          <p>{t("settings.footer_version")}</p>
+          <p>{t("settings.footer_copyright", { year: new Date().getFullYear() })}</p>
         </div>
       </div>
 
