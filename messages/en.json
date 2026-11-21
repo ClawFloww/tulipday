@@ -105,7 +105,8 @@
     "photo_spot": "Photo spot",
     "attraction": "Attraction",
     "food": "Food & drink",
-    "parking": "Parking"
+    "parking": "Parking",
+    "bike_rental": "Bike rental"
   },
   "route_type": {
     "bike": "Cycling",
@@ -175,7 +176,20 @@
     "route_saved": "Saved!",
     "route_saved_sub": "Find it under Saved → Yours",
     "save_route": "Save route",
-    "save_route_sub": "Pick a name for this route"
+    "save_route_sub": "Pick a name for this route",
+    "navigate_here": "Navigate here",
+    "open_now": "Open now",
+    "closed_now": "Closed",
+    "along_fields": "Bulb fields along the route",
+    "along_food": "Food & drinks on the way",
+    "by_bike": "Cycling",
+    "on_foot": "Walking",
+    "route_on_map": "Show on map",
+    "route_off_map": "Hide from map",
+    "start_route": "Start",
+    "details": "Details",
+    "read_more": "Read more",
+    "read_less": "Less"
   },
   "location": {
     "photo_view": "Photo",

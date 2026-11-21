@@ -105,7 +105,8 @@
     "photo_spot": "Spot photo",
     "attraction": "Attraction",
     "food": "Nourriture & boissons",
-    "parking": "Parking"
+    "parking": "Parking",
+    "bike_rental": "Location de vélos"
   },
   "route_type": {
     "bike": "Cyclisme",
@@ -175,7 +176,20 @@
     "route_saved": "Enregistré !",
     "route_saved_sub": "Retrouvez-le sous Enregistré → Mes",
     "save_route": "Enregistrer l'itinéraire",
-    "save_route_sub": "Choisissez un nom pour cet itinéraire"
+    "save_route_sub": "Choisissez un nom pour cet itinéraire",
+    "navigate_here": "Y aller",
+    "open_now": "Ouvert",
+    "closed_now": "Fermé",
+    "along_fields": "Champs de fleurs sur le parcours",
+    "along_food": "Où manger en chemin",
+    "by_bike": "À vélo",
+    "on_foot": "À pied",
+    "route_on_map": "Sur la carte",
+    "route_off_map": "Retirer",
+    "start_route": "Démarrer",
+    "details": "Détails",
+    "read_more": "Lire plus",
+    "read_less": "Moins"
   },
   "location": {
     "photo_view": "Photo",

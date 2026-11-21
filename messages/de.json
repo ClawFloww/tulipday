@@ -105,7 +105,8 @@
     "photo_spot": "Fotospot",
     "attraction": "Attraktion",
     "food": "Essen & Trinken",
-    "parking": "Parkplatz"
+    "parking": "Parkplatz",
+    "bike_rental": "Fahrradverleih"
   },
   "route_type": {
     "bike": "Radfahren",
@@ -175,7 +176,20 @@
     "route_saved": "Gespeichert!",
     "route_saved_sub": "Zu finden unter Gespeichert → Eigene",
     "save_route": "Route speichern",
-    "save_route_sub": "Wählen Sie einen Namen für diese Route"
+    "save_route_sub": "Wählen Sie einen Namen für diese Route",
+    "navigate_here": "Hierhin navigieren",
+    "open_now": "Jetzt geöffnet",
+    "closed_now": "Geschlossen",
+    "along_fields": "Blumenfelder entlang der Route",
+    "along_food": "Essen & Trinken unterwegs",
+    "by_bike": "Radfahren",
+    "on_foot": "Zu Fuß",
+    "route_on_map": "Auf Karte",
+    "route_off_map": "Von Karte",
+    "start_route": "Start",
+    "details": "Details",
+    "read_more": "Mehr lesen",
+    "read_less": "Weniger"
   },
   "location": {
     "photo_view": "Foto",

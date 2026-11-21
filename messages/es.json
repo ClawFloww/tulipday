@@ -105,7 +105,8 @@
     "photo_spot": "Spot fotográfico",
     "attraction": "Atracción",
     "food": "Comida y bebida",
-    "parking": "Aparcamiento"
+    "parking": "Aparcamiento",
+    "bike_rental": "Alquiler de bicis"
   },
   "route_type": {
     "bike": "Ciclismo",
@@ -175,7 +176,20 @@
     "route_saved": "¡Guardado!",
     "route_saved_sub": "Encuéntralo en Guardado → Tuyo",
     "save_route": "Guardar ruta",
-    "save_route_sub": "Elige un nombre para esta ruta"
+    "save_route_sub": "Elige un nombre para esta ruta",
+    "navigate_here": "Ir aquí",
+    "open_now": "Abierto ahora",
+    "closed_now": "Cerrado",
+    "along_fields": "Campos de flores en la ruta",
+    "along_food": "Comer y beber en el camino",
+    "by_bike": "En bici",
+    "on_foot": "A pie",
+    "route_on_map": "En el mapa",
+    "route_off_map": "Quitar del mapa",
+    "start_route": "Empezar",
+    "details": "Detalles",
+    "read_more": "Leer más",
+    "read_less": "Menos"
   },
   "location": {
     "photo_view": "Foto",

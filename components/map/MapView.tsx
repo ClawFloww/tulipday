@@ -1,88 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
-import type { Location, Category } from "@/lib/types";
+import type { Location } from "@/lib/types";
+import { X, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { isCurrentlyOpen } from "@/lib/openingHours";
-import { BloomBadge } from "@/components/ui/BloomBadge";
-import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
 import { saveCustomRoute } from "@/lib/customRoutes";
-import { MAP_FONT_BOLD, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { MAP_PRIMARY, addMapIcons } from "@/lib/mapIcons";
+import { addRouteLayers, applyRouteTheme, boundsOf, routeLayerIds, setRouteLines } from "@/lib/mapLayers";
+import { MAP_FONT_BOLD, isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { LocationSheet } from "@/components/map/LocationSheet";
+import { RouteSheet, type RouteSheetDetail, type SheetRoute } from "@/components/map/RouteSheet";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BOLLENSTREEK_CENTER: [number, number] = [4.56, 52.27];
-const SOURCE_ID      = "locations";
-const DRAW_SOURCE_ID = "draw-route";
+const SOURCE_ID        = "locations";
+const DRAW_SOURCE_ID   = "draw-route";
+const ROUTES_SOURCE_ID = "map-routes";
+const HALO_LAYER_ID    = "selected-halo";
 
-// ─── Geometry helpers ─────────────────────────────────────────────────────────
-
-function subsamplePoints<T>(arr: T[], max: number): T[] {
-  if (arr.length <= max) return arr;
-  const out: T[] = [arr[0]];
-  const step = (arr.length - 1) / (max - 1);
-  for (let i = 1; i < max - 1; i++) out.push(arr[Math.round(i * step)]);
-  out.push(arr[arr.length - 1]);
-  return out;
-}
-
-async function fetchSnappedGeometry(
-  lnglats: [number, number][], // [lng, lat]
-  profile: string,
-): Promise<[number, number][] | null> {
-  if (lnglats.length < 2) return null;
-  const waypoints = subsamplePoints(lnglats, 25);
-  const coords = waypoints.map(([lng, lat]) => `${lng},${lat}`).join(";");
-  try {
-    const res = await fetch(
-      `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-      { signal: AbortSignal.timeout(8000) },
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data.routes?.[0]?.geometry?.coordinates as [number, number][]) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function activityToOSRMProfile(activity: string | null): string {
-  return activity === "Wandelroute" ? "routed-foot" : "routed-bike";
-}
+// Ruimte voor de zwevende filterbalk bovenaan
+const TOP_PADDING = 110;
 
 // ─── Route browser constants ──────────────────────────────────────────────────
 
-type MapRoute = {
-  id: string;
-  title: string;
-  slug: string;
-  activity: string | null;
-  distance_km: number | null;
-  difficulty: string | null;
-  cover_image_url: string | null;
-  geometry_points: [number, number][] | null;
-};
+type MapRoute = SheetRoute;
 
-type FullRouteDetail = {
-  description: string | null;
-  duration_minutes: number | null;
-  environment: string[] | null;
-  themes: string[] | null;
-  target_audience: string[] | null;
-  bloom_peak: string[] | null;
-};
-
-type StopLocation = { id: string; title: string; slug: string; category: Category; image_url: string | null };
-type FetchedStop  = { id: string; sort_order: number; locations: StopLocation };
-
-const SLOT_COLORS   = ["#E8102A", "#3b82f6", "#f59e0b"] as const;
-const ROUTE_SOURCES = ["map-route-0", "map-route-1", "map-route-2"] as const;
+/** Supabase slaat [lat, lng] op; MapLibre wil [lng, lat]. */
+const toLngLat = (points: [number, number][] | null): [number, number][] =>
+  (points ?? []).map(([lat, lng]) => [lng, lat]);
 
 type PanelActivity = { id: string; label: string; Icon?: typeof Bike };
 const PANEL_ACTIVITIES: PanelActivity[] = [
@@ -98,15 +51,6 @@ const OSRM_BACKENDS: Record<string, string> = {
   foot:    "https://routing.openstreetmap.de/routed-foot",
   cycling: "https://routing.openstreetmap.de/routed-bike",
   driving: "https://routing.openstreetmap.de/routed-car",
-};
-
-const CATEGORY_COLOR: Record<Category, string> = {
-  flower_field: "#f43f5e",
-  photo_spot:   "#3b82f6",
-  attraction:   "#22c55e",
-  food:         "#f97316",
-  parking:      "#94a3b8",
-  bike_rental:  "#8b5cf6",
 };
 
 const MAP_SELECT = "id,title,slug,latitude,longitude,category,bloom_status,address,image_url,access_type,crowd_score,opening_hours";
@@ -221,7 +165,6 @@ function locationsToGeoJSON(
         bloom_status: loc.bloom_status,
         address:      loc.address,
         image_url:    loc.image_url,
-        color:        CATEGORY_COLOR[loc.category] ?? "#94a3b8",
         // Voor horeca: null = geen data, true = open, false = gesloten
         is_open:      loc.category === "food" ? isCurrentlyOpen(loc.opening_hours) : null,
       },
@@ -319,7 +262,8 @@ function RoutesBrowserPanel({
   routes,
   activeActivity,
   onActivityChange,
-  routeSlots,
+  onMapIds,
+  focusedId,
   onToggle,
   onSelect,
   onClose,
@@ -327,7 +271,8 @@ function RoutesBrowserPanel({
   routes: MapRoute[];
   activeActivity: string;
   onActivityChange: (a: string) => void;
-  routeSlots: Record<string, number>;
+  onMapIds: string[];
+  focusedId: string | null;
   onToggle: (route: MapRoute) => void;
   onSelect: (route: MapRoute) => void;
   onClose: () => void;
@@ -338,15 +283,13 @@ function RoutesBrowserPanel({
     ? routes
     : routes.filter((r) => r.activity === activeActivity);
 
-  const activeCount = Object.keys(routeSlots).length;
-
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-12 pb-2 border-b border-gray-100">
         <div>
           <p className="text-sm font-extrabold text-gray-900">Routes</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">{filtered.length} routes · max 3 tegelijk</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{filtered.length} routes</p>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -389,10 +332,8 @@ function RoutesBrowserPanel({
       {/* Route list */}
       <div className="flex-1 overflow-y-auto">
         {filtered.map((route) => {
-          const slotIdx = routeSlots[route.id];
-          const isOnMap = slotIdx !== undefined;
-          const slotColor = isOnMap ? SLOT_COLORS[slotIdx] : null;
-          const canAdd = !isOnMap && activeCount < 3;
+          const isOnMap   = onMapIds.includes(route.id);
+          const isFocused = route.id === focusedId;
 
           return (
             <div
@@ -424,14 +365,18 @@ function RoutesBrowserPanel({
                   )}
                 </div>
               </div>
+              {/* Geselecteerde route in merkrood, andere routes op de kaart gedimd */}
               <button
-                onClick={(e) => { e.stopPropagation(); if (isOnMap || canAdd) onToggle(route); }}
-                disabled={!isOnMap && !canAdd}
-                className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all disabled:opacity-30
-                  ${isOnMap ? "" : "border-2 border-gray-200"}`}
-                style={isOnMap ? { backgroundColor: slotColor! } : {}}
+                onClick={(e) => { e.stopPropagation(); onToggle(route); }}
+                aria-label={isOnMap ? "Van kaart halen" : "Op kaart tonen"}
+                aria-pressed={isOnMap}
+                className="flex-shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-full
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                {isOnMap && <X size={10} className="text-white" />}
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-fast
+                  ${isOnMap ? (isFocused ? "bg-primary" : "bg-ink-3") : "border-2 border-line-strong"}`}>
+                  {isOnMap && <Check size={12} className="text-on-primary" aria-hidden />}
+                </span>
               </button>
             </div>
           );
@@ -441,331 +386,6 @@ function RoutesBrowserPanel({
             <p className="text-xs text-gray-400">Geen routes gevonden</p>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ─── RouteDetailSheet ─────────────────────────────────────────────────────────
-
-function RouteDetailSheet({
-  route,
-  detail,
-  stops,
-  loading,
-  isOnMap,
-  slotColor,
-  canAddToMap,
-  onToggleMap,
-  onClose,
-  onDetails,
-  onStart,
-}: {
-  route: MapRoute;
-  detail: FullRouteDetail | null;
-  stops: FetchedStop[];
-  loading: boolean;
-  isOnMap: boolean;
-  slotColor: string | null;
-  canAddToMap: boolean;
-  onToggleMap: () => void;
-  onClose: () => void;
-  onDetails: () => void;
-  onStart: () => void;
-}) {
-  const [descExpanded, setDescExpanded] = useState(false);
-  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=800";
-
-  return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-40 rounded-t-3xl shadow-2xl shadow-black/30 animate-slide-up flex flex-col"
-      style={{ maxHeight: "88vh", backgroundColor: "var(--color-surface-2)" }}
-    >
-      {/* Drag handle */}
-      <div className="flex-shrink-0 flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
-      </div>
-
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto">
-
-        {/* Cover image */}
-        <div className="relative w-full h-44 flex-shrink-0">
-          <Image
-            src={route.cover_image_url ?? fallback}
-            alt={route.title}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-          >
-            <X size={14} className="text-white" />
-          </button>
-        </div>
-
-        {/* Title + stats */}
-        <div className="px-4 pt-3 pb-3">
-          {route.activity && (
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 mb-2">
-              {route.activity}
-            </span>
-          )}
-          <h2 className="text-base font-extrabold leading-tight mb-3" style={{ color: "var(--color-text)" }}>
-            {route.title}
-          </h2>
-
-          <div className="flex items-center gap-3 flex-wrap">
-            {route.distance_km && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                   style={{ backgroundColor: "var(--color-surface-3)" }}>
-                <span className="text-sm">📏</span>
-                <span className="text-xs font-bold" style={{ color: "var(--color-text)" }}>{route.distance_km} km</span>
-              </div>
-            )}
-            {detail?.duration_minutes && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                   style={{ backgroundColor: "var(--color-surface-3)" }}>
-                <span className="text-sm">🕐</span>
-                <span className="text-xs font-bold" style={{ color: "var(--color-text)" }}>{fmtDuration(detail.duration_minutes * 60)}</span>
-              </div>
-            )}
-            {route.difficulty && (
-              <div className="px-2.5 py-1.5 rounded-xl" style={{ backgroundColor: "var(--color-surface-3)" }}>
-                <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>{route.difficulty}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="h-px mx-4" style={{ backgroundColor: "var(--color-border)" }} />
-
-        {loading ? (
-          <div className="p-4 space-y-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-4 rounded-lg animate-pulse"
-                   style={{
-                     width: i % 2 === 0 ? "100%" : "75%",
-                     backgroundColor: "var(--color-surface-3)",
-                   }} />
-            ))}
-          </div>
-        ) : (
-          <>
-            {/* Tags */}
-            {((detail?.environment?.length ?? 0) > 0 || (detail?.themes?.length ?? 0) > 0) && (
-              <div className="px-4 pt-3 pb-1 flex flex-wrap gap-1.5">
-                {detail?.environment?.map((e) => (
-                  <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{e}</span>
-                ))}
-                {detail?.themes?.map((t) => (
-                  <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{t}</span>
-                ))}
-              </div>
-            )}
-
-            {/* Description */}
-            {detail?.description && (
-              <div className="px-4 py-3">
-                <p className={`text-xs leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}
-                   style={{ color: "var(--color-text-2)" }}>
-                  {detail.description}
-                </p>
-                {detail.description.length > 150 && (
-                  <button
-                    onClick={() => setDescExpanded((p) => !p)}
-                    className="text-xs font-bold text-tulip-500 mt-1.5"
-                  >
-                    {descExpanded ? "Minder" : "Lees meer"}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Stops */}
-            {stops.length > 0 && (
-              <div className="px-4 pt-1 pb-4">
-                <div className="h-px mb-3" style={{ backgroundColor: "var(--color-border)" }} />
-                <h3 className="text-xs font-extrabold mb-3" style={{ color: "var(--color-text)" }}>Routestops</h3>
-                <div className="relative">
-                  {/* Vertical connector line */}
-                  <div className="absolute left-[13px] top-6 bottom-6 w-px"
-                       style={{ backgroundColor: "var(--color-border)" }} />
-
-                  {/* Start */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold z-10"
-                         style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}>
-                      A
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>Startpunt</span>
-                  </div>
-
-                  {/* Numbered stops */}
-                  {stops.map((stop, idx) => (
-                    <div key={stop.id} className="flex items-center gap-3 mb-3">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-bold z-10"
-                           style={{
-                             backgroundColor: "var(--color-surface-2)",
-                             borderColor: "var(--color-border)",
-                             color: "var(--color-text-2)",
-                           }}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 flex items-center gap-2 min-w-0">
-                        <p className="flex-1 text-xs font-semibold line-clamp-1" style={{ color: "var(--color-text)" }}>
-                          {stop.locations.title}
-                        </p>
-                        {stop.locations.image_url && (
-                          <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
-                               style={{ backgroundColor: "var(--color-surface-3)" }}>
-                            <Image src={stop.locations.image_url} alt={stop.locations.title} fill className="object-cover" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* End */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold z-10"
-                         style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}>
-                      B
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: "var(--color-text-2)" }}>Eindpunt</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Spacer so content doesn't hide behind bottom bar */}
-        <div className="h-24" />
-      </div>
-
-      {/* Bottom action bar — 3 knoppen: Op kaart / Details / Start */}
-      <div
-        className="flex-shrink-0 px-4 pt-3 flex gap-2"
-        style={{
-          borderTop: "1px solid var(--color-border)",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
-        }}
-      >
-        <button
-          onClick={onToggleMap}
-          disabled={!isOnMap && !canAddToMap}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 disabled:opacity-40"
-          style={isOnMap
-            ? { backgroundColor: slotColor!, color: "#fff" }
-            : { backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
-        >
-          <MapPin size={13} />
-          {isOnMap ? "Van kaart" : "Op kaart"}
-        </button>
-        <button
-          onClick={onDetails}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95"
-          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
-        >
-          Details
-        </button>
-        <button
-          onClick={onStart}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-tulip-500 text-white text-xs font-bold transition-all active:scale-95"
-          style={{ boxShadow: "0 4px 12px rgba(232,16,42,0.32)" }}
-        >
-          Start
-          <ChevronRight size={13} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── PreviewCard ──────────────────────────────────────────────────────────────
-
-function PreviewCard({
-  location,
-  onClose,
-  onNavigate,
-  t,
-}: {
-  location: MapLocation;
-  onClose: () => void;
-  onNavigate: () => void;
-  t: (key: string) => string;
-}) {
-  const startY = useRef<number | null>(null);
-
-  function onPointerDown(e: React.PointerEvent) { startY.current = e.clientY; }
-  function onPointerUp(e: React.PointerEvent) {
-    if (startY.current !== null) {
-      if (e.clientY - startY.current < -50) onNavigate();
-      startY.current = null;
-    }
-  }
-
-  const fallback = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=600";
-  const dot = CATEGORY_COLOR[location.category] ?? "#94a3b8";
-
-  return (
-    <div
-      className="absolute bottom-above-nav left-3 right-3 z-30 rounded-3xl bg-white shadow-2xl shadow-black/20 overflow-hidden animate-slide-up"
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-    >
-      <div className="flex justify-center pt-2.5 pb-1">
-        <div className="w-10 h-1 bg-gray-200 rounded-full" />
-      </div>
-
-      <div className="flex gap-3 px-4 pb-4">
-        <div className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden">
-          <Image
-            src={location.image_url ?? fallback}
-            alt={location.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-extrabold text-gray-900 text-base leading-tight line-clamp-2 flex-1">
-              {location.title}
-            </h3>
-            <button
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
-              className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-            >
-              <X size={14} />
-            </button>
-          </div>
-
-          {location.bloom_status && (
-            <div className="mb-2">
-              <BloomBadge status={location.bloom_status} />
-            </div>
-          )}
-
-          {location.address && (
-            <p className="flex items-center gap-1 text-[11px] text-gray-400 mb-2.5 truncate">
-              <MapPin size={10} className="flex-shrink-0" />
-              {location.address}
-            </p>
-          )}
-
-          <button
-            onClick={onNavigate}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95"
-            style={{ backgroundColor: dot }}
-          >
-            {t("map.view_details")}
-            <ChevronUp size={13} />
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -800,14 +420,14 @@ export default function MapView() {
   // Route browser state
   const [mapRoutes,        setMapRoutes]        = useState<MapRoute[]>([]);
   const [routePanelOpen,   setRoutePanelOpen]   = useState(false);
-  const [routeSlots,       setRouteSlots]        = useState<Record<string, number>>({});
+  const [onMapRouteIds,    setOnMapRouteIds]    = useState<string[]>([]);
+  const [focusedRouteId,   setFocusedRouteId]   = useState<string | null>(null);
   const [routesPanelAct,   setRoutesPanelAct]   = useState("all");
   const [showRouteHint,    setShowRouteHint]    = useState(false);
 
   // Route detail sheet state
   const [selectedMapRoute,    setSelectedMapRoute]    = useState<MapRoute | null>(null);
-  const [routeDetail,         setRouteDetail]         = useState<FullRouteDetail | null>(null);
-  const [routeStops,          setRouteStops]          = useState<FetchedStop[]>([]);
+  const [routeDetail,         setRouteDetail]         = useState<RouteSheetDetail | null>(null);
   const [routeDetailLoading,  setRouteDetailLoading]  = useState(false);
 
   // Refs so MapLibre event handlers always see current values
@@ -819,8 +439,9 @@ export default function MapView() {
   const waypointMarkersRef    = useRef<maplibregl.Marker[]>([]);
   const userMarkerRef         = useRef<maplibregl.Marker | null>(null);
   const mapRoutesRef          = useRef<MapRoute[]>([]);
-  const routeSlotsRef         = useRef<Record<string, number>>({});
-  const snappedGeometriesRef  = useRef<Record<string, [number, number][]>>({});
+  const onMapRouteIdsRef      = useRef<string[]>([]);
+  const focusedRouteIdRef     = useRef<string | null>(null);
+  const routePanelOpenRef     = useRef(false);
 
   locationsRef.current    = locations;
   activeFilterRef.current = activeFilter;
@@ -828,7 +449,9 @@ export default function MapView() {
   drawModeRef.current     = drawMode;
   waypointsRef.current    = waypoints;
   mapRoutesRef.current    = mapRoutes;
-  routeSlotsRef.current   = routeSlots;
+  onMapRouteIdsRef.current = onMapRouteIds;
+  focusedRouteIdRef.current = focusedRouteId;
+  routePanelOpenRef.current = routePanelOpen;
 
   // ── Fetch locations ──
   useEffect(() => {
@@ -862,24 +485,17 @@ export default function MapView() {
     if (!selectedMapRoute) return;
     setRouteDetailLoading(true);
     setRouteDetail(null);
-    setRouteStops([]);
 
-    Promise.all([
-      supabase
-        .from("routes")
-        .select("description,duration_minutes,environment,themes,target_audience,bloom_peak")
-        .eq("id", selectedMapRoute.id)
-        .single(),
-      supabase
-        .from("route_stops")
-        .select("id,sort_order,locations(id,title,slug,category,image_url)")
-        .eq("route_id", selectedMapRoute.id)
-        .order("sort_order", { ascending: true }),
-    ]).then(([{ data: detail }, { data: stops }]) => {
-      if (detail) setRouteDetail(detail as FullRouteDetail);
-      if (stops)  setRouteStops(stops as unknown as FetchedStop[]);
-      setRouteDetailLoading(false);
-    });
+    supabase
+      .from("routes")
+      .select("description,duration_minutes")
+      .eq("id", selectedMapRoute.id)
+      .eq("is_active", true)
+      .single()
+      .then(({ data }) => {
+        if (data) setRouteDetail(data as RouteSheetDetail);
+        setRouteDetailLoading(false);
+      });
   }, [selectedMapRoute]);
 
   // ── Update GeoJSON source ──
@@ -959,13 +575,10 @@ export default function MapView() {
       // Draw cycling route geometry on map
       const map = mapRef.current;
       if (!map || !mapReadyRef.current) return;
-      const src = map.getSource(DRAW_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-      if (src && cycling?.geometry) {
-        src.setData({
-          type: "Feature",
-          geometry: cycling.geometry,
-          properties: {},
-        } as GeoJSON.Feature);
+      if (cycling?.geometry.type === "LineString") {
+        setRouteLines(map, DRAW_SOURCE_ID, [
+          { id: "draw", coords: cycling.geometry.coordinates as [number, number][], selected: true },
+        ]);
       }
     });
   }, [waypoints, drawMode]);
@@ -976,10 +589,7 @@ export default function MapView() {
     waypointMarkersRef.current = [];
 
     const map = mapRef.current;
-    if (map && mapReadyRef.current) {
-      const src = map.getSource(DRAW_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-      if (src) src.setData({ type: "FeatureCollection", features: [] });
-    }
+    if (map && mapReadyRef.current) setRouteLines(map, DRAW_SOURCE_ID, []);
 
     setWaypoints([]);
     setRouteResult(null);
@@ -1003,58 +613,69 @@ export default function MapView() {
     if (typeof window !== "undefined") localStorage.setItem("tulipday_routes_hint_seen", "1");
   }, []);
 
-  const toggleRouteOnMap = useCallback((route: MapRoute) => {
-    const prev = routeSlotsRef.current;
+  // ── Camera: houd rekening met filterbalk, sheet en (op brede schermen) de routelijst ──
+  const cameraPadding = useCallback((sheetFraction: number): maplibregl.PaddingOptions => {
+    const w = window.innerWidth, h = window.innerHeight;
+    const left = routePanelOpenRef.current && w >= 640 ? 288 + 24 : 24;
+    return { top: TOP_PADDING, bottom: Math.round(h * sheetFraction) + 24, left, right: 24 };
+  }, []);
 
-    if (prev[route.id] !== undefined) {
-      setRouteSlots((s) => {
-        const next = { ...s };
-        delete next[route.id];
-        return next;
-      });
-      delete snappedGeometriesRef.current[route.id];
+  const fitRoute = useCallback((route: MapRoute) => {
+    const bounds = boundsOf(toLngLat(route.geometry_points));
+    if (bounds) mapRef.current?.fitBounds(bounds, { padding: cameraPadding(0.5), maxZoom: 15, duration: 900 });
+  }, [cameraPadding]);
+
+  // Route openen: op de kaart, geselecteerd, sheet open en camera erheen
+  const openRoute = useCallback((route: MapRoute) => {
+    setSelected(null);
+    setOnMapRouteIds((ids) => (ids.includes(route.id) ? ids : [...ids, route.id]));
+    setFocusedRouteId(route.id);
+    setSelectedMapRoute(route);
+    if (window.innerWidth < 640) setRoutePanelOpen(false);
+    fitRoute(route);
+  }, [fitRoute]);
+
+  const toggleRouteOnMap = useCallback((route: MapRoute) => {
+    const ids = onMapRouteIdsRef.current;
+    if (ids.includes(route.id)) {
+      const rest = ids.filter((id) => id !== route.id);
+      setOnMapRouteIds(rest);
+      setFocusedRouteId((f) => (f === route.id ? rest[rest.length - 1] ?? null : f));
       return;
     }
+    setOnMapRouteIds([...ids, route.id]);
+    setFocusedRouteId(route.id);
+    fitRoute(route);
+  }, [fitRoute]);
 
-    const usedSlots = new Set(Object.values(prev));
-    const freeSlot  = [0, 1, 2].find((s) => !usedSlots.has(s));
-    if (freeSlot === undefined) return;
-
-    setRouteSlots((s) => ({ ...s, [route.id]: freeSlot }));
-
-    if (route.geometry_points && route.geometry_points.length > 0) {
-      const lnglats = route.geometry_points.map(([lat, lng]) => [lng, lat] as [number, number]);
-
-      // Zoom naar route
-      const minLng  = Math.min(...lnglats.map(([lng]) => lng));
-      const maxLng  = Math.max(...lnglats.map(([lng]) => lng));
-      const minLat  = Math.min(...lnglats.map(([, lat]) => lat));
-      const maxLat  = Math.max(...lnglats.map(([, lat]) => lat));
-      mapRef.current?.fitBounds(
-        [[minLng, minLat], [maxLng, maxLat]],
-        { padding: { top: 80, bottom: 160, left: 300, right: 40 }, duration: 600 },
-      );
-
-      // Snap geometrie aan wegennetwerk (async, update kaart zodra klaar)
-      const profile = activityToOSRMProfile(route.activity);
-      fetchSnappedGeometry(lnglats, profile).then((snapped) => {
-        if (!snapped) return;
-        snappedGeometriesRef.current[route.id] = snapped;
-        const map     = mapRef.current;
-        const slotIdx = routeSlotsRef.current[route.id];
-        if (map && mapReadyRef.current && slotIdx !== undefined) {
-          const src = map.getSource(ROUTE_SOURCES[slotIdx]) as maplibregl.GeoJSONSource | undefined;
-          if (src) {
-            src.setData({
-              type: "Feature",
-              geometry: { type: "LineString", coordinates: snapped },
-              properties: {},
-            } as GeoJSON.Feature);
-          }
-        }
-      });
-    }
+  // Locatie openen: sheet open en de locatie midden in het zichtbare deel boven de sheet.
+  // offset i.p.v. padding: padding in easeTo blijft daarna op de kaart hangen.
+  const selectLocation = useCallback((loc: MapLocation) => {
+    setSelectedMapRoute(null);
+    setSelected(loc);
+    const map = mapRef.current;
+    if (!map || loc.latitude == null || loc.longitude == null) return;
+    const h = window.innerHeight;
+    const visibleCenter = (TOP_PADDING + h * (1 - 0.45)) / 2;
+    map.easeTo({
+      center:   [loc.longitude, loc.latitude],
+      zoom:     Math.max(map.getZoom(), 13),
+      offset:   [0, visibleCenter - h / 2],
+      duration: 700,
+    });
   }, []);
+
+  const selectLocationRef = useRef(selectLocation);
+  const openRouteRef      = useRef(openRoute);
+  selectLocationRef.current = selectLocation;
+  openRouteRef.current      = openRoute;
+
+  // ── Geselecteerde locatie krijgt een rode gloed ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current || !map.getLayer(HALO_LAYER_ID)) return;
+    map.setFilter(HALO_LAYER_ID, ["==", ["get", "id"], selected?.id ?? ""]);
+  }, [selected]);
 
   // ── Save drawn route ──
   const openSaveSheet = useCallback(() => {
@@ -1078,36 +699,17 @@ export default function MapView() {
     setTimeout(() => setShowSaveSheet(false), 1200);
   }, [routeResult, saveName, waypoints]);
 
-  // ── Sync route slots → MapLibre sources ──
-  useEffect(() => {
+  // ── Routes op de kaart: geselecteerde in merkrood, de rest gedimd ──
+  const syncRouteLines = useCallback(() => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current) return;
+    setRouteLines(map, ROUTES_SOURCE_ID, onMapRouteIdsRef.current.flatMap((id) => {
+      const route = mapRoutesRef.current.find((r) => r.id === id);
+      return route ? [{ id, coords: toLngLat(route.geometry_points), selected: id === focusedRouteIdRef.current }] : [];
+    }));
+  }, []);
 
-    const slotToRoute: Record<number, MapRoute | undefined> = {};
-    for (const [routeId, slotIdx] of Object.entries(routeSlots)) {
-      slotToRoute[slotIdx] = mapRoutesRef.current.find((r) => r.id === routeId);
-    }
-
-    for (let i = 0; i < 3; i++) {
-      const src = map.getSource(ROUTE_SOURCES[i]) as maplibregl.GeoJSONSource | undefined;
-      if (!src) continue;
-
-      const route = slotToRoute[i];
-      if (!route?.geometry_points || route.geometry_points.length < 2) {
-        src.setData({ type: "FeatureCollection", features: [] });
-        continue;
-      }
-
-      // Gebruik OSRM-gesnappte geometrie indien beschikbaar, anders ruwe GPX
-      const coords = snappedGeometriesRef.current[route.id]
-        ?? route.geometry_points.map(([lat, lng]) => [lng, lat]);
-      src.setData({
-        type: "Feature",
-        geometry: { type: "LineString", coordinates: coords },
-        properties: {},
-      } as GeoJSON.Feature);
-    }
-  }, [routeSlots]);
+  useEffect(() => { syncRouteLines(); }, [onMapRouteIds, focusedRouteId, mapRoutes, syncRouteLines]);
 
   // ── Init map ──
   useEffect(() => {
@@ -1121,10 +723,20 @@ export default function MapView() {
     });
 
     mapRef.current = map;
-    const stopThemeWatch = watchMapTheme(map);
+    const stopThemeWatch = watchMapTheme(map, (dark) => {
+      applyRouteTheme(map, ROUTES_SOURCE_ID, dark);
+      applyRouteTheme(map, DRAW_SOURCE_ID, dark);
+    });
 
-    map.on("load", () => {
+    map.on("load", async () => {
+      await addMapIcons(map);
+      if (mapRef.current !== map) return;
       mapReadyRef.current = true;
+
+      // ── Routes (onder de locatiemarkers) ──
+      const dark = isDarkTheme();
+      addRouteLayers(map, ROUTES_SOURCE_ID, dark);
+      addRouteLayers(map, DRAW_SOURCE_ID, dark);
 
       // ── Location source + layers ──
       map.addSource(SOURCE_ID, {
@@ -1143,7 +755,8 @@ export default function MapView() {
         source: SOURCE_ID,
         filter: ["has", "point_count"],
         paint: {
-          "circle-color": ["step", ["get", "point_count"], "#f43f5e", 10, "#e11d48", 30, "#9f1239"],
+          // Merkrood, donkerder naarmate het cluster groter is
+          "circle-color": ["step", ["get", "point_count"], MAP_PRIMARY, 10, "#C40C22", 30, "#8F0A1A"],
           "circle-radius": [
             "step", ["zoom"],
             ["step", ["get", "point_count"], 20, 10, 26, 30, 32],
@@ -1151,9 +764,8 @@ export default function MapView() {
             12, ["step", ["get", "point_count"], 13, 10, 17, 30, 21],
             13, ["step", ["get", "point_count"], 10, 10, 13, 30, 16],
           ],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#fff",
-          "circle-opacity": 0.9,
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#FFFFFF",
         },
       });
 
@@ -1170,16 +782,32 @@ export default function MapView() {
         paint: { "text-color": "#ffffff" },
       });
 
+      // Gloed onder de geselecteerde locatie
       map.addLayer({
-        id: "unclustered-point",
+        id: HALO_LAYER_ID,
         type: "circle",
         source: SOURCE_ID,
-        filter: ["!", ["has", "point_count"]],
+        filter: ["==", ["get", "id"], ""],
         paint: {
-          "circle-color": ["get", "color"],
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 9, 13, 7, 16, 5],
+          "circle-color": MAP_PRIMARY,
+          "circle-opacity": 0.25,
+          "circle-radius": 24,
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff",
+          "circle-stroke-color": MAP_PRIMARY,
+        },
+      });
+
+      // Categoriemarker: lucide-icoon in een gekleurde cirkel (zie lib/mapIcons.ts)
+      map.addLayer({
+        id: "unclustered-point",
+        type: "symbol",
+        source: SOURCE_ID,
+        filter: ["!", ["has", "point_count"]],
+        layout: {
+          "icon-image": ["concat", "pin-", ["get", "category"]],
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.75, 14, 1],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
         },
       });
 
@@ -1208,63 +836,12 @@ export default function MapView() {
               "transparent",
             ],
           ],
-          "circle-radius": 4,
+          "circle-radius": 4.5,
           "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#ffffff",
-          "circle-translate": [6, -6],
+          "circle-stroke-color": "#FFFFFF",
+          "circle-translate": [10, -10],
         },
       });
-
-      // ── Draw route source + layers ──
-      map.addSource(DRAW_SOURCE_ID, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-
-      // Outline / casing
-      map.addLayer({
-        id: "draw-route-casing",
-        type: "line",
-        source: DRAW_SOURCE_ID,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.8 },
-      });
-
-      // Main line
-      map.addLayer({
-        id: "draw-route-line",
-        type: "line",
-        source: DRAW_SOURCE_ID,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#E8102A", "line-width": 4, "line-opacity": 0.9 },
-      });
-
-      // ── Route browser sources + layers (3 slots) ──
-      for (let i = 0; i < 3; i++) {
-        const srcId = ROUTE_SOURCES[i];
-        const color = SLOT_COLORS[i];
-
-        map.addSource(srcId, {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
-
-        map.addLayer({
-          id: `${srcId}-casing`,
-          type: "line",
-          source: srcId,
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.85 },
-        });
-
-        map.addLayer({
-          id: `${srcId}-line`,
-          type: "line",
-          source: srcId,
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": color, "line-width": 4, "line-opacity": 0.9 },
-        });
-      }
 
       // ── Cluster click → zoom in ──
       map.on("click", "clusters", (e) => {
@@ -1279,16 +856,29 @@ export default function MapView() {
         });
       });
 
-      // ── Point click → preview card ──
+      // ── Point click → locatiesheet ──
       const handlePointClick = (e: maplibregl.MapLayerMouseEvent) => {
         if (drawModeRef.current) return;
         const props = e.features?.[0]?.properties;
         if (!props) return;
         const loc = locationsRef.current.find((l) => l.id === props.id);
-        if (loc) setSelected(loc);
+        if (loc) selectLocationRef.current(loc);
       };
       map.on("click", "unclustered-point",    handlePointClick);
       map.on("click", "unclustered-bloom-dot", handlePointClick);
+
+      // ── Route click → routesheet (markers gaan voor) ──
+      const routeHit = routeLayerIds(ROUTES_SOURCE_ID).hit;
+      map.on("click", routeHit, (e) => {
+        if (drawModeRef.current) return;
+        const onPoint = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point"] });
+        if (onPoint.length > 0) return;
+        const id = e.features?.[0]?.properties?.id;
+        const route = mapRoutesRef.current.find((r) => r.id === id);
+        if (route) openRouteRef.current(route);
+      });
+      map.on("mouseenter", routeHit, () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", routeHit, () => { if (!drawModeRef.current) map.getCanvas().style.cursor = ""; });
 
       // ── Pointer cursors ──
       map.on("mouseenter", "clusters",             () => { if (!drawModeRef.current) map.getCanvas().style.cursor = "pointer"; });
@@ -1325,12 +915,13 @@ export default function MapView() {
           return;
         }
 
-        // Normal mode: dismiss preview if empty area
-        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point", "unclustered-bloom-dot"] });
+        // Normal mode: sluit de locatiesheet bij een tik op een lege plek
+        const hit = map.queryRenderedFeatures(e.point, { layers: ["clusters", "unclustered-point", "unclustered-bloom-dot", routeHit] });
         if (hit.length === 0) setSelected(null);
       });
 
       updateSource();
+      syncRouteLines();
     });
 
     return () => {
@@ -1382,6 +973,14 @@ export default function MapView() {
       );
     }
   }, [activeFilter]);
+
+  const selectedRouteCoords = useMemo(
+    () => toLngLat(selectedMapRoute?.geometry_points ?? null),
+    [selectedMapRoute],
+  );
+  // Stabiele callbacks: BottomSheet herstart zijn effect bij een nieuwe onClose
+  const closeRouteSheet    = useCallback(() => setSelectedMapRoute(null), []);
+  const closeLocationSheet = useCallback(() => setSelected(null), []);
 
   const filters = FILTER_IDS.map((f) => ({ ...f, label: t(`map.filter_${f.id}`) }));
   const showRoutePanel = drawMode && waypoints.length >= 2;
@@ -1458,9 +1057,9 @@ export default function MapView() {
       >
         <List size={16} className={routePanelOpen ? "text-rose-600" : "text-gray-600"} />
         <span className="text-xs font-bold text-gray-700">{t("map.routes_panel")}</span>
-        {Object.keys(routeSlots).length > 0 && (
-          <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center">
-            {Object.keys(routeSlots).length}
+        {onMapRouteIds.length > 0 && (
+          <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-on-primary text-[10px] font-extrabold flex items-center justify-center">
+            {onMapRouteIds.length}
           </span>
         )}
       </button>
@@ -1489,9 +1088,10 @@ export default function MapView() {
           routes={mapRoutes}
           activeActivity={routesPanelAct}
           onActivityChange={setRoutesPanelAct}
-          routeSlots={routeSlots}
+          onMapIds={onMapRouteIds}
+          focusedId={focusedRouteId}
           onToggle={toggleRouteOnMap}
-          onSelect={setSelectedMapRoute}
+          onSelect={openRoute}
           onClose={() => setRoutePanelOpen(false)}
         />
       </div>
@@ -1611,31 +1211,33 @@ export default function MapView() {
       )}
 
       {/* ── Route detail sheet ── */}
-      {selectedMapRoute && (
-        <RouteDetailSheet
-          route={selectedMapRoute}
-          detail={routeDetail}
-          stops={routeStops}
-          loading={routeDetailLoading}
-          isOnMap={routeSlots[selectedMapRoute.id] !== undefined}
-          slotColor={routeSlots[selectedMapRoute.id] !== undefined ? SLOT_COLORS[routeSlots[selectedMapRoute.id]] : null}
-          canAddToMap={Object.keys(routeSlots).length < 3}
-          onToggleMap={() => toggleRouteOnMap(selectedMapRoute)}
-          onClose={() => setSelectedMapRoute(null)}
-          onDetails={() => router.push(routePath(locale, selectedMapRoute.slug))}
-          onStart={() => router.push(`/${locale}/navigate?slug=${selectedMapRoute.slug}`)}
-        />
-      )}
+      <RouteSheet
+        route={selectedMapRoute}
+        coords={selectedRouteCoords}
+        detail={routeDetail}
+        loading={routeDetailLoading}
+        locations={locations}
+        isOnMap={selectedMapRoute !== null && onMapRouteIds.includes(selectedMapRoute.id)}
+        onToggleMap={() => {
+          if (!selectedMapRoute) return;
+          toggleRouteOnMap(selectedMapRoute);
+          if (onMapRouteIds.includes(selectedMapRoute.id)) setSelectedMapRoute(null);
+        }}
+        onClose={closeRouteSheet}
+        onDetails={() => selectedMapRoute && router.push(routePath(locale, selectedMapRoute.slug))}
+        onStart={() => selectedMapRoute && router.push(`/${locale}/navigate?slug=${selectedMapRoute.slug}`)}
+        onLocationSelect={(loc) => {
+          const full = locations.find((l) => l.id === loc.id);
+          if (full) selectLocation(full);
+        }}
+      />
 
-      {/* ── Location preview card (hidden in draw mode) ── */}
-      {selected && !drawMode && (
-        <PreviewCard
-          location={selected}
-          onClose={() => setSelected(null)}
-          onNavigate={() => router.push(locationPath(locale, selected.slug))}
-          t={t}
-        />
-      )}
+      {/* ── Locatiesheet (niet in tekenmodus) ── */}
+      <LocationSheet
+        location={selected && !drawMode ? selected : null}
+        onClose={closeLocationSheet}
+        onDetails={() => selected && router.push(locationPath(locale, selected.slug))}
+      />
 
       {/* ── Bottom nav ── */}
 

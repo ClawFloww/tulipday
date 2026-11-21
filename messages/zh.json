@@ -105,7 +105,8 @@
     "photo_spot": "拍照地点",
     "attraction": "景点",
     "food": "餐饮",
-    "parking": "停车场"
+    "parking": "停车场",
+    "bike_rental": "自行车租赁"
   },
   "route_type": {
     "bike": "骑行",
@@ -175,7 +176,20 @@
     "route_saved": "已保存！",
     "route_saved_sub": "可在「收藏 → 我的」中找到",
     "save_route": "保存路线",
-    "save_route_sub": "为这条路线选择一个名称"
+    "save_route_sub": "为这条路线选择一个名称",
+    "navigate_here": "导航到这里",
+    "open_now": "营业中",
+    "closed_now": "已关闭",
+    "along_fields": "沿途花田",
+    "along_food": "沿途餐饮",
+    "by_bike": "骑行",
+    "on_foot": "步行",
+    "route_on_map": "显示在地图上",
+    "route_off_map": "从地图移除",
+    "start_route": "开始",
+    "details": "详情",
+    "read_more": "阅读更多",
+    "read_less": "收起"
   },
   "location": {
     "photo_view": "照片",

@@ -11,7 +11,7 @@ const BUDGET_MINUTES: Record<TimeBudget, number> = {
 };
 
 // Reistijd per km per vervoersmiddel (minuten/km)
-const TRAVEL_MIN_PER_KM: Record<Transport, number> = {
+export const TRAVEL_MIN_PER_KM: Record<Transport, number> = {
   walking:  12,
   cycling:   4,
   car:       2,

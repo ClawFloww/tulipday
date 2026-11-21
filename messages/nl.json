@@ -105,7 +105,8 @@
     "photo_spot": "Fotolocatie",
     "attraction": "Attractie",
     "food": "Eten & drinken",
-    "parking": "Parkeren"
+    "parking": "Parkeren",
+    "bike_rental": "Fietsverhuur"
   },
   "route_type": {
     "bike": "Fiets",
@@ -175,7 +176,20 @@
     "route_saved": "Opgeslagen!",
     "route_saved_sub": "Terug te vinden onder Opgeslagen → Eigen",
     "save_route": "Route opslaan",
-    "save_route_sub": "Kies een naam voor deze route"
+    "save_route_sub": "Kies een naam voor deze route",
+    "navigate_here": "Navigeer hierheen",
+    "open_now": "Nu open",
+    "closed_now": "Gesloten",
+    "along_fields": "Bollenvelden langs de route",
+    "along_food": "Eten & drinken onderweg",
+    "by_bike": "Fietsen",
+    "on_foot": "Wandelen",
+    "route_on_map": "Op kaart",
+    "route_off_map": "Van kaart",
+    "start_route": "Start",
+    "details": "Details",
+    "read_more": "Lees meer",
+    "read_less": "Minder"
   },
   "location": {
     "photo_view": "Foto",
