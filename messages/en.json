@@ -81,6 +81,8 @@
     }
   },
   "nav": {
+    "fields": "Fields",
+    "profile": "Profile",
     "home": "Home",
     "map": "Map",
     "plan": "Plan",

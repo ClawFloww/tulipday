@@ -81,6 +81,8 @@
     }
   },
   "nav": {
+    "fields": "Velden",
+    "profile": "Profiel",
     "home": "Home",
     "map": "Kaart",
     "plan": "Plan",

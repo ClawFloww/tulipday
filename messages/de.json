@@ -81,6 +81,8 @@
     }
   },
   "nav": {
+    "fields": "Felder",
+    "profile": "Profil",
     "home": "Startseite",
     "map": "Karte",
     "plan": "Plan",

@@ -9,7 +9,6 @@ import { supabase } from "@/lib/supabase";
 import type { Location, Category } from "@/lib/types";
 import { isCurrentlyOpen } from "@/lib/openingHours";
 import { BloomBadge } from "@/components/ui/BloomBadge";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
@@ -253,7 +252,7 @@ function RoutesPanel({
   ];
 
   return (
-    <div className="absolute bottom-20 left-3 right-3 z-30 bg-white rounded-3xl shadow-2xl shadow-black/15 overflow-hidden animate-slide-up">
+    <div className="absolute bottom-above-nav left-3 right-3 z-30 bg-white rounded-3xl shadow-2xl shadow-black/15 overflow-hidden animate-slide-up">
       <div className="flex justify-center pt-2.5 pb-1">
         <div className="w-10 h-1 bg-gray-200 rounded-full" />
       </div>
@@ -714,7 +713,7 @@ function PreviewCard({
 
   return (
     <div
-      className="absolute bottom-20 left-3 right-3 z-30 rounded-3xl bg-white shadow-2xl shadow-black/20 overflow-hidden animate-slide-up"
+      className="absolute bottom-above-nav left-3 right-3 z-30 rounded-3xl bg-white shadow-2xl shadow-black/20 overflow-hidden animate-slide-up"
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
     >
@@ -1637,7 +1636,6 @@ export default function MapView() {
       )}
 
       {/* ── Bottom nav ── */}
-      <BottomNav active="map" />
 
       {/* ── Animations ── */}
       <style jsx global>{`

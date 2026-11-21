@@ -81,6 +81,8 @@
     }
   },
   "nav": {
+    "fields": "Champs",
+    "profile": "Profil",
     "home": "Accueil",
     "map": "Carte",
     "plan": "Plan",

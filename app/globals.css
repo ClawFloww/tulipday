@@ -169,6 +169,7 @@ body {
   .pb-safe      { padding-bottom: env(safe-area-inset-bottom); }
   .pb-safe-nav  { padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); }
   .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+  .bottom-above-nav { bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 12px); }
 
   /* Cijfers even breed (afstanden, tijden, statistieken) */
   .font-mono { font-variant-numeric: tabular-nums; }

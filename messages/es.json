@@ -81,6 +81,8 @@
     }
   },
   "nav": {
+    "fields": "Campos",
+    "profile": "Perfil",
     "home": "Inicio",
     "map": "Mapa",
     "plan": "Plan",

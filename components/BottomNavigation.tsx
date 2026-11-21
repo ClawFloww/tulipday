@@ -1,33 +1,30 @@
 "use client";
 
-// TulipDay Bottom Navigation
-// Vijf tabs: Kaart, Routes, Velden, Opgeslagen, Profiel
-// Frosted glass achtergrond, spring-animaties via Framer Motion
-// Actieve tab: tulip-roze capsule + label; inactieve tabs: grijs icoon
+// TulipDay Bottom Navigation — de enige navigatiebalk van de app
+// Vijf tabs met altijd zichtbare labels; actieve tab in merkrood met
+// glijdende capsule. Hoogte = --nav-height + safe area (home-indicator).
 
 import { usePathname, useParams, useRouter } from "next/navigation";
 import { Map, CalendarDays, Flower2, Heart, User, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { tap } from "@/lib/haptics";
+import { useT } from "@/lib/i18n-context";
 
 type TabId = "map" | "plan" | "fields" | "saved" | "profile";
 
 interface Tab {
-  id:      TabId;
-  label:   string;
-  segment: string;
-  Icon:    LucideIcon;
+  id:       TabId;
+  labelKey: string;
+  segment:  string;
+  Icon:     LucideIcon;
 }
 
-// Kleuren — actief gebruikt CSS variabele voor automatische donker-modus
-const ACTIVE_COLOR   = "var(--color-primary)";
-const INACTIVE_COLOR = "var(--color-text-3)";
-
 const TABS: Tab[] = [
-  { id: "map",     label: "Kaart",      segment: "map",      Icon: Map          },
-  { id: "plan",    label: "Plan",       segment: "plan",     Icon: CalendarDays },
-  { id: "fields",  label: "Velden",     segment: "home",     Icon: Flower2      },
-  { id: "saved",   label: "Opgeslagen", segment: "saved",    Icon: Heart        },
-  { id: "profile", label: "Profiel",    segment: "settings", Icon: User         },
+  { id: "map",     labelKey: "nav.map",     segment: "map",      Icon: Map          },
+  { id: "plan",    labelKey: "nav.plan",    segment: "plan",     Icon: CalendarDays },
+  { id: "fields",  labelKey: "nav.fields",  segment: "home",     Icon: Flower2      },
+  { id: "saved",   labelKey: "nav.saved",   segment: "saved",    Icon: Heart        },
+  { id: "profile", labelKey: "nav.profile", segment: "settings", Icon: User         },
 ];
 
 // Welke tab is actief op basis van URL
@@ -42,6 +39,7 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const params   = useParams();
   const router   = useRouter();
+  const { t }    = useT();
   const locale   = (params?.locale as string | undefined) ?? "nl";
 
   // Verberg op fullscreen-ervaringen waar de tabs over de eigen
@@ -53,11 +51,8 @@ export function BottomNavigation() {
   const activeId = getActiveTab(pathname);
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 nav-glass border-t border-black/[0.06]"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <div className="flex items-stretch h-[60px] max-w-[430px] mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 nav-glass border-t border-line pb-safe">
+      <div className="flex items-stretch h-[var(--nav-height)] max-w-[430px] mx-auto">
         {TABS.map((tab) => {
           const isActive = tab.id === activeId;
 
@@ -65,50 +60,33 @@ export function BottomNavigation() {
             <button
               key={tab.id}
               data-tour={`nav-${tab.id}`}
-              onClick={() => router.push(`/${locale}/${tab.segment}`)}
-              aria-label={tab.label}
+              onClick={() => {
+                if (!isActive) tap();
+                router.push(`/${locale}/${tab.segment}`);
+              }}
               aria-current={isActive ? "page" : undefined}
-              className="relative flex-1 flex flex-col items-center justify-center tap-scale"
+              className="relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-touch
+                         transition-transform duration-fast active:scale-[0.94]
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary rounded-2xl"
             >
-              {/* Verschuivende achtergrond-capsule — gebruik CSS var voor donker thema */}
-              {isActive && (
-                <motion.div
-                  layoutId="nav-active-pill"
-                  className="absolute inset-x-1.5 top-2 bottom-2 rounded-full"
-                  style={{ backgroundColor: "var(--color-primary-subtle)" }}
-                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                />
-              )}
-
-              {/* Icoon — spring-schaal bij activeren */}
-              <motion.div
-                animate={{
-                  scale: isActive ? 1.1 : 1.0,
-                  y:     isActive ? -1  : 0,
-                }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="relative z-10"
-              >
+              {/* Glijdende capsule achter het icoon van de actieve tab */}
+              <span className="relative flex items-center justify-center h-7 w-14">
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-active-pill"
+                    className="absolute inset-0 rounded-full bg-primary-subtle"
+                    transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                  />
+                )}
                 <tab.Icon
-                  size={22}
-                  style={{ color: isActive ? ACTIVE_COLOR : INACTIVE_COLOR }}
+                  size={21}
+                  strokeWidth={isActive ? 2.4 : 2}
+                  className={`relative z-10 transition-colors duration-fast ${isActive ? "text-primary" : "text-ink-3"}`}
                 />
-              </motion.div>
-
-              {/* Label — alleen zichtbaar bij actieve tab, klapt in/uit */}
-              <motion.span
-                initial={false}
-                animate={{
-                  opacity:    isActive ? 1  : 0,
-                  height:     isActive ? 13 : 0,
-                  marginTop:  isActive ? 2  : 0,
-                }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="relative z-10 text-[10px] font-bold leading-none overflow-hidden whitespace-nowrap"
-                style={{ color: ACTIVE_COLOR }}
-              >
-                {tab.label}
-              </motion.span>
+              </span>
+              <span className={`text-[10.5px] leading-none font-bold transition-colors duration-fast ${isActive ? "text-primary" : "text-ink-3"}`}>
+                {t(tab.labelKey)}
+              </span>
             </button>
           );
         })}
