@@ -7,7 +7,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-react";
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
-import { mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { addMapIcons } from "@/lib/mapIcons";
+import { addRouteLayers, applyRouteTheme, setRouteLines } from "@/lib/mapLayers";
+import { isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
 import { publicUrl, resolveParam } from "@/lib/links";
 
 
@@ -66,9 +68,9 @@ export default function SharedRoutePage() {
       zoom:      12,
       interactive: true,
     });
-    const stopThemeWatch = watchMapTheme(map);
+    const stopThemeWatch = watchMapTheme(map, (dark) => applyRouteTheme(map, "route", dark));
 
-    map.on("load", () => {
+    map.on("load", async () => {
       // Waypoint markers
       waypoints.forEach(([lng, lat], i) => {
         const el = document.createElement("div");
@@ -85,16 +87,11 @@ export default function SharedRoutePage() {
 
       // Lijn tussen punten
       if (waypoints.length > 1) {
-        map.addSource("route-line", {
-          type: "geojson",
-          data: { type: "Feature", geometry: { type: "LineString", coordinates: waypoints }, properties: {} },
-        });
-        map.addLayer({ id: "route-casing", type: "line", source: "route-line",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.8 } });
-        map.addLayer({ id: "route-line", type: "line", source: "route-line",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#E8102A", "line-width": 4, "line-opacity": 0.9 } });
+        await addMapIcons(map);
+        if (!mapRef.current) return;
+        // Onder de genummerde markers, die als DOM-elementen boven de kaart liggen
+        addRouteLayers(map, "route", isDarkTheme());
+        setRouteLines(map, "route", [{ id: "route", coords: waypoints, selected: true }]);
       }
 
       // Fit bounds

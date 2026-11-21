@@ -8,7 +8,9 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RouteStop } from "@/lib/types";
-import { mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
+import { addMapIcons } from "@/lib/mapIcons";
+import { addRouteLayers, applyRouteTheme, setRouteLines } from "@/lib/mapLayers";
+import { isDarkTheme, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
 
 export type MapLocation = {
   id:                string;
@@ -56,13 +58,14 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
   const onSelectRef  = useRef(onLocationSelect);
   useEffect(() => { onSelectRef.current = onLocationSelect; }, [onLocationSelect]);
 
-  // Bouw [lng, lat]-coördinaten voor MapLibre (stops hebben voorrang)
+  // Bouw [lng, lat]-coördinaten voor MapLibre. De echte routegeometrie heeft
+  // voorrang; alleen zonder geometrie rechte lijnen tussen de stops.
   const routeCoords: [number, number][] =
-    stops.length > 0
-      ? stops
+    points && points.length > 1
+      ? points.map(([lat, lng]) => [lng, lat])
+      : stops
           .filter((s) => s.locations.latitude != null && s.locations.longitude != null)
-          .map((s) => [s.locations.longitude as number, s.locations.latitude as number])
-      : (points ?? []).map(([lat, lng]) => [lng, lat]);
+          .map((s) => [s.locations.longitude as number, s.locations.latitude as number]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || routeCoords.length === 0) return;
@@ -75,48 +78,26 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
       interactive: true,
     });
 
-    const stopThemeWatch = watchMapTheme(map);
+    const stopThemeWatch = watchMapTheme(map, (dark) => applyRouteTheme(map, "route", dark));
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
-    map.on("load", () => {
-      // Routelijn
+    map.on("load", async () => {
+      // Routelijn met rand, richtingspijlen en start/finish
       if (routeCoords.length > 1) {
-        map.addSource("route", {
-          type: "geojson",
-          data: {
-            type:     "Feature",
-            geometry: { type: "LineString", coordinates: routeCoords },
-            properties: {},
-          },
-        });
-        map.addLayer({
-          id: "route-casing", type: "line", source: "route",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint:  { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.85 },
-        });
-        map.addLayer({
-          id: "route-line", type: "line", source: "route",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint:  { "line-color": "#E8102A", "line-width": 4 },
-        });
+        await addMapIcons(map);
+        if (!mapRef.current) return;
+        addRouteLayers(map, "route", isDarkTheme());
+        setRouteLines(map, "route", [{ id: "route", coords: routeCoords, selected: true }]);
       }
 
-      // Markers: genummerde stops of alleen start/eind
-      const markerDefs =
-        stops.length > 0
-          ? stops
-              .filter((s) => s.locations.latitude)
-              .map((s, i) => ({
-                lngLat: [s.locations.longitude as number, s.locations.latitude as number] as [number, number],
-                label:  String(i + 1),
-                color:  i === 0 ? "#2D7D46" : i === stops.length - 1 ? "#E8102A" : "#E8102A",
-              }))
-          : routeCoords.length > 1
-          ? [
-              { lngLat: routeCoords[0],                      label: "S", color: "#2D7D46" },
-              { lngLat: routeCoords[routeCoords.length - 1], label: "E", color: "#E8102A" },
-            ]
-          : [];
+      // Genummerde stops
+      const markerDefs = stops
+        .filter((s) => s.locations.latitude)
+        .map((s, i) => ({
+          lngLat: [s.locations.longitude as number, s.locations.latitude as number] as [number, number],
+          label:  String(i + 1),
+          color:  "#E8102A",
+        }));
 
       markerDefs.forEach(({ lngLat, label, color }) => {
         const el = document.createElement("div");
