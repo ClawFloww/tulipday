@@ -124,6 +124,14 @@
     "private_desc": "仅限从公共小径观赏——请勿进入。"
   },
   "home": {
+    "transport_bike": "骑行路线",
+    "transport_car": "自驾路线",
+    "transport_walking": "步行路线",
+    "time_short": "短途",
+    "time_half_day": "半天",
+    "time_full_day": "全天",
+    "no_results": "没有找到“{query}”的结果",
+    "no_results_hint": "试试其他关键词或地名。",
     "greeting_morning": "早上好",
     "greeting_afternoon": "下午好",
     "greeting_evening": "晚上好",

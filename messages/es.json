@@ -124,6 +124,14 @@
     "private_desc": "Solo vista desde caminos públicos — no entrar."
   },
   "home": {
+    "transport_bike": "Rutas en bici",
+    "transport_car": "Rutas en coche",
+    "transport_walking": "Rutas a pie",
+    "time_short": "corta",
+    "time_half_day": "medio día",
+    "time_full_day": "día completo",
+    "no_results": "Sin resultados para «{query}»",
+    "no_results_hint": "Prueba con otro término o nombre de lugar.",
     "greeting_morning": "Buenos días",
     "greeting_afternoon": "Buenas tardes",
     "greeting_evening": "Buenas noches",

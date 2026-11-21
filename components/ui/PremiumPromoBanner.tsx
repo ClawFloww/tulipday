@@ -37,7 +37,7 @@ export function PremiumPromoBanner({ locale }: Props) {
         href={`/${locale}/premium`}
         className="block w-full rounded-2xl overflow-hidden shadow-lg active:scale-[0.98] transition-transform"
         style={{
-          backgroundColor: "#E8102A",
+          backgroundColor: "var(--color-primary)",
           boxShadow: "0 6px 18px rgba(232,16,42,0.32)",
         }}
       >

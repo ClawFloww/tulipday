@@ -124,6 +124,14 @@
     "private_desc": "Alleen bekijken van openbare paden — niet betreden."
   },
   "home": {
+    "transport_bike": "Fietsroutes",
+    "transport_car": "Autoroutes",
+    "transport_walking": "Wandelroutes",
+    "time_short": "kort",
+    "time_half_day": "halve dag",
+    "time_full_day": "hele dag",
+    "no_results": "Geen resultaten voor “{query}”",
+    "no_results_hint": "Probeer een andere zoekterm of plaatsnaam.",
     "greeting_morning": "Goedemorgen",
     "greeting_afternoon": "Goedemiddag",
     "greeting_evening": "Goedenavond",

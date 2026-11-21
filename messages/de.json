@@ -124,6 +124,14 @@
     "private_desc": "Nur von öffentlichen Wegen aus – nicht betreten."
   },
   "home": {
+    "transport_bike": "Radrouten",
+    "transport_car": "Autorouten",
+    "transport_walking": "Wanderrouten",
+    "time_short": "kurz",
+    "time_half_day": "halber Tag",
+    "time_full_day": "ganzer Tag",
+    "no_results": "Keine Ergebnisse für „{query}“",
+    "no_results_hint": "Versuche einen anderen Suchbegriff oder Ortsnamen.",
     "greeting_morning": "Guten Morgen",
     "greeting_afternoon": "Guten Nachmittag",
     "greeting_evening": "Guten Abend",

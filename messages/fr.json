@@ -124,6 +124,14 @@
     "private_desc": "Vue uniquement depuis les chemins publics – ne pas entrer."
   },
   "home": {
+    "transport_bike": "Itinéraires à vélo",
+    "transport_car": "Itinéraires en voiture",
+    "transport_walking": "Itinéraires à pied",
+    "time_short": "court",
+    "time_half_day": "demi-journée",
+    "time_full_day": "journée entière",
+    "no_results": "Aucun résultat pour « {query} »",
+    "no_results_hint": "Essaie un autre mot-clé ou nom de lieu.",
     "greeting_morning": "Bonjour",
     "greeting_afternoon": "Bon après-midi",
     "greeting_evening": "Bonsoir",

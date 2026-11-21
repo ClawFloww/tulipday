@@ -65,8 +65,8 @@ export function LocationCard({ location, onClick, status }: LocationCardProps) {
               key={i}
               size={10}
               style={{
-                color: i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
-                fill:  i < location.photo_score! ? "#F59E0B" : "var(--color-surface-3)",
+                color: i < location.photo_score! ? "var(--color-warning)" : "var(--color-surface-3)",
+                fill:  i < location.photo_score! ? "var(--color-warning)" : "var(--color-surface-3)",
               }}
             />
           ))}

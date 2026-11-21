@@ -124,6 +124,14 @@
     "private_desc": "View only from public paths — do not enter."
   },
   "home": {
+    "transport_bike": "Bike routes",
+    "transport_car": "Car routes",
+    "transport_walking": "Walking routes",
+    "time_short": "short",
+    "time_half_day": "half day",
+    "time_full_day": "full day",
+    "no_results": "No results for “{query}”",
+    "no_results_hint": "Try another search term or place name.",
     "greeting_morning": "Good morning",
     "greeting_afternoon": "Good afternoon",
     "greeting_evening": "Good evening",
