@@ -51,8 +51,8 @@ export function BottomNavigation() {
   const locale   = (params?.locale as string | undefined) ?? "nl";
 
   // Verberg op fullscreen-ervaringen waar de tabs over de eigen
-  // bottom-UI van de pagina heen vallen (navigatie + legacy actieve route).
-  if (pathname.includes("/navigate") || pathname.includes("/active-route")) {
+  // bottom-UI van de pagina heen vallen (navigatie, actieve route, onboarding).
+  if (pathname.includes("/navigate") || pathname.includes("/active-route") || pathname.includes("/onboarding")) {
     return null;
   }
 

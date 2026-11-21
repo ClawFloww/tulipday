@@ -27,6 +27,10 @@
     "footer": "郁金香季节 · 荷兰"
   },
   "onboarding": {
+    "welcome_title": "欢迎来到 TulipDay",
+    "welcome_body": "探索球茎花田区最美的花田",
+    "start": "开始",
+    "have_account": "已有账户？登录",
     "step_of": "{n} / {total}",
     "intent": {
       "question": "今天您想寻找什么？",

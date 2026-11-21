@@ -5,13 +5,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { tap } from "@/lib/haptics";
 import { useT } from "@/lib/i18n-context";
 import { TERMS_VERSION, TERMS_DATE, getLegalDocs } from "@/constants/legal";
 import { PLANNER_PROFILE_KEY } from "@/lib/planner/types";
-import type { PlannerProfile } from "@/lib/planner/types";
 import PlannerFlow from "@/components/planner/PlannerFlow";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Button } from "@/components/ui/Button";
+import type { PlannerProfile } from "@/lib/planner/types";
 
 // ── Constanten ────────────────────────────────────────────────────────────────
 
@@ -33,12 +36,9 @@ function LegalCheckbox({ checked, animating }: { checked: boolean; animating: bo
     <motion.div
       animate={animating ? { scale: [1, 0.8, 1.1, 1.0] } : { scale: 1 }}
       transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-      className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-      style={{
-        borderColor:     checked ? "#E8102A" : "var(--color-border-strong)",
-        backgroundColor: checked ? "#E8102A" : "transparent",
-        transition:      "background-color 0.2s, border-color 0.2s",
-      }}
+      aria-hidden
+      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors duration-base
+                  ${checked ? "border-primary bg-primary" : "border-line-strong bg-transparent"}`}
     >
       <svg viewBox="0 0 10 8" fill="none" className="w-3.5 h-3.5">
         <motion.path
@@ -56,64 +56,29 @@ function LegalCheckbox({ checked, animating }: { checked: boolean; animating: bo
   );
 }
 
-// ── Document bottom-sheet ─────────────────────────────────────────────────────
+// ── Acceptatierij: echte checkbox voor schermlezers, link opent het document ──
 
-function LegalDocSheet({
-  title, content, closeLabel, onClose,
-}: {
-  title:      string;
-  content:    string;
-  closeLabel: string;
-  onClose:    () => void;
+function LegalRow({ checked, animating, onToggle, prefix, link, suffix, onOpenDoc }: {
+  checked: boolean; animating: boolean; onToggle: () => void;
+  prefix: string; link: string; suffix: string; onOpenDoc: () => void;
 }) {
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/50"
-        onClick={onClose}
-      />
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
-        style={{ backgroundColor: "var(--color-surface-2)", maxHeight: "85vh" }}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: "var(--color-border-strong)" }} />
-        </div>
-        <div className="flex items-center justify-between px-5 pt-2 pb-3"
-             style={{ borderBottom: "1px solid var(--color-border)" }}>
-          <h3 className="text-base font-bold" style={{ color: "var(--color-text)" }}>{title}</h3>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}
-          >
-            <X size={16} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <pre className="text-[13px] leading-relaxed whitespace-pre-wrap font-sans"
-               style={{ color: "var(--color-text-2)" }}>
-            {content}
-          </pre>
-        </div>
-        <div className="px-5 py-4" style={{ borderTop: "1px solid var(--color-border)" }}>
-          <button
-            onClick={onClose}
-            className="w-full py-3.5 rounded-xl text-sm font-bold"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
-          >
-            {closeLabel}
-          </button>
-        </div>
-      </motion.div>
-    </>
+    <div className="flex items-center gap-4 min-h-[56px] rounded-xl px-3 -mx-3">
+      <button type="button" role="checkbox" aria-checked={checked} aria-label={`${prefix}${link}${suffix}`}
+              onClick={onToggle}
+              className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+                         before:absolute before:content-[''] relative before:-inset-2">
+        <LegalCheckbox checked={checked} animating={animating} />
+      </button>
+      <p className="text-body flex-1 leading-snug text-ink-2" onClick={onToggle}>
+        {prefix}
+        <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDoc(); }}
+                className="font-semibold underline underline-offset-2 text-primary rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          {link}
+        </button>
+        {suffix}
+      </p>
+    </div>
   );
 }
 
@@ -156,14 +121,17 @@ export default function OnboardingPage() {
   }
 
   function toggleTerms() {
+    tap();
     if (!acceptedTerms) { setTermsAnimating(true); setTimeout(() => setTermsAnimating(false), 450); }
     setAcceptedTerms((v) => !v);
   }
   function togglePrivacy() {
+    tap();
     if (!acceptedPrivacy) { setPrivacyAnimating(true); setTimeout(() => setPrivacyAnimating(false), 450); }
     setAcceptedPrivacy((v) => !v);
   }
   function toggleEtiquette() {
+    tap();
     if (!acceptedEtiquette) { setEtiquetteAnimating(true); setTimeout(() => setEtiquetteAnimating(false), 450); }
     setAcceptedEtiquette((v) => !v);
   }
@@ -224,19 +192,15 @@ export default function OnboardingPage() {
         const tl = (k: string) => t(`onboarding.legal.${k}`);
 
         return (
-          <div
-            className="flex flex-col min-h-screen px-6 pt-14 pb-10"
-            style={{ backgroundColor: "var(--color-surface)" }}
-          >
+          <div className="flex flex-col min-h-screen px-6 pt-safe pb-safe bg-surface">
             {/* Logo */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col items-center mb-10"
+              className="flex flex-col items-center mt-8 mb-6"
             >
-              <span className="text-5xl mb-2 select-none">🌷</span>
-              <span className="text-xl font-extrabold" style={{ color: "#E8102A" }}>TulipDay</span>
+              <Image src="/logo.png" alt="TulipDay" width={210} height={140} className="object-contain" priority />
             </motion.div>
 
             <motion.div
@@ -245,12 +209,8 @@ export default function OnboardingPage() {
               transition={{ delay: 0.1, duration: 0.4 }}
               className="mb-8"
             >
-              <h1 className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}>
-                {tl("title")}
-              </h1>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-3)" }}>
-                {tl("subtitle")}
-              </p>
+              <h1 className="text-display text-ink mb-2">{tl("title")}</h1>
+              <p className="text-body leading-relaxed text-ink-3">{tl("subtitle")}</p>
             </motion.div>
 
             {/* Checkboxrijen */}
@@ -260,68 +220,15 @@ export default function OnboardingPage() {
               transition={{ delay: 0.2, duration: 0.4 }}
               className="space-y-2 mb-8"
             >
-              <div
-                role="button" tabIndex={0}
-                onClick={toggleTerms}
-                onKeyDown={(e) => e.key === "Enter" && toggleTerms()}
-                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: "pointer" }}
-              >
-                <LegalCheckbox checked={acceptedTerms} animating={termsAnimating} />
-                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
-                  {tl("terms_prefix")}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("terms"); }}
-                    className="font-semibold underline"
-                    style={{ color: "#E8102A" }}
-                  >
-                    {tl("terms_link")}
-                  </button>
-                  {tl("terms_suffix")}
-                </p>
-              </div>
-
-              <div
-                role="button" tabIndex={0}
-                onClick={togglePrivacy}
-                onKeyDown={(e) => e.key === "Enter" && togglePrivacy()}
-                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: "pointer" }}
-              >
-                <LegalCheckbox checked={acceptedPrivacy} animating={privacyAnimating} />
-                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
-                  {tl("privacy_prefix")}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("privacy"); }}
-                    className="font-semibold underline"
-                    style={{ color: "#E8102A" }}
-                  >
-                    {tl("privacy_link")}
-                  </button>
-                  {tl("privacy_suffix")}
-                </p>
-              </div>
-
-              <div
-                role="button" tabIndex={0}
-                onClick={toggleEtiquette}
-                onKeyDown={(e) => e.key === "Enter" && toggleEtiquette()}
-                className="flex items-center gap-4 py-3.5 rounded-xl px-3 -mx-3 transition-colors"
-                style={{ minHeight: 48, cursor: "pointer" }}
-              >
-                <LegalCheckbox checked={acceptedEtiquette} animating={etiquetteAnimating} />
-                <p className="text-sm flex-1 leading-snug" style={{ color: "var(--color-text-2)" }}>
-                  {tl("etiquette_prefix")}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setOpenDoc("etiquette"); }}
-                    className="font-semibold underline"
-                    style={{ color: "#E8102A" }}
-                  >
-                    {tl("etiquette_link")}
-                  </button>
-                  {tl("etiquette_suffix")}
-                </p>
-              </div>
+              <LegalRow checked={acceptedTerms} animating={termsAnimating} onToggle={toggleTerms}
+                        prefix={tl("terms_prefix")} link={tl("terms_link")} suffix={tl("terms_suffix")}
+                        onOpenDoc={() => setOpenDoc("terms")} />
+              <LegalRow checked={acceptedPrivacy} animating={privacyAnimating} onToggle={togglePrivacy}
+                        prefix={tl("privacy_prefix")} link={tl("privacy_link")} suffix={tl("privacy_suffix")}
+                        onOpenDoc={() => setOpenDoc("privacy")} />
+              <LegalRow checked={acceptedEtiquette} animating={etiquetteAnimating} onToggle={toggleEtiquette}
+                        prefix={tl("etiquette_prefix")} link={tl("etiquette_link")} suffix={tl("etiquette_suffix")}
+                        onOpenDoc={() => setOpenDoc("etiquette")} />
             </motion.div>
 
             {/* Doorgaan */}
@@ -331,35 +238,27 @@ export default function OnboardingPage() {
               transition={{ delay: 0.3, duration: 0.4 }}
               className="mt-auto space-y-3"
             >
-              <button
-                onClick={() => allAccepted && advanceTo(1)}
-                className="w-full py-4 rounded-2xl text-white font-extrabold text-base
-                           active:scale-[0.97] transition-all"
-                style={{
-                  backgroundColor: allAccepted ? "var(--color-primary)" : "var(--color-surface-3)",
-                  color:            allAccepted ? "white"   : "var(--color-text-3)",
-                  cursor:           allAccepted ? "pointer" : "not-allowed",
-                }}
-              >
+              <Button size="lg" fullWidth disabled={!allAccepted} onClick={() => advanceTo(1)}>
                 {tl("continue")}
-              </button>
-              <p className="text-center text-[11px]" style={{ color: "var(--color-text-3)" }}>
+              </Button>
+              <p className="text-center text-caption pb-4 text-ink-3">
                 v{TERMS_VERSION} · {TERMS_DATE} · info@tulipday.online
               </p>
             </motion.div>
 
-            {/* Document sheets */}
-            <AnimatePresence>
-              {openDoc === "terms" && (
-                <LegalDocSheet title={tl("terms_title")} content={termsContent} closeLabel={tl("close")} onClose={() => setOpenDoc(null)} />
-              )}
-              {openDoc === "privacy" && (
-                <LegalDocSheet title={tl("privacy_title")} content={privacyContent} closeLabel={tl("close")} onClose={() => setOpenDoc(null)} />
-              )}
-              {openDoc === "etiquette" && (
-                <LegalDocSheet title={tl("etiquette_title")} content={etiquetteContent} closeLabel={tl("close")} onClose={() => setOpenDoc(null)} />
-              )}
-            </AnimatePresence>
+            {/* Documenten — één sheet, inhoud wisselt mee */}
+            <BottomSheet
+              open={openDoc !== null}
+              onClose={() => setOpenDoc(null)}
+              size="full"
+              showClose
+              title={openDoc ? tl(`${openDoc}_title`) : ""}
+            >
+              <pre className="text-label font-normal leading-relaxed whitespace-pre-wrap font-sans text-ink-2 pb-4">
+                {openDoc === "terms" ? termsContent : openDoc === "privacy" ? privacyContent : openDoc === "etiquette" ? etiquetteContent : ""}
+              </pre>
+              <Button variant="secondary" fullWidth onClick={() => setOpenDoc(null)}>{tl("close")}</Button>
+            </BottomSheet>
           </div>
         );
       }
@@ -367,59 +266,44 @@ export default function OnboardingPage() {
       // ── Scherm 1: Welkom ──────────────────────────────────────────────────
       case 1:
         return (
-          <div className="flex flex-col items-center justify-between min-h-screen px-6 pt-20 pb-12"
-               style={{ backgroundColor: "var(--color-surface)" }}>
+          <div className="flex flex-col items-center justify-between min-h-screen px-6 pt-safe pb-safe bg-surface">
             <div className="flex-1 flex flex-col items-center justify-center text-center">
               <motion.div
-                initial={{ scale: 0.3, opacity: 0 }}
+                initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
-                className="text-[100px] leading-none mb-8 select-none"
+                className="mb-6"
               >
-                🌷
+                <Image src="/logo.png" alt="TulipDay" width={300} height={200} className="object-contain" priority />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
               >
-                <h1 className="text-3xl font-extrabold mb-3 leading-tight" style={{ color: "var(--color-text)" }}>
-                  Welkom bij TulipDay
-                </h1>
-                <p className="text-base leading-relaxed max-w-xs" style={{ color: "var(--color-text-3)" }}>
-                  Ontdek de mooiste bollenvelden van de Bollenstreek
-                </p>
+                <h1 className="text-display text-ink mb-3">{t("onboarding.welcome_title")}</h1>
+                <p className="text-body leading-relaxed max-w-xs text-ink-3">{t("onboarding.welcome_body")}</p>
               </motion.div>
             </div>
 
             <motion.div
-              className="w-full space-y-3"
+              className="w-full space-y-2 pb-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.4 }}
             >
-              <button
-                onClick={() => setPlannerActive(true)}
-                className="w-full py-4 rounded-2xl text-white font-extrabold text-base
-                           active:scale-[0.97] transition-transform"
-                style={{ backgroundColor: "var(--color-primary)" }}
-              >
-                Start
-              </button>
-              <button
-                disabled
-                className="w-full py-2 text-sm font-medium disabled:cursor-not-allowed"
-                style={{ color: "var(--color-text-3)" }}
-              >
-                Al een account? Inloggen
-              </button>
-              <button
-                onClick={devReset}
-                className="w-full py-1.5 text-[10px] font-medium"
-                style={{ color: "var(--color-text-3)", opacity: 0.5 }}
-              >
-                ↺ Reset onboarding
-              </button>
+              <Button size="lg" fullWidth onClick={() => setPlannerActive(true)}>
+                {t("onboarding.start")}
+              </Button>
+              <Button variant="ghost" fullWidth onClick={() => router.push(`/${locale}/account`)}>
+                {t("onboarding.have_account")}
+              </Button>
+              {/* Alleen tijdens ontwikkeling: onboarding opnieuw doorlopen */}
+              {process.env.NODE_ENV === "development" && (
+                <button onClick={devReset} className="w-full py-1.5 text-caption text-ink-3 opacity-50">
+                  ↺ Reset onboarding
+                </button>
+              )}
             </motion.div>
           </div>
         );

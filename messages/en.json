@@ -27,6 +27,10 @@
     "footer": "Tulip season · Netherlands"
   },
   "onboarding": {
+    "welcome_title": "Welcome to TulipDay",
+    "welcome_body": "Discover the most beautiful bulb fields of the Bollenstreek",
+    "start": "Start",
+    "have_account": "Already have an account? Sign in",
     "step_of": "{n} / {total}",
     "intent": {
       "question": "What are you looking for today?",

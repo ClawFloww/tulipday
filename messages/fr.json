@@ -27,6 +27,10 @@
     "footer": "Saison des tulipes · Pays-Bas"
   },
   "onboarding": {
+    "welcome_title": "Bienvenue sur TulipDay",
+    "welcome_body": "Découvre les plus beaux champs de fleurs de la Bollenstreek",
+    "start": "Commencer",
+    "have_account": "Déjà un compte ? Se connecter",
     "step_of": "{n} / {total}",
     "intent": {
       "question": "Que recherchez-vous aujourd'hui ?",
