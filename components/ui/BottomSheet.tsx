@@ -17,6 +17,8 @@ export type BottomSheetProps = {
   size?:      Size;
   /** Toont een sluitknop rechts in de kop. */
   showClose?: boolean;
+  /** false = geen overlay en geen scroll-lock; wat erachter ligt (bijv. de kaart) blijft bedienbaar. */
+  modal?:     boolean;
   className?: string;
 };
 
@@ -41,7 +43,7 @@ export function SheetHandle({ onPointerDown }: { onPointerDown?: (e: React.Point
   );
 }
 
-export function BottomSheet({ open, onClose, title, children, size = "auto", showClose = false, className = "" }: BottomSheetProps) {
+export function BottomSheet({ open, onClose, title, children, size = "auto", showClose = false, modal = true, className = "" }: BottomSheetProps) {
   const { t } = useT();
   const titleId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ export function BottomSheet({ open, onClose, title, children, size = "auto", sho
     if (!open) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (modal) document.body.style.overflow = "hidden";
 
     const frame = requestAnimationFrame(() => {
       sheetRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
@@ -60,7 +62,7 @@ export function BottomSheet({ open, onClose, title, children, size = "auto", sho
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") { onClose(); return; }
-      if (e.key !== "Tab" || !sheetRef.current) return;
+      if (!modal || e.key !== "Tab" || !sheetRef.current) return;
       // Focus binnen de sheet houden
       const items = Array.from(sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
       if (items.length === 0) return;
@@ -77,7 +79,7 @@ export function BottomSheet({ open, onClose, title, children, size = "auto", sho
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open, onClose, modal]);
 
   function handleDragEnd(_: unknown, info: PanInfo) {
     if (info.offset.y > DISMISS_OFFSET || info.velocity.y > DISMISS_VELOCITY) onClose();
@@ -86,23 +88,25 @@ export function BottomSheet({ open, onClose, title, children, size = "auto", sho
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center">
-          <motion.div
-            className="absolute inset-0 bg-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-            aria-hidden
-          />
+        <div className={`fixed inset-0 z-[70] flex items-end justify-center ${modal ? "" : "pointer-events-none"}`}>
+          {modal && (
+            <motion.div
+              className="absolute inset-0 bg-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onClose}
+              aria-hidden
+            />
+          )}
           <motion.div
             ref={sheetRef}
             role="dialog"
-            aria-modal="true"
+            aria-modal={modal}
             aria-labelledby={title ? titleId : undefined}
             className={[
-              "relative w-full max-w-[480px] flex flex-col bg-surface-2 rounded-t-3xl shadow-sheet pb-safe",
+              "relative w-full max-w-[480px] flex flex-col bg-surface-2 rounded-t-3xl shadow-sheet pb-safe pointer-events-auto",
               HEIGHTS[size],
               className,
             ].join(" ")}
