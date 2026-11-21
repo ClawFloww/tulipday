@@ -174,6 +174,10 @@
     "save_route_sub": "Kies een naam voor deze route"
   },
   "location": {
+    "photo_view": "Foto",
+    "visit_website": "Bezoek website",
+    "save_failed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+    "back": "Terug",
     "loading": "Locatie laden…",
     "not_found_title": "Locatie niet gevonden",
     "not_found_desc": "Deze plek is mogelijk verwijderd of de link klopt niet.",
@@ -362,6 +366,7 @@
     "footer_copyright": "© {year} TulipDay. Alle rechten voorbehouden."
   },
   "photos": {
+    "preview_alt": "Voorvertoning van je foto",
     "upload_button": "Foto toevoegen",
     "sheet_title": "Deel een foto",
     "step_pick": "Kies een foto",

@@ -4,44 +4,71 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
-  ArrowLeft, MapPin, Star, Heart, Navigation, Loader2,
+  ArrowLeft, MapPin, Star, Heart, Navigation,
   ChevronRight, Camera, Clock, Footprints, ParkingCircle,
-  ShieldCheck, Flower2, Users, Plus, Share2, Check, ExternalLink,
+  ShieldCheck, Flower2, Users, Plus, Share2, Check, ExternalLink, SearchX,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Location, AccessType, Category } from "@/lib/types";
 import { useT } from "@/lib/i18n-context";
 import { publicUrl, resolveParam } from "@/lib/links";
 import { isCurrentlyOpen, getWeekSchedule } from "@/lib/openingHours";
-import type { DayKey } from "@/lib/openingHours";
 import { currentUserId, ensureUser } from "@/lib/auth";
-import { BloomBadge } from "@/components/ui/BloomBadge";
 import { track } from "@/lib/analytics";
+import { Badge } from "@/components/ui/Badge";
+import { BloomBadge } from "@/components/ui/BloomBadge";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { toast } from "@/components/ui/Toast";
 import PhotoUploadSheet from "@/components/ui/PhotoUploadSheet";
 import LocationPhotoGallery, { PendingPhoto } from "@/components/ui/LocationPhotoGallery";
 import UnsplashPhotoFeed from "@/components/UnsplashPhotoFeed";
+import type { Location, AccessType, Category } from "@/lib/types";
+import type { DayKey } from "@/lib/openingHours";
 
-const CATEGORY_STYLE: Record<Category, { bg: string; color: string }> = {
-  flower_field: { bg: "bg-tulip-50 dark:bg-tulip-900/25",     color: "text-tulip-600 dark:text-tulip-400"     },
-  photo_spot:   { bg: "bg-blue-50 dark:bg-blue-900/25",       color: "text-blue-600 dark:text-blue-400"       },
-  attraction:   { bg: "bg-amber-50 dark:bg-amber-900/25",     color: "text-amber-700 dark:text-amber-400"     },
-  food:         { bg: "bg-orange-50 dark:bg-orange-900/25",   color: "text-orange-700 dark:text-orange-400"   },
-  parking:      { bg: "bg-gray-100 dark:bg-gray-800",         color: "text-gray-600 dark:text-gray-400"       },
-  bike_rental:  { bg: "bg-violet-50 dark:bg-violet-900/25",   color: "text-violet-700 dark:text-violet-400"   },
+const CATEGORY_TONE: Record<Category, "primary" | "info" | "warning" | "neutral" | "success"> = {
+  flower_field: "primary",
+  photo_spot:   "info",
+  attraction:   "warning",
+  food:         "warning",
+  parking:      "neutral",
+  bike_rental:  "success",
 };
 
 const CROWD_KEYS = ["crowd_very_quiet", "crowd_quiet", "crowd_moderate", "crowd_busy", "crowd_very_busy"];
-const CROWD_COLORS = ["bg-forest-500", "bg-forest-400", "bg-yellow-400", "bg-orange-400", "bg-tulip-500"];
+const CROWD_COLORS = ["bg-success", "bg-success", "bg-warning", "bg-warning", "bg-danger"];
+
+// Hoogte van de actiebalk boven de navigatiebalk (+ marge), voor de paginapadding
+const ACTION_BAR_HEIGHT        = 88;
+const ACTION_BAR_HEIGHT_SITE   = 144;
 
 function InfoCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-surface-2 rounded-2xl p-4 flex flex-col gap-1.5">
-      <div className="flex items-center gap-2" style={{ color: "var(--color-text-3)" }}>
+    <div className="bg-surface-2 rounded-2xl border border-line p-4 flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 text-ink-3">
         {icon}
-        <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+        <span className="text-caption font-semibold uppercase tracking-wide">{label}</span>
       </div>
-      <p className="text-sm font-bold leading-snug" style={{ color: "var(--color-text)" }}>{value}</p>
-      {sub && <p className="text-xs leading-snug" style={{ color: "var(--color-text-2)" }}>{sub}</p>}
+      <p className="text-[15px] font-bold leading-snug text-ink">{value}</p>
+      {sub && <p className="text-label font-normal leading-snug text-ink-2">{sub}</p>}
+    </div>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-surface" aria-busy="true">
+      <Skeleton className="h-72 w-full !rounded-none" />
+      <div className="px-5 py-5 space-y-4">
+        <Skeleton className="h-6 w-24 !rounded-full" />
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton variant="text" lines={3} />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -60,6 +87,7 @@ export default function LocationDetailPage() {
   const [saving,   setSaving]   = useState(false);
   const [imgError, setImgError] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [uploadKey, setUploadKey]   = useState(0);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [copied, setCopied] = useState(false);
   const [showStreetView, setShowStreetView] = useState(false);
@@ -92,16 +120,24 @@ export default function LocationDetailPage() {
     if (!location || saving) return;
     setSaving(true);
     const userId = await ensureUser();
-    if (!userId) { setSaving(false); return; }
+    if (!userId) { setSaving(false); toast.error(t("location.save_failed")); return; }
     if (saved) {
-      await supabase.from("saved_items").delete()
+      const { error } = await supabase.from("saved_items").delete()
         .eq("user_id", userId).eq("item_type", "location").eq("item_id", location.id);
-      setSaved(false);
-      track("save", { location_id: location.id, action: "unsave" });
+      if (error) toast.error(t("location.save_failed"));
+      else {
+        setSaved(false);
+        toast.info(t("saved_page.removed"));
+        track("save", { location_id: location.id, action: "unsave" });
+      }
     } else {
-      await supabase.from("saved_items").insert({ item_type: "location", item_id: location.id });
-      setSaved(true);
-      track("save", { location_id: location.id, action: "save" });
+      const { error } = await supabase.from("saved_items").insert({ item_type: "location", item_id: location.id });
+      if (error) toast.error(t("location.save_failed"));
+      else {
+        setSaved(true);
+        toast.success(t("common.saved"));
+        track("save", { location_id: location.id, action: "save" });
+      }
     }
     setSaving(false);
   }
@@ -128,30 +164,19 @@ export default function LocationDetailPage() {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      toast.success(t("common.copied"));
       setTimeout(() => setCopied(false), 2000);
     } catch { /* no clipboard access */ }
   }
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-surface flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 size={32} className="text-tulip-400 animate-spin" />
-          <p className="text-sm" style={{ color: "var(--color-text-3)" }}>{t("location.loading")}</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <DetailSkeleton />;
 
   if (notFound || !location) {
     return (
-      <div className="fixed inset-0 bg-surface flex flex-col items-center justify-center gap-4 px-8 text-center">
-        <span className="text-5xl">🌷</span>
-        <h2 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>{t("location.not_found_title")}</h2>
-        <p className="text-sm" style={{ color: "var(--color-text-3)" }}>{t("location.not_found_desc")}</p>
-        <button onClick={() => router.back()} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
-          {t("common.go_back")}
-        </button>
+      <div className="min-h-screen bg-surface flex items-center justify-center pb-safe-nav">
+        <EmptyState icon={<SearchX size={28} />} title={t("location.not_found_title")}
+                    description={t("location.not_found_desc")}
+                    actionLabel={t("common.go_back")} onAction={() => router.back()} />
       </div>
     );
   }
@@ -166,7 +191,7 @@ export default function LocationDetailPage() {
   const mainPhoto = location.image_url ?? fallback;
   const displayImage = imgError ? fallback : mainPhoto;
 
-  const catStyle = CATEGORY_STYLE[location.category];
+  const catTone = CATEGORY_TONE[location.category] ?? "neutral";
   const crowdIdx = Math.min((location.crowd_score ?? 1) - 1, 4);
 
   const accessMap: Record<AccessType, { label: string; desc: string }> = {
@@ -186,9 +211,10 @@ export default function LocationDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface pb-32">
+    <div className="min-h-screen bg-surface"
+         style={{ paddingBottom: `calc(var(--nav-height) + env(safe-area-inset-bottom) + ${location.website_url ? ACTION_BAR_HEIGHT_SITE : ACTION_BAR_HEIGHT}px)` }}>
 
-      <div className="relative h-72 sm:h-96 overflow-hidden bg-gray-200">
+      <div className="relative h-72 sm:h-96 overflow-hidden bg-surface-3">
         {showStreetView && streetViewEmbedUrl ? (
           <iframe
             src={streetViewEmbedUrl}
@@ -210,34 +236,35 @@ export default function LocationDetailPage() {
           </>
         )}
 
-        {/* Terug knop */}
-        <button onClick={() => router.back()}
-          className="absolute top-12 left-4 z-10 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-
-        {/* Street View toggle */}
-        {streetViewEmbedUrl && (
-          <button
-            onClick={() => setShowStreetView((v) => !v)}
-            className="absolute top-12 right-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full backdrop-blur-sm text-xs font-bold transition-all active:scale-95"
-            style={{
-              backgroundColor: showStreetView ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.35)",
-              color: showStreetView ? "#1A1A1A" : "#ffffff",
-            }}
-          >
-            <MapPin size={12} />
-            {showStreetView ? "Foto" : "Street View"}
-          </button>
-        )}
+        {/* Bovenbalk: terug + Street View, onder de notch */}
+        <div className="absolute inset-x-4 z-10 flex items-center justify-between top-[calc(env(safe-area-inset-top)+12px)]">
+          <IconButton variant="overlay" aria-label={t("location.back")} onClick={() => router.back()}>
+            <ArrowLeft size={20} />
+          </IconButton>
+          {streetViewEmbedUrl && (
+            <button
+              onClick={() => setShowStreetView((v) => !v)}
+              aria-pressed={showStreetView}
+              className={`flex items-center gap-1.5 min-h-touch px-4 rounded-full backdrop-blur-md text-label transition-colors duration-fast active:scale-95
+                          ${showStreetView ? "bg-surface-2 text-ink shadow-md" : "bg-black/40 text-white"}`}
+            >
+              <MapPin size={14} aria-hidden />
+              {showStreetView ? t("location.photo_view") : "Street View"}
+            </button>
+          )}
+        </div>
 
         {location.bloom_status && (
-          <div className="absolute bottom-4 left-4"><BloomBadge status={location.bloom_status} /></div>
+          // Vaste achtergrond zodat de badge leesbaar blijft op elke foto
+          <div className="absolute bottom-4 left-4 rounded-full bg-surface-2 shadow-md">
+            <BloomBadge status={location.bloom_status} />
+          </div>
         )}
         {location.photo_score != null && (
-          <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full">
+          <div className="absolute bottom-4 right-4 flex items-center gap-0.5 bg-black/40 backdrop-blur-md px-2.5 py-1.5 rounded-full"
+               aria-label={`${t("location.photo_score")}: ${location.photo_score}/5`}>
             {Array.from({ length: location.photo_score }).map((_, i) => (
-              <Star key={i} size={11} className="text-amber-400 fill-amber-400" />
+              <Star key={i} size={12} className="text-warning fill-current" aria-hidden />
             ))}
           </div>
         )}
@@ -247,28 +274,27 @@ export default function LocationDetailPage() {
 
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${catStyle.bg} ${catStyle.color}`}>
-              <Flower2 size={11} /> {t(`category.${location.category}`)}
-            </span>
+            <Badge tone={catTone} icon={<Flower2 size={11} />}>{t(`category.${location.category}`)}</Badge>
           </div>
-          <h1 className="text-2xl font-extrabold leading-tight mb-1" style={{ color: "var(--color-text)" }}>{location.title}</h1>
+          <h1 className="text-display text-ink mb-1">{location.title}</h1>
           {location.address && (
-            <p className="flex items-center gap-1.5 text-sm" style={{ color: "var(--color-text-2)" }}>
-              <MapPin size={13} className="text-tulip-400 flex-shrink-0" /> {location.address}
+            <p className="flex items-center gap-1.5 text-body text-ink-2">
+              <MapPin size={14} className="text-primary flex-shrink-0" aria-hidden /> {location.address}
             </p>
           )}
           {location.photo_score != null && (
             <div className="flex items-center gap-1 mt-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={16} className={i < location.photo_score! ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200 dark:text-gray-700 dark:fill-gray-700"} />
+                <Star key={i} size={16} aria-hidden
+                      className={i < location.photo_score! ? "text-warning fill-current" : "text-line-strong fill-current"} />
               ))}
-              <span className="text-xs ml-1 font-medium" style={{ color: "var(--color-text-3)" }}>{t("location.photo_score")}</span>
+              <span className="text-caption ml-1 text-ink-3">{t("location.photo_score")}</span>
             </div>
           )}
         </div>
 
         {location.short_description && (
-          <p className="text-[15px] leading-relaxed" style={{ color: "var(--color-text-2)" }}>{location.short_description}</p>
+          <p className="text-body leading-relaxed text-ink-2">{location.short_description}</p>
         )}
 
         <div className="grid grid-cols-2 gap-3">
@@ -300,30 +326,30 @@ export default function LocationDetailPage() {
         )}
 
         {location.crowd_score != null && (
-          <div className="bg-surface-2 rounded-2xl p-4 flex flex-col gap-2">
-            <div className="flex items-center gap-2" style={{ color: "var(--color-text-3)" }}>
+          <div className="bg-surface-2 rounded-2xl border border-line p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-ink-3">
               <Users size={15} />
-              <span className="text-xs font-semibold uppercase tracking-wide">{t("location.crowd_level")}</span>
+              <span className="text-caption font-semibold uppercase tracking-wide">{t("location.crowd_level")}</span>
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5" aria-hidden>
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className={`flex-1 h-2 rounded-full ${i < location.crowd_score! ? CROWD_COLORS[crowdIdx] : "bg-gray-200 dark:bg-gray-700"}`} />
+                <div key={i} className={`flex-1 h-2 rounded-full ${i < location.crowd_score! ? CROWD_COLORS[crowdIdx] : "bg-surface-3"}`} />
               ))}
             </div>
-            <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t(`location.${CROWD_KEYS[crowdIdx]}`)}</p>
+            <p className="text-[15px] font-bold text-ink">{t(`location.${CROWD_KEYS[crowdIdx]}`)}</p>
           </div>
         )}
 
         {(location.category === "photo_spot" || (location.photo_score ?? 0) >= 4) && (
-          <div className="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-4">
+          <div className="bg-surface-2 rounded-2xl border border-line p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Camera size={16} className="text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-extrabold text-blue-900 dark:text-blue-200">{t("location.photography_tips")}</h3>
+              <Camera size={16} className="text-info" />
+              <h3 className="text-headline text-ink">{t("location.photography_tips")}</h3>
             </div>
             <ul className="space-y-2">
               {(["tip_golden_hour", "tip_wide_angle", "tip_overcast", "tip_low_angle"] as const).map((key) => (
-                <li key={key} className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-300">
-                  <ChevronRight size={12} className="mt-0.5 flex-shrink-0 text-blue-400 dark:text-blue-500" /> {t(`location.${key}`)}
+                <li key={key} className="flex items-start gap-2 text-label font-normal text-ink-2">
+                  <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-info" aria-hidden /> {t(`location.${key}`)}
                 </li>
               ))}
             </ul>
@@ -334,8 +360,8 @@ export default function LocationDetailPage() {
 
         {location.full_description && (
           <div>
-            <h2 className="text-base font-extrabold mb-2" style={{ color: "var(--color-text)" }}>{t("location.about")}</h2>
-            <p className="text-[15px] leading-relaxed whitespace-pre-line" style={{ color: "var(--color-text-2)" }}>{location.full_description}</p>
+            <h2 className="text-headline text-ink mb-2">{t("location.about")}</h2>
+            <p className="text-body leading-relaxed whitespace-pre-line text-ink-2">{location.full_description}</p>
           </div>
         )}
 
@@ -343,27 +369,27 @@ export default function LocationDetailPage() {
         <div>
           <LocationPhotoGallery locationId={location.id} pendingPhotos={pendingPhotos} />
           <button
-            onClick={() => setShowUpload(true)}
-            aria-label={t("photos.upload_button")}
-            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl
-                       border-2 border-dashed border-tulip-200 dark:border-tulip-800 text-tulip-500 font-bold text-sm
-                       hover:border-tulip-400 hover:bg-tulip-50 dark:hover:bg-tulip-900/20 transition-all"
+            onClick={() => { setUploadKey((k) => k + 1); setShowUpload(true); }}
+            className="mt-3 w-full flex items-center justify-center gap-2 min-h-[48px] rounded-xl
+                       border-2 border-dashed border-line-strong text-primary font-bold text-[15px]
+                       hover:border-primary hover:bg-primary-subtle transition-colors duration-fast
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <Plus size={16} /> {t("photos.upload_button")}
           </button>
         </div>
 
         {(location.category === "flower_field" || location.category === "attraction" || location.category === "photo_spot") && (
-          <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--color-primary-subtle)" }}>
+          <div className="rounded-2xl p-4 bg-primary-subtle">
             <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck size={16} className="text-tulip-500" />
-              <h3 className="text-sm font-extrabold text-tulip-600">{t("location.etiquette_title")}</h3>
+              <ShieldCheck size={16} className="text-primary" />
+              <h3 className="text-headline text-primary">{t("location.etiquette_title")}</h3>
             </div>
             <ul className="space-y-3">
               {etiquetteRules.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="text-base leading-none mt-0.5 flex-shrink-0">{item.emoji}</span>
-                  <p className="text-xs leading-snug" style={{ color: "var(--color-text-2)" }}>{item.rule}</p>
+                  <span className="text-base leading-none mt-0.5 flex-shrink-0" aria-hidden>{item.emoji}</span>
+                  <p className="text-label font-normal leading-snug text-ink-2">{item.rule}</p>
                 </li>
               ))}
             </ul>
@@ -371,62 +397,44 @@ export default function LocationDetailPage() {
         )}
       </div>
 
-      {showUpload && (
-        <PhotoUploadSheet
-          locationId={location.id}
-          onClose={() => setShowUpload(false)}
-          onUploaded={(id, url) => {
-            setPendingPhotos((prev) => [{ id, previewUrl: url }, ...prev]);
-            setShowUpload(false);
-          }}
-        />
-      )}
+      {/* Blijft gemount voor de sluitanimatie; nieuwe key per opening = lege stappen */}
+      <PhotoUploadSheet
+        key={uploadKey}
+        open={showUpload}
+        locationId={location.id}
+        onClose={() => setShowUpload(false)}
+        onUploaded={(id, url) => {
+          setPendingPhotos((prev) => [{ id, previewUrl: url }, ...prev]);
+        }}
+      />
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 pb-safe border-t"
-           style={{ backgroundColor: "var(--color-surface-2)", borderColor: "var(--color-border)" }}>
+      {/* Actiebalk — boven de navigatiebalk, niet erachter */}
+      <div className="fixed left-0 right-0 bottom-nav z-40 px-4 pt-3 pb-3 nav-glass border-t border-line">
         {location.website_url && (
-          <div className="max-w-lg mx-auto mb-2">
-            <a
-              href={location.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border-2 transition-all active:scale-[0.98]"
-              style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
-            >
-              <ExternalLink size={15} />
-              Bezoek website
-            </a>
-          </div>
+          <a
+            href={location.website_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="max-w-lg mx-auto mb-2 w-full flex items-center justify-center gap-2 min-h-touch rounded-xl text-label
+                       bg-surface-3 text-ink-2 active:scale-[0.98] transition-transform duration-fast
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <ExternalLink size={15} aria-hidden />
+            {t("location.visit_website")}
+          </a>
         )}
         <div className="flex gap-2 max-w-lg mx-auto">
-          <button
-            onClick={handleNavigate}
-            disabled={!location.latitude}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl
-                       bg-tulip-500 text-white font-bold text-sm shadow-md shadow-tulip-200
-                       hover:bg-tulip-600 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Navigation size={17} /> {t("common.navigate")}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
-                        ${saved ? "bg-tulip-500 border-tulip-500 text-white shadow-md shadow-tulip-200" : "border-tulip-200 dark:border-tulip-800 text-tulip-500 hover:border-tulip-400"}`}
-            style={saved ? {} : { backgroundColor: "var(--color-surface-2)" }}
-            aria-label={saved ? t("common.saved") : t("common.save")}
-          >
-            {saving ? <Loader2 size={17} className="animate-spin" /> : <Heart size={17} className={saved ? "fill-white" : ""} />}
-          </button>
-          <button
-            onClick={handleShare}
-            className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm border-2 transition-all active:scale-[0.98]
-                        ${copied ? "bg-forest-500 border-forest-500 text-white" : "border-[var(--color-border)] hover:border-gray-400"}`}
-            style={copied ? {} : { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" }}
-            aria-label={t("common.share")}
-          >
-            {copied ? <Check size={17} /> : <Share2 size={17} />}
-          </button>
+          <Button size="lg" className="flex-1" icon={<Navigation size={18} />}
+                  onClick={handleNavigate} disabled={!location.latitude}>
+            {t("common.navigate")}
+          </Button>
+          <Button size="lg" variant={saved ? "primary" : "secondary"} loading={saving} onClick={handleSave}
+                  aria-label={saved ? t("common.saved") : t("common.save")} aria-pressed={saved} className="!px-4">
+            {!saving && <Heart size={18} className={saved ? "fill-current" : "text-primary"} />}
+          </Button>
+          <Button size="lg" variant="secondary" onClick={handleShare} aria-label={t("common.share")} className="!px-4">
+            {copied ? <Check size={18} className="text-success" /> : <Share2 size={18} />}
+          </Button>
         </div>
       </div>
     </div>
@@ -444,24 +452,21 @@ function OpeningHoursCard({
   const today  = (["sun","mon","tue","wed","thu","fri","sat"] as DayKey[])[new Date().getDay()];
 
   return (
-    <div className="bg-surface-2 rounded-2xl p-4 flex flex-col gap-3">
-      {/* Header */}
+    <div className="bg-surface-2 rounded-2xl border border-line p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2" style={{ color: "var(--color-text-3)" }}>
+        <div className="flex items-center gap-2 text-ink-3">
           <Clock size={15} />
-          <span className="text-xs font-semibold uppercase tracking-wide">{t("location.opening_hours")}</span>
+          <span className="text-caption font-semibold uppercase tracking-wide">{t("location.opening_hours")}</span>
         </div>
         {isOpen === true && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-green-600">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <Badge tone="success" icon={<span className="block w-1.5 h-1.5 rounded-full bg-success animate-pulse" />}>
             {t("location.open_now")}
-          </span>
+          </Badge>
         )}
         {isOpen === false && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
+          <Badge tone="danger" icon={<span className="block w-1.5 h-1.5 rounded-full bg-danger" />}>
             {t("location.closed_now")}
-          </span>
+          </Badge>
         )}
       </div>
 
@@ -472,9 +477,8 @@ function OpeningHoursCard({
             const isToday = key === today;
             return (
               <div key={key} className={`flex flex-col items-center gap-1 rounded-xl py-1.5 px-0.5
-                ${isToday ? "bg-tulip-500/10" : ""}`}>
-                <span className={`text-[10px] font-bold uppercase ${isToday ? "text-tulip-600" : ""}`}
-                      style={isToday ? {} : { color: "var(--color-text-3)" }}>
+                ${isToday ? "bg-primary-subtle" : ""}`}>
+                <span className={`text-[10px] font-bold uppercase ${isToday ? "text-primary" : "text-ink-3"}`}>
                   {t(`location.day_${key}`)}
                 </span>
                 {schedule ? (

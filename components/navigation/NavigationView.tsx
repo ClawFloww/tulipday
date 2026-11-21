@@ -674,6 +674,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
       {/* ── Foto-upload sheet ─────────────────────────────────────────── */}
       {showPhotoUpload && activeStop && (
         <PhotoUploadSheet
+          open
           locationId={activeStop.location_id ?? activeStop.id}
           onClose={() => setShowPhotoUpload(false)}
           onUploaded={() => setShowPhotoUpload(false)}

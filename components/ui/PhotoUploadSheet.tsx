@@ -3,11 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { X, Camera, ImageIcon, Upload, Check, Loader2, ChevronRight } from "lucide-react";
+import { Camera, ImageIcon, Upload, Check, Loader2, ChevronRight, AlertTriangle } from "lucide-react";
+import { success as hapticSuccess } from "@/lib/haptics";
 import { useT } from "@/lib/i18n-context";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
+  open: boolean;
   locationId: string;
   onClose: () => void;
   onUploaded: (photoId: string, previewUrl: string) => void;
@@ -43,7 +47,16 @@ async function getCroppedBlob(img: HTMLImageElement, crop: PixelCrop): Promise<B
   );
 }
 
-export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Props) {
+function ErrorBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div role="alert" className="flex items-start gap-2 text-label rounded-xl px-4 py-3 bg-surface-3 text-ink">
+      <AlertTriangle size={16} className="text-warning flex-shrink-0 mt-0.5" aria-hidden />
+      {children}
+    </div>
+  );
+}
+
+export default function PhotoUploadSheet({ open, locationId, onClose, onUploaded }: Props) {
   const { t } = useT();
   const { upload, progress } = usePhotoUpload();
   const [step, setStep] = useState<Step>("pick");
@@ -135,6 +148,7 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
     });
 
     if (result) {
+      hapticSuccess();
       setPreviewUrl(result.publicUrl);
       setStep("success");
       onUploaded(result.photoId, result.publicUrl);
@@ -159,212 +173,134 @@ export default function PhotoUploadSheet({ locationId, onClose, onUploaded }: Pr
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+    <BottomSheet open={open} onClose={onClose} title={t("photos.sheet_title")} showClose>
+      <div className="pt-2 pb-4">
 
-      {/* Sheet */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("photos.sheet_title")}
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] overflow-y-auto"
-      >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" aria-hidden="true" />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <h2 className="text-base font-extrabold text-gray-900">{t("photos.sheet_title")}</h2>
-          <button
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="px-5 py-5 pb-8">
-
-          {/* ── Step: pick ── */}
-          {step === "pick" && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("photos.step_pick")}</p>
-              {error && (
-                <div role="alert" className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5 font-medium">
-                  {error}
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <PickButton
-                  icon={<Camera size={24} className="text-tulip-500" />}
-                  label={t("photos.pick_camera")}
-                  capture="environment"
-                  onFile={handleFileSelected}
-                />
-                <PickButton
-                  icon={<ImageIcon size={24} className="text-tulip-500" />}
-                  label={t("photos.pick_gallery")}
-                  onFile={handleFileSelected}
-                />
-              </div>
+        {/* ── Stap: kiezen ── */}
+        {step === "pick" && (
+          <div className="space-y-4">
+            <p className="text-body text-ink-2">{t("photos.step_pick")}</p>
+            {error && <ErrorBox>{error}</ErrorBox>}
+            <div className="grid grid-cols-2 gap-3">
+              <PickButton icon={<Camera size={26} />} label={t("photos.pick_camera")} capture="environment" onFile={handleFileSelected} />
+              <PickButton icon={<ImageIcon size={26} />} label={t("photos.pick_gallery")} onFile={handleFileSelected} />
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── Step: crop ── */}
-          {step === "crop" && srcUrl && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">{t("photos.step_crop")}</p>
-              <div className="rounded-2xl overflow-hidden bg-gray-100">
-                <ReactCrop
-                  crop={crop}
-                  onChange={(c) => setCrop(c)}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={ASPECT}
-                  minWidth={100}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imgRef}
-                    src={srcUrl}
-                    alt="Voorvertoning voor bijsnijden"
-                    onLoad={onImageLoad}
-                    className="w-full object-contain"
-                    style={{ maxHeight: "45dvh" }}
-                  />
-                </ReactCrop>
-              </div>
-              <button
-                onClick={handleCropDone}
-                disabled={!completedCrop}
-                className="w-full py-3.5 bg-tulip-500 text-white font-bold rounded-xl flex items-center justify-center gap-2
-                           disabled:opacity-40 hover:bg-tulip-600 transition-colors"
+        {/* ── Stap: bijsnijden ── */}
+        {step === "crop" && srcUrl && (
+          <div className="space-y-4">
+            <p className="text-body text-ink-2">{t("photos.step_crop")}</p>
+            <div className="rounded-2xl overflow-hidden bg-surface-3">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={ASPECT}
+                minWidth={100}
               >
-                {t("photos.step_details")} <ChevronRight size={16} />
-              </button>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imgRef}
+                  src={srcUrl}
+                  alt={t("photos.preview_alt")}
+                  onLoad={onImageLoad}
+                  className="w-full object-contain max-h-[45dvh]"
+                />
+              </ReactCrop>
             </div>
-          )}
+            <Button size="lg" fullWidth onClick={handleCropDone} disabled={!completedCrop}>
+              {t("photos.step_details")} <ChevronRight size={18} aria-hidden />
+            </Button>
+          </div>
+        )}
 
-          {/* ── Step: details ── */}
-          {step === "details" && srcUrl && (
-            <div className="space-y-4">
-              {/* Preview */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={srcUrl}
-                alt="Voorvertoning"
-                className="w-full aspect-[4/3] object-cover rounded-2xl bg-gray-100"
+        {/* ── Stap: details ── */}
+        {step === "details" && srcUrl && (
+          <div className="space-y-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={srcUrl} alt={t("photos.preview_alt")} className="w-full aspect-[4/3] object-cover rounded-2xl bg-surface-3" />
+
+            {error && <ErrorBox>{error}</ErrorBox>}
+
+            <div>
+              <label htmlFor="photo-caption" className="text-caption font-semibold uppercase tracking-wide block mb-1.5 text-ink-3">
+                {t("photos.caption_label")}
+              </label>
+              <textarea
+                id="photo-caption"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value.slice(0, 80))}
+                placeholder={t("photos.caption_placeholder")}
+                rows={2}
+                className="w-full px-3.5 py-3 text-[15px] rounded-xl resize-none text-ink bg-surface-3 border-2 border-line
+                           placeholder:text-ink-3 focus:outline-none focus:border-primary transition-colors duration-fast"
               />
-
-              {error && (
-                <div role="alert" className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5 font-medium">
-                  {error}
-                </div>
-              )}
-
-              {/* Caption */}
-              <div>
-                <label htmlFor="photo-caption" className="text-xs font-semibold uppercase tracking-wide block mb-1.5"
-                       style={{ color: "var(--color-text-3)" }}>
-                  {t("photos.caption_label")}
-                </label>
-                <textarea
-                  id="photo-caption"
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value.slice(0, 80))}
-                  placeholder={t("photos.caption_placeholder")}
-                  rows={2}
-                  aria-label={t("photos.caption_label")}
-                  className="w-full px-3 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-tulip-300 focus:border-tulip-400 resize-none transition-all"
-                  style={{ backgroundColor: "var(--color-surface-3)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}
-                />
-                <p className="text-xs text-gray-400 text-right mt-1">
-                  {t("photos.caption_hint").replace("{n}", String(caption.length))}
-                </p>
-              </div>
-
-              {/* Bloom confirm */}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={bloomConfirmed}
-                  onChange={(e) => setBloomConfirmed(e.target.checked)}
-                  aria-label={t("photos.bloom_confirm_label")}
-                  className="mt-0.5 w-4 h-4 rounded accent-tulip-500"
-                />
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{t("photos.bloom_confirm_label")}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{t("photos.bloom_confirm_hint")}</p>
-                </div>
-              </label>
-
-              {/* Consent */}
-              <label className="flex items-start gap-3 cursor-pointer bg-tulip-50 rounded-xl p-3">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  aria-label={t("photos.consent_label")}
-                  className="mt-0.5 w-4 h-4 flex-shrink-0 rounded accent-tulip-500"
-                />
-                <p className="text-sm leading-snug text-tulip-700">{t("photos.consent_label")}</p>
-              </label>
-
-              <button
-                onClick={handleUpload}
-                disabled={!consent}
-                className="w-full py-3.5 bg-tulip-500 text-white font-bold rounded-xl flex items-center justify-center gap-2
-                           disabled:opacity-40 hover:bg-tulip-600 transition-colors"
-              >
-                <Upload size={16} /> {t("photos.upload_btn")}
-              </button>
+              <p className="text-caption text-ink-3 text-right mt-1 font-mono">
+                {t("photos.caption_hint").replace("{n}", String(caption.length))}
+              </p>
             </div>
-          )}
 
-          {/* ── Step: uploading ── */}
-          {step === "uploading" && (
-            <div className="flex flex-col items-center justify-center py-10 gap-4">
-              <Loader2 size={36} className="text-tulip-400 animate-spin" />
-              <p className="text-sm text-gray-500 font-medium">{progress ?? t("photos.uploading")}</p>
-            </div>
-          )}
+            <label className="flex items-start gap-3 cursor-pointer min-h-touch">
+              <input
+                type="checkbox"
+                checked={bloomConfirmed}
+                onChange={(e) => setBloomConfirmed(e.target.checked)}
+                className="mt-0.5 w-5 h-5 rounded accent-[var(--color-primary)] flex-shrink-0"
+              />
+              <span>
+                <span className="block text-[15px] font-semibold text-ink">{t("photos.bloom_confirm_label")}</span>
+                <span className="block text-label font-normal text-ink-3 mt-0.5">{t("photos.bloom_confirm_hint")}</span>
+              </span>
+            </label>
 
-          {/* ── Step: success ── */}
-          {step === "success" && (
-            <div className="space-y-4">
-              <div className="flex flex-col items-center py-6 gap-3">
-                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-                  <Check size={28} className="text-green-600" />
-                </div>
-                <h3 className="text-lg font-extrabold text-gray-900">{t("photos.success_title")}</h3>
-                <p className="text-sm text-gray-500 text-center leading-relaxed">{t("photos.success_body")}</p>
+            <label className="flex items-start gap-3 cursor-pointer rounded-xl p-3 bg-primary-subtle">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 w-5 h-5 flex-shrink-0 rounded accent-[var(--color-primary)]"
+              />
+              <span className="text-label font-normal leading-snug text-ink">{t("photos.consent_label")}</span>
+            </label>
+
+            <Button size="lg" fullWidth icon={<Upload size={18} />} onClick={handleUpload} disabled={!consent}>
+              {t("photos.upload_btn")}
+            </Button>
+          </div>
+        )}
+
+        {/* ── Stap: uploaden ── */}
+        {step === "uploading" && (
+          <div className="flex flex-col items-center justify-center py-10 gap-4" aria-live="polite">
+            <Loader2 size={36} className="text-primary animate-spin" aria-hidden />
+            <p className="text-body text-ink-2 font-medium">{progress ?? t("photos.uploading")}</p>
+          </div>
+        )}
+
+        {/* ── Stap: gelukt ── */}
+        {step === "success" && (
+          <div className="space-y-4">
+            <div className="flex flex-col items-center py-6 gap-3 text-center">
+              <div className="w-14 h-14 rounded-full bg-surface-3 flex items-center justify-center">
+                <Check size={28} className="text-success" />
               </div>
-              {previewUrl && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={previewUrl} alt="Geüploade foto" className="w-full aspect-[4/3] object-cover rounded-2xl" />
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleReset}
-                  className="py-3 border-2 border-tulip-200 text-tulip-500 font-bold rounded-xl hover:border-tulip-400 transition-colors text-sm"
-                >
-                  {t("photos.add_another")}
-                </button>
-                <button
-                  onClick={onClose}
-                  className="py-3 bg-tulip-500 text-white font-bold rounded-xl hover:bg-tulip-600 transition-colors text-sm"
-                >
-                  {t("photos.done_btn")}
-                </button>
-              </div>
+              <h3 className="text-title text-ink">{t("photos.success_title")}</h3>
+              <p className="text-body text-ink-2 leading-relaxed">{t("photos.success_body")}</p>
             </div>
-          )}
-        </div>
+            {previewUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={previewUrl} alt={t("photos.preview_alt")} className="w-full aspect-[4/3] object-cover rounded-2xl" />
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="secondary" onClick={handleReset}>{t("photos.add_another")}</Button>
+              <Button onClick={onClose}>{t("photos.done_btn")}</Button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </BottomSheet>
   );
 }
 
@@ -383,13 +319,13 @@ function PickButton({
     <button
       type="button"
       onClick={() => inputRef.current?.click()}
-      className="flex flex-col items-center justify-center gap-3 py-8 rounded-2xl
-                 bg-gray-50 border-2 border-dashed border-gray-200
-                 hover:border-tulip-300 hover:bg-tulip-50 transition-all"
-      aria-label={label}
+      className="flex flex-col items-center justify-center gap-3 py-8 rounded-2xl text-primary
+                 bg-surface-3 border-2 border-dashed border-line-strong
+                 hover:border-primary hover:bg-primary-subtle active:scale-[0.98] transition-[transform,background-color,border-color] duration-fast
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {icon}
-      <span className="text-sm font-semibold text-gray-700">{label}</span>
+      <span className="text-[15px] font-semibold text-ink">{label}</span>
       <input
         ref={inputRef}
         type="file"

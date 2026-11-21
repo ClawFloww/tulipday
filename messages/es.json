@@ -174,6 +174,10 @@
     "save_route_sub": "Elige un nombre para esta ruta"
   },
   "location": {
+    "photo_view": "Foto",
+    "visit_website": "Visitar web",
+    "save_failed": "No se pudo guardar. Inténtalo de nuevo.",
+    "back": "Atrás",
     "loading": "Cargando lugar…",
     "not_found_title": "Lugar no encontrado",
     "not_found_desc": "Este spot puede haber sido eliminado o el enlace es incorrecto.",
@@ -362,6 +366,7 @@
     "footer_copyright": "© {year} TulipDay. Todos los derechos reservados."
   },
   "photos": {
+    "preview_alt": "Vista previa de tu foto",
     "upload_button": "Agregar foto",
     "sheet_title": "Compartir una foto",
     "step_pick": "Choose a photo",
