@@ -12,7 +12,7 @@ Instructies voor Claude Code. Lees dit bestand volledig voordat je iets wijzigt.
 
 - **Framework**: Next.js 14 (App Router), TypeScript strict mode
 - **Database**: Supabase (PostgreSQL + Storage + Realtime)
-- **Kaarten**: MapLibre GL (OSM-based, geen Google Maps)
+- **Kaarten**: MapLibre GL met OpenFreeMap-vectortegels (licht/donker, geen API-key); MapTiler alleen nog in de navigatiekaart
 - **Routing**: BRouter (veldpaden) + OSRM (wegnavigatie)
 - **Stijl**: Tailwind CSS + CSS custom properties voor theming
 - **Mobile**: Capacitor voor iOS/Android builds
@@ -97,6 +97,14 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - GPS-navigatie via `watchPosition` met afslagen (OSRM turn-by-turn)
 - Aanrijdroute: grijze lijn van GPS-positie naar eerste stop
 - Bloeistatus melden onderweg
+
+### Kaart (`components/map/`, `lib/map*.ts`)
+- **Stijl** (`lib/mapStyle.ts`): `mapStyleUrl()` + `watchMapTheme(map, onThemeChange)` direct na `new maplibregl.Map`. Wisselt mee met `.dark`, behoudt eigen GeoJSON-lagen, valt terug op Positron als de donkere stijl niet laadt. Eigen tekstlagen gebruiken `MAP_FONT_BOLD` (OpenFreeMap levert alleen Noto Sans).
+- **Routelijnen** (`lib/mapLayers.ts`): altijd via `addRouteLayers` + `setRouteLines` (één bron per kaart, casing, richtingspijlen, start/finish). `selected: true` = merkrood, anders gedimd. Na een thema-wissel `applyRouteTheme`.
+- **Iconen** (`lib/mapIcons.ts`): `await addMapIcons(map)` vóór symboollagen; categoriemarkers zijn `pin-<category>`. Kleuren als hex in `CATEGORY_COLOR`/`MAP_PRIMARY` (MapLibre leest geen CSS-variabelen).
+- **Sheets boven de kaart**: `LocationSheet` en `RouteSheet` op `BottomSheet` met `modal={false}`, zodat de kaart bedienbaar blijft.
+- **Camera**: `fitBounds` met padding voor filterbalk en sheet; voor één punt `easeTo` met `offset` (padding in `easeTo` blijft op de kaart hangen).
+- Routegeometrie uit Supabase wordt ongewijzigd getekend (al BRouter-gesnapt); niet opnieuw via OSRM snappen.
 
 ### Route-module (`app/[locale]/routes/`)
 - Preset routes uit Supabase, BRouter-geometrie

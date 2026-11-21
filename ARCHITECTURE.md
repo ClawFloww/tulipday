@@ -385,8 +385,8 @@ Er is één `error.tsx` op locale-niveau. Individuele pagina's hebben geen eigen
 ### geometry_points als JSON-array in plaats van PostGIS
 Route-geometrie is opgeslagen als een JSON-array van `[lat, lng]` pairs in een gewone `jsonb` kolom. PostGIS zou spatial queries en afstandsberekeningen mogelijk maken zonder client-side verwerking.
 
-### Hardcoded MapTiler API key
-De MapTiler API key staat hardcoded in `RouteDetailClient.tsx` en vermoedelijk ook in `MapView.tsx`: zichtbaar in de client-side bundle. Zou via een environment variable moeten lopen.
+### MapTiler-key als fallback in code
+Alleen de navigatiekaart en startpuntkiezer gebruiken nog MapTiler (`lib/mapStyle.ts`, met de key als fallback naast `NEXT_PUBLIC_MAPTILER_KEY`). Alle andere kaarten draaien op OpenFreeMap zonder key.
 
 ### home/page.tsx gegroeid naar 587 regels
 De homepagina is bijna verdubbeld ten opzichte van de oorspronkelijke ~300 regels. Combineert: locatie-ophaling, route-ophaling, weer-integratie, onboarding-check, corso-banner logica, en filtering/sortering. Groeit richting een tweede monoliet.
