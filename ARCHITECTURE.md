@@ -352,8 +352,8 @@ lib/customRoutes.ts (localStorage)
 
 ## 5. Technische schuld & inconsistenties
 
-### Dubbele navigatiecomponents
-`components/BottomNavigation.tsx` en `components/ui/BottomNav.tsx` bestaan naast elkaar. Beide implementeren een navigatiebalk. `app/[locale]/layout.tsx` importeert `BottomNavigation.tsx`. `BottomNav.tsx` is vermoedelijk een ongebruikte kopie.
+### Dubbele navigatiecomponents — opgelost
+`components/ui/BottomNav.tsx` is verwijderd (werd nog door `MapView` gebruikt, bovenop de gedeelde balk). Alleen `components/BottomNavigation.tsx` bestaat nog, geladen in `app/[locale]/layout.tsx`.
 
 ### Corso componenten — opgelost
 `useCorsoPhotos.ts` (lezen, Supabase Realtime) en `useCorsoUpload.ts` (schrijven, Storage) hebben bewust gescheiden verantwoordelijkheden. `CorsoPhotoFeed.tsx` was dode code (geen importers) en is verwijderd.

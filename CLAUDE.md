@@ -32,6 +32,44 @@ Zie `ARCHITECTURE.md` voor een volledig overzicht van de codebase.
 
 ---
 
+## Design system
+
+Eén bron van waarheid: CSS-variabelen in `app/globals.css` (`:root` + `.dark`), gekoppeld in `tailwind.config.ts`. **Geen hex-kleuren in componenten** (uitzondering: MapLibre-stijlen, die geen CSS-variabelen lezen).
+
+### Tokens (Tailwind-klassen)
+| Soort | Klassen |
+|---|---|
+| Merk | `bg-primary`, `text-primary`, `bg-primary-subtle`, `text-on-primary` (#E8102A in licht én donker) |
+| Oppervlak | `bg-surface`, `bg-surface-2`, `bg-surface-3`, `bg-overlay` |
+| Tekst | `text-ink`, `text-ink-2`, `text-ink-3` |
+| Randen | `border-line`, `border-line-strong` |
+| Status | `success`, `warning`, `danger`, `info` (bg/text) |
+| Typografie | `text-display`, `text-title`, `text-headline`, `text-body`, `text-label`, `text-caption`; cijfers met `font-mono` (Inter, tabular-nums) |
+| Schaduw | `shadow-sm/md/lg/sheet`, `shadow-card` |
+| Beweging | `duration-fast/base/slow`, `ease-out-soft` |
+| Touch | `min-h-touch`, `min-w-touch` (44px) |
+| Safe area | `pt-safe`, `pb-safe`, `pb-safe-nav` (paginabodem onder navigatiebalk), `bottom-nav`, `bottom-above-nav` |
+
+Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alleen grote titels). `tulip-50…900` zijn warme roodtinten; gebruik bij voorkeur de semantische tokens.
+
+### Basiscomponenten (`components/ui/`)
+- `Button` (primary/secondary/ghost/danger, sm/md/lg, `loading`, `icon`) — **gebruik i.p.v. een losse `<button>`** voor acties
+- `IconButton` (verplicht `aria-label`; surface/ghost/overlay/primary)
+- `Card`, `Chip` (selecteerbaar), `Badge` (statisch, tonen), `BloomBadge`
+- `BottomSheet` + `SheetHandle` — **elke sheet gebruikt deze** (vegen/Escape/focus-trap/safe area)
+- `Skeleton` — skeletons i.p.v. spinners voor het laden van inhoud (spinner alleen ín knoppen)
+- `EmptyState` — lege lijsten, geen resultaten, fout/offline (met "Opnieuw proberen")
+- `toast` uit `Toast.tsx` (`toast.success/error/info`); `<Toaster>` staat al in de locale-layout
+
+### Regels
+- Haptiek via `lib/haptics.ts` (`tap`, `success`, `warning`) bij belangrijke acties; doet niets op het web.
+- Touch targets minimaal 44px; elke icoonknop een `aria-label`; focus-ring `focus-visible:ring-primary`.
+- Pagina's: kop met `pt-safe`, inhoud eindigt met `pb-safe-nav`. Vaste balken boven de navigatiebalk met `bottom-nav`.
+- Geen permanente `transition` op `*` (maakt scrollen stroef); thema-wissel gebruikt tijdelijk `.theme-transition`.
+- Geen emoji als icoon of plaatshouder — lucide-iconen of het logo (`/logo.png`).
+
+---
+
 ## Wat er gebouwd is
 
 ### Core UI
@@ -152,7 +190,8 @@ import type { Route, Location } from "@/lib/types";
 | `react-image-crop` | Foto bijsnijden |
 | `browser-image-compression` | Foto comprimeren |
 | `web-push` | Push notificaties |
-| `@capacitor/*` | iOS/Android |
+| `@capacitor/*` | iOS/Android (o.a. `@capacitor/haptics`) |
+| `react-hot-toast` | Toasts (alleen via `components/ui/Toast.tsx`) |
 | `tailwindcss` | Styling |
 
 **Voeg geen nieuwe dependencies toe zonder overleg.** Controleer altijd eerst of het probleem op te lossen is met bestaande libraries.
@@ -221,7 +260,7 @@ npm run dev                # Start lokale dev server op :3000
 
 # Build
 npm run build              # Productie build (web)
-npm run build:mobile       # Capacitor build (iOS/Android)
+npm run build:mobile       # Capacitor build (iOS/Android) via scripts/build-mobile.mjs
 
 # Lint & typecheck
 npm run lint               # ESLint
@@ -236,7 +275,7 @@ npm run cap:sync           # Sync web assets naar native
 npx tsx --env-file=.env.local scripts/migrate-routes-brouter.ts --live
 ```
 
-Er zijn **geen geautomatiseerde tests**. Controleer wijzigingen handmatig in de browser.
+Unit-tests: `npx vitest run` (in `__tests__/`). Controleer UI-wijzigingen daarnaast handmatig op ~390px, licht én donker.
 
 ---
 
