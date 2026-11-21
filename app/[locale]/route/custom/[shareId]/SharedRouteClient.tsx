@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-react";
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
-import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
+import { mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
 import { publicUrl, resolveParam } from "@/lib/links";
 
 
@@ -61,11 +61,12 @@ export default function SharedRoutePage() {
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style:     MAP_STYLE_STREETS,
+      style:     mapStyleUrl(),
       center:    waypoints[0],
       zoom:      12,
       interactive: true,
     });
+    const stopThemeWatch = watchMapTheme(map);
 
     map.on("load", () => {
       // Waypoint markers
@@ -105,7 +106,7 @@ export default function SharedRoutePage() {
     });
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { stopThemeWatch(); map.remove(); mapRef.current = null; };
   }, [route]);
 
   async function handleShare() {

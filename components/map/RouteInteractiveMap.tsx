@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RouteStop } from "@/lib/types";
-import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
+import { mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
 
 export type MapLocation = {
   id:                string;
@@ -69,12 +69,13 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
 
     const map = new maplibregl.Map({
       container:   containerRef.current,
-      style:       MAP_STYLE_STREETS,
+      style:       mapStyleUrl(),
       center:      routeCoords[0],
       zoom:        12,
       interactive: true,
     });
 
+    const stopThemeWatch = watchMapTheme(map);
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
@@ -187,7 +188,7 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
     }
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { stopThemeWatch(); map.remove(); mapRef.current = null; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

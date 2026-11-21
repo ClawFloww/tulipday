@@ -13,7 +13,7 @@ import { X, ChevronUp, ChevronRight, MapPin, Locate, PenLine, Trash2, BookmarkPl
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
 import { saveCustomRoute } from "@/lib/customRoutes";
-import { MAP_STYLE_STREETS } from "@/lib/mapStyle";
+import { MAP_FONT_BOLD, mapStyleUrl, watchMapTheme } from "@/lib/mapStyle";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1115,12 +1115,13 @@ export default function MapView() {
 
     const map = new maplibregl.Map({
       container: mapDivRef.current,
-      style: MAP_STYLE_STREETS,
+      style: mapStyleUrl(),
       center: BOLLENSTREEK_CENTER,
       zoom: 11,
     });
 
     mapRef.current = map;
+    const stopThemeWatch = watchMapTheme(map);
 
     map.on("load", () => {
       mapReadyRef.current = true;
@@ -1163,7 +1164,7 @@ export default function MapView() {
         filter: ["has", "point_count"],
         layout: {
           "text-field": "{point_count_abbreviated}",
-          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-font": MAP_FONT_BOLD,
           "text-size": ["step", ["zoom"], 13, 11, 11, 12, 10, 13, 9],
         },
         paint: { "text-color": "#ffffff" },
@@ -1333,6 +1334,7 @@ export default function MapView() {
     });
 
     return () => {
+      stopThemeWatch();
       mapReadyRef.current = false;
       userMarkerRef.current?.remove();
       userMarkerRef.current = null;
