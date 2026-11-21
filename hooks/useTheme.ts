@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 export type Theme = "light" | "dark" | "system";
 
 const STORAGE_KEY = "tulipday_theme";
+const THEME_TRANSITION_MS = 350;
 
 /** Bepaal het effectieve (resolved) thema op basis van voorkeur + systeeminstelling */
 function resolveTheme(theme: Theme): "light" | "dark" {
@@ -59,7 +60,11 @@ export function useTheme(): UseThemeResult {
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     try { localStorage.setItem(STORAGE_KEY, newTheme); } catch {}
+    // Alleen bij een bewuste wissel kleuren laten overvloeien (zie globals.css)
+    const root = document.documentElement;
+    root.classList.add("theme-transition");
     applyTheme(newTheme);
+    window.setTimeout(() => root.classList.remove("theme-transition"), THEME_TRANSITION_MS);
   }, []);
 
   return {

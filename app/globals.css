@@ -4,18 +4,22 @@
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN TOKENS — licht thema (:root)
+   Eén bron van waarheid; tailwind.config.ts verwijst hiernaar.
+   Componenten gebruiken nooit hex-waarden, alleen deze tokens.
    ═══════════════════════════════════════════════════════════════ */
 :root {
-  /* Merkrood */
+  /* Merkrood — #E8102A in beide thema's, nooit roze */
   --color-primary:        #E8102A;
-  --color-primary-dark:   #C00D22;
-  --color-primary-light:  #FF3347;
-  --color-primary-subtle: #FFF0F2;
+  --color-primary-dark:   #C40C22;
+  --color-primary-light:  #F5483A;
+  --color-primary-subtle: #FFF3F1;
+  --color-on-primary:     #FFFFFF;
 
   /* Oppervlakken */
   --color-surface:   #FAFAF7;
   --color-surface-2: #FFFFFF;
   --color-surface-3: #F3F2EC;
+  --color-overlay:   rgba(0, 0, 0, 0.45);
 
   /* Randen */
   --color-border:        rgba(0, 0, 0, 0.08);
@@ -26,10 +30,16 @@
   --color-text-2: #5C5C58;
   --color-text-3: #8C8C88;
 
+  /* Status */
+  --color-success: #2D7D46;
+  --color-warning: #D4820A;
+  --color-danger:  #E8102A;
+  --color-info:    #2563EB;
+
   /* Score-indicatoren */
-  --color-score-good:   #2D7D46;
-  --color-score-medium: #D4820A;
-  --color-score-bad:    #E8102A;
+  --color-score-good:   var(--color-success);
+  --color-score-medium: var(--color-warning);
+  --color-score-bad:    var(--color-danger);
 
   /* Skeleton */
   --color-skeleton:       #F0EFE8;
@@ -38,6 +48,28 @@
   /* Corso event-kleur */
   --color-corso:       #F0306A;
   --color-corso-light: #FFF0F5;
+
+  /* Schaduwen */
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md:    0 2px 12px rgba(0, 0, 0, 0.07);
+  --shadow-lg:    0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+
+  /* Beweging */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-out:      cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Layout */
+  --nav-height: 60px;
 
   /* Aliassen */
   --background: var(--color-surface);
@@ -48,16 +80,18 @@
    DESIGN TOKENS — donker thema (.dark op <html>)
    ═══════════════════════════════════════════════════════════════ */
 .dark {
-  /* Merkrood (iets helderder voor contrast op donkere achtergrond) */
-  --color-primary:        #F01030;
-  --color-primary-dark:   #C00D22;
-  --color-primary-light:  #FF3347;
-  --color-primary-subtle: #2A0008;
+  /* Merkrood — bewust gelijk aan licht thema */
+  --color-primary:        #E8102A;
+  --color-primary-dark:   #C40C22;
+  --color-primary-light:  #F5483A;
+  --color-primary-subtle: #2A0A0C;
+  --color-on-primary:     #FFFFFF;
 
   /* Oppervlakken */
   --color-surface:   #0F0F0E;
   --color-surface-2: #1A1A18;
   --color-surface-3: #242420;
+  --color-overlay:   rgba(0, 0, 0, 0.6);
 
   /* Randen */
   --color-border:        rgba(255, 255, 255, 0.08);
@@ -68,10 +102,11 @@
   --color-text-2: #A8A8A4;
   --color-text-3: #6C6C68;
 
-  /* Score-indicatoren */
-  --color-score-good:   #34D070;
-  --color-score-medium: #F0A020;
-  --color-score-bad:    #F01030;
+  /* Status */
+  --color-success: #34D070;
+  --color-warning: #F0A020;
+  --color-danger:  #F5483A;
+  --color-info:    #60A5FA;
 
   /* Skeleton */
   --color-skeleton:       #242420;
@@ -80,6 +115,12 @@
   /* Corso event-kleur */
   --color-corso:       #F0306A;
   --color-corso-light: #1A0610;
+
+  /* Schaduwen — donkerder voor diepte op donkere oppervlakken */
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:    0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg:    0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.5);
 
   /* Aliassen */
   --background: var(--color-surface);
@@ -98,23 +139,18 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════
    SOEPELE THEMA-OVERGANG
-   Alleen achtergrond, rand en tekst — niet transform/opacity
-   (Framer Motion gebruikt transform/opacity en wordt niet geraakt)
+   Alleen tijdens het wisselen van thema (useTheme zet .theme-transition
+   kort op <html>). Een permanente transitie op * laat elk element bij
+   elke render animeren en maakt scrollen in de WebView stroef.
    ═══════════════════════════════════════════════════════════════ */
-*,
-*::before,
-*::after {
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
   transition:
     background-color 0.3s ease,
     border-color     0.3s ease,
-    color            0.2s ease;
-}
-
-/* Schakel transitie uit voor elementen die Framer Motion beheert */
-[data-framer-motion],
-[style*="transform"],
-[style*="opacity"] {
-  transition: none !important;
+    color            0.2s ease !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -127,6 +163,15 @@ body {
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
+
+  /* Safe areas (notch / home-indicator) — werkt dankzij viewport-fit=cover */
+  .pt-safe      { padding-top:    env(safe-area-inset-top); }
+  .pb-safe      { padding-bottom: env(safe-area-inset-bottom); }
+  .pb-safe-nav  { padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); }
+  .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* Cijfers even breed (afstanden, tijden, statistieken) */
+  .font-mono { font-variant-numeric: tabular-nums; }
 
   /* Verberg scrollbalk */
   .scrollbar-hide {

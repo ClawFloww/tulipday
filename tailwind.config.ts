@@ -28,17 +28,38 @@ const config: Config = {
           light:   "var(--color-primary-light)",
           subtle:  "var(--color-primary-subtle)",
         },
+        "on-primary": "var(--color-on-primary)",
 
-        // ── Tulip-palet: bijgewerkt naar nieuw merkrood ──
+        // ── Tekst & randen (semantisch, schakelen per thema) ──
+        ink: {
+          DEFAULT: "var(--color-text)",
+          2:       "var(--color-text-2)",
+          3:       "var(--color-text-3)",
+        },
+        line: {
+          DEFAULT: "var(--color-border)",
+          strong:  "var(--color-border-strong)",
+        },
+        overlay: "var(--color-overlay)",
+
+        // ── Status ──
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        danger:  "var(--color-danger)",
+        info:    "var(--color-info)",
+
+        // ── Tulip-palet: warme roodtinten rond het merkrood (geen roze) ──
         tulip: {
-          50:  "#FFF0F2",   // subtiele roze achtergrond
-          100: "#FFD0D6",
-          200: "#FF9EAA",
-          300: "#FF6070",
-          400: "#FF3347",   // licht rood / highlight
+          50:  "#FFF3F1",
+          100: "#FFE2DE",
+          200: "#FFC2BA",
+          300: "#FF8F82",
+          400: "#F5483A",
           500: "#E8102A",   // merkrood (primair)
-          600: "#C00D22",   // hover / pressed
-          700: "#9A0018",   // donker rood
+          600: "#C40C22",   // hover / pressed
+          700: "#9E0A1C",
+          800: "#7A0815",
+          900: "#4D050D",
         },
 
         // ── Groen (ongewijzigd) ──
@@ -63,7 +84,18 @@ const config: Config = {
       fontFamily: {
         sans:    ["var(--font-body)",    "Inter",            "system-ui", "sans-serif"],
         display: ["var(--font-display)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
-        mono:    ["var(--font-mono)",    "Inter Tight",      "system-ui", "sans-serif"],
+        // Cijfers: Inter met tabular-nums (zie .font-mono in globals.css)
+        mono:    ["var(--font-body)",    "Inter",            "system-ui", "sans-serif"],
+      },
+
+      // ── Typografieschaal: [grootte, { regelhoogte, gewicht, letterafstand }] ──
+      fontSize: {
+        display:  ["28px", { lineHeight: "34px", fontWeight: "800", letterSpacing: "-0.02em" }],
+        title:    ["22px", { lineHeight: "28px", fontWeight: "700", letterSpacing: "-0.01em" }],
+        headline: ["17px", { lineHeight: "22px", fontWeight: "700" }],
+        body:     ["15px", { lineHeight: "22px" }],
+        label:    ["13px", { lineHeight: "18px", fontWeight: "600" }],
+        caption:  ["11px", { lineHeight: "14px", fontWeight: "500" }],
       },
 
       borderRadius: {
@@ -73,9 +105,26 @@ const config: Config = {
       },
 
       boxShadow: {
-        card:         "0 2px 12px 0 rgba(0,0,0,0.07)",
-        "card-hover": "0 6px 24px 0 rgba(0,0,0,0.12)",
-        nav:          "0 -1px 0 0 rgba(0,0,0,0.06)",
+        sm:           "var(--shadow-sm)",
+        md:           "var(--shadow-md)",
+        lg:           "var(--shadow-lg)",
+        sheet:        "var(--shadow-sheet)",
+        card:         "var(--shadow-md)",
+        "card-hover": "var(--shadow-lg)",
+        nav:          "0 -1px 0 0 var(--color-border)",
+      },
+
+      // Minimale aanraakgrootte (Apple HIG / Material: 44px)
+      minHeight: { touch: "44px" },
+      minWidth:  { touch: "44px" },
+
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        base: "var(--duration-base)",
+        slow: "var(--duration-slow)",
+      },
+      transitionTimingFunction: {
+        "out-soft": "var(--ease-out)",
       },
     },
   },

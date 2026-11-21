@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter, Inter_Tight } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 
-// Display font: Plus Jakarta Sans voor titels en headers — modern, helder en leesbaar
+// Display font: Plus Jakarta Sans alleen voor grote titels
 const playfair = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display",
@@ -13,7 +13,7 @@ const playfair = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-// Body font: Inter voor lopende tekst en UI-labels
+// Body font: Inter voor tekst, labels en cijfers (tabular-nums via .font-mono)
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
@@ -21,18 +21,22 @@ const inter = Inter({
   display: "swap",
 });
 
-// Mono/stats font: Inter Tight voor getallen, afstanden en statistieken
-const interTight = Inter_Tight({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL("https://tulipday.online"),
   title: "TulipDay",
   description: "Ontdek de mooiste tulpenvelden bij jou in de buurt.",
+};
+
+// viewport-fit=cover: inhoud loopt door tot onder notch en home-indicator,
+// zodat env(safe-area-inset-*) in de iOS-app echte waarden geeft.
+export const viewport: Viewport = {
+  width:        "device-width",
+  initialScale: 1,
+  viewportFit:  "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF7" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0F0F0E" },
+  ],
 };
 
 export default function RootLayout({
@@ -56,7 +60,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} ${interTight.variable} font-sans antialiased`}
+        className={`${playfair.variable} ${inter.variable} font-sans antialiased`}
       >
         <I18nProvider>{children}</I18nProvider>
         <Analytics />
