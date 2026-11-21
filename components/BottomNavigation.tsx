@@ -27,8 +27,16 @@ const TABS: Tab[] = [
   { id: "profile", labelKey: "nav.profile", segment: "settings", Icon: User         },
 ];
 
+// Subpagina's die onder een tab vallen zonder dat het segment in de URL staat
+const SUBPAGE_TABS: Record<string, TabId> = {
+  account: "profile",
+  premium: "profile",
+};
+
 // Welke tab is actief op basis van URL
 function getActiveTab(pathname: string): TabId {
+  const sub = Object.keys(SUBPAGE_TABS).find((segment) => pathname.includes(`/${segment}`));
+  if (sub) return SUBPAGE_TABS[sub];
   // Langst passende segment wint (voorkomt false matches)
   const matches = TABS.filter((t) => pathname.includes(`/${t.segment}`));
   if (matches.length === 0) return "fields";
