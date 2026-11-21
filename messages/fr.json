@@ -597,6 +597,7 @@
     "add_review": "+ Ajouter un commentaire"
   },
   "premium": {
+    "already_active": "Ton pass saison est actif. Profite des champs !",
     "title": "🌷 Pass Saison TulipDay",
     "subtitle": "Profitez pleinement de la saison des tulipes",
     "col_feature": "Fonctionnalité",

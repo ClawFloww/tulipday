@@ -597,6 +597,7 @@
     "add_review": "+ Add a comment"
   },
   "premium": {
+    "already_active": "Your season pass is active. Enjoy the fields!",
     "title": "🌷 TulipDay Season Pass",
     "subtitle": "Get the most out of tulip season",
     "col_feature": "Feature",

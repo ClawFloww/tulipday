@@ -597,6 +597,7 @@
     "add_review": "+ 添加评论"
   },
   "premium": {
+    "already_active": "你的季票已激活。尽情欣赏花田吧！",
     "title": "🌷 TulipDay 季票",
     "subtitle": "充分享受郁金香季节",
     "col_feature": "功能",

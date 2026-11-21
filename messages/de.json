@@ -597,6 +597,7 @@
     "add_review": "+ Kommentar hinzufügen"
   },
   "premium": {
+    "already_active": "Dein Saisonpass ist aktiv. Viel Spaß auf den Feldern!",
     "title": "🌷 TulipDay Saisonpass",
     "subtitle": "Holen Sie alles aus der Tulpensaison heraus",
     "col_feature": "Funktion",
