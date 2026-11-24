@@ -39,11 +39,12 @@ Eén bron van waarheid: CSS-variabelen in `app/globals.css` (`:root` + `.dark`),
 ### Tokens (Tailwind-klassen)
 | Soort | Klassen |
 |---|---|
-| Merk | `bg-primary`, `text-primary`, `bg-primary-subtle`, `text-on-primary` (#E8102A in licht én donker) |
+| Merk | `bg-primary`, `text-primary`, `bg-primary-subtle`, `text-on-primary`. Vlakken altijd #E8102A; `text-primary` gebruikt `--color-primary-text` (in dark mode #FF5A69, voor 4,5:1 contrast) |
+| Corso | `bg-corso`, `text-corso`, `bg-corso-light` — eigen event-kleur van de Bloemencorso, niet het merkrood |
 | Oppervlak | `bg-surface`, `bg-surface-2`, `bg-surface-3`, `bg-overlay` |
 | Tekst | `text-ink`, `text-ink-2`, `text-ink-3` |
 | Randen | `border-line`, `border-line-strong` |
-| Status | `success`, `warning`, `danger`, `info` (bg/text) |
+| Status | `success`, `warning`, `danger`, `info` (bg/text). Alle tekst-tokens halen ≥ 4,5:1 op surface t/m surface-3 |
 | Typografie | `text-display`, `text-title`, `text-headline`, `text-body`, `text-label`, `text-caption`; cijfers met `font-mono` (Inter, tabular-nums) |
 | Schaduw | `shadow-sm/md/lg/sheet`, `shadow-card` |
 | Beweging | `duration-fast/base/slow`, `ease-out-soft` |
@@ -66,16 +67,18 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - Touch targets minimaal 44px; elke icoonknop een `aria-label`; focus-ring `focus-visible:ring-primary`.
 - Pagina's: kop met `pt-safe`, inhoud eindigt met `pb-safe-nav`. Vaste balken boven de navigatiebalk met `bottom-nav`.
 - Geen permanente `transition` op `*` (maakt scrollen stroef); thema-wissel gebruikt tijdelijk `.theme-transition`.
-- Geen emoji als icoon of plaatshouder — lucide-iconen of het logo (`/logo.png`).
+- Geen emoji als icoon of plaatshouder — lucide-iconen of het logo (`/logo.png`). Ook niet in vertalingen.
+- CSS-variabele-kleuren ondersteunen geen `/opacity`-modifier (`bg-success/20` werkt niet): gebruik een losse laag met `opacity-[0.15]`.
+- Geen vaste UI-tekst in componenten of `lib/` — ook niet in labels die uit lib-functies komen (geef sleutels terug, zoals `scoreBand`, `weatherCondition`, planner-`reasons`).
 
 ---
 
 ## Wat er gebouwd is
 
 ### Core UI
-- `SwipeCard` — gesture-based veldontdekking (drag threshold, card stack animaties)
-- `bloomStatus` utilities — types: `'peak'` | `'starting'` | `'past_peak'` | `'not_yet'`
-- `FilterChips` — filterbalk voor veldtype, dorp, bloeistatus
+- `SwipeCard` + `app/[locale]/discover` — veegkaarten (bereikbaar vanaf Velden), opslaan via `saved_items`
+- **Bloeistatus** (`lib/bloomStatus.ts`): één set voor de hele app = `locations.bloom_status`: `early` → `blooming` → `peak` → `ending`. Labels `bloom.<status>`, kleuren `BLOOM_TONE`, sortering `BLOOM_RANK`. Partnerfases (`bloom_phase`) via `fromPartnerPhase`. Weergave altijd met `BloomBadge`.
+- **Bloei melden**: `reportBloom()` → Supabase-functie `report_bloom` (migratie `20261124000000`), controleert status en limiet per gebruiker en logt in `bloom_updates` (source `user`). De app schrijft nooit zelf in `locations`.
 - `BottomNavigation` — tabs: Kaart / Plan / Velden / Saved / Profiel
 
 ### Data (Supabase)
@@ -95,7 +98,7 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - **Bezoektijden (min):** normaal `flower_field 25, photo_spot 20, attraction 45, food 50`; bij `2h` korter (`15, 10, 30, 30`) zodat alle gekozen vibes passen; daarna × tempo (`relaxed 1.25, normal 1, active 0.8`), afgerond op 5 min
 
 ### Navigatie-module (`app/[locale]/navigate/`)
-- **Ingangen**: `?slug=` (presetroute), `?generated=true` (planner, localStorage), `?dest=lat,lng&name=&mode=` ("Navigeer hierheen" in `LocationSheet`). Google/Apple Maps alleen als terugvaloptie (`MapsPickerSheet`); **nooit Komoot**.
+- **Ingangen**: `?slug=` (presetroute), `?generated=true` (planner, localStorage), `?dest=lat,lng&name=&mode=` ("Navigeer hierheen" in `LocationSheet` en op de locatiepagina). Google/Apple Maps alleen als terugvaloptie (`MapsPickerSheet`); **nooit Komoot**.
 - **Kern in `lib/navigation/`** (pure functies, getest in `__tests__/navigation.test.ts`): `geometry.ts` (`buildLine`, `project`, `pointAt`, `bearingAt`; alles `[lng, lat]`), `maneuvers.ts`, `tracker.ts` (`trackFix`), `osrm.ts`, `wakeLock.ts`.
 - **Afslagen**: presetroutes → `deriveManeuvers` uit de eigen BRouter-lijn (klopt altijd met wat er getekend is, geen straatnamen). Planner, aanrijden, terugleiden en losse bestemming → OSRM-stappen via `fromOsrmSteps` (met straatnaam). De Supabase-lijn wordt nooit door OSRM vervangen.
 - **Voortgang** langs de lijn (`along` in meters), niet "dichtstbijzijnde afslagpunt". Zoeken in een venster rond de vorige plek, zodat rondjes niet naar de finish springen.
