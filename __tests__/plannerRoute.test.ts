@@ -67,6 +67,8 @@ describe("buildOptimalRoute — vibe-dekking", () => {
     { vibes: ["bloemen", "fotografie", "cultuur", "eten", "natuur"], time: "full", transport: "cycling" },
     { vibes: ["eten", "cultuur"],                                    time: "half", transport: "walking" },
     { vibes: ["bloemen", "fotografie", "cultuur", "eten", "natuur"], time: "half", transport: "car" },
+    // Korte route: kortere bezoektijden zodat alles toch past
+    { vibes: ["bloemen", "fotografie", "cultuur", "eten", "natuur"], time: "2h",   transport: "walking" },
   ];
 
   for (const { vibes, time, transport } of cases) {
@@ -103,6 +105,13 @@ describe("buildOptimalRoute — acceptatiecriteria", () => {
     const { result } = plan({ vibes: ["bloemen"], time: "2h", transport: "cycling" });
     const firstField = LOCATIONS.find((l) => l.id === result.stops.find((s) => s.category === "flower_field")?.id);
     expect(firstField?.bloom_status).toBe("peak");
+  });
+
+  it("rekent bij een korte route kortere bezoektijden", () => {
+    const short = plan({ time: "2h" }).scored.find((l) => l.category === "food");
+    const long  = plan({ time: "full" }).scored.find((l) => l.category === "food");
+    expect(short?.avgVisitMin).toBe(30);
+    expect(long?.avgVisitMin).toBe(50);
   });
 
   it("reistijd tussen stops volgt het snelheidsprofiel", () => {

@@ -12,6 +12,16 @@ const AVG_VISIT_MINUTES: Record<string, number> = {
   bike_rental:  10,
 };
 
+// Korte route (2 uur): kortere bezoeken (koffie i.p.v. lunch, korte stop bij
+// een attractie), zodat alle gekozen onderwerpen in de route passen
+const SHORT_VISIT_MINUTES: Record<string, number> = {
+  flower_field: 15,
+  photo_spot:   10,
+  attraction:   30,
+  food:         30,
+  bike_rental:  10,
+};
+
 // ── Vibe-tags per categorie ───────────────────────────────────────────────
 const CATEGORY_VIBE_TAGS: Record<string, Vibe[]> = {
   flower_field: ["bloemen", "natuur", "fotografie"],
@@ -125,7 +135,9 @@ export function scoreLocation(
 ): ScoredLocation {
   const vibeTags = CATEGORY_VIBE_TAGS[loc.category ?? ""] ?? [];
   const accessible = loc.access_type === "public_access";
-  const avgVisitMin = AVG_VISIT_MINUTES[loc.category ?? ""] ?? 30;
+  const avgVisitMin = profile.time === "2h"
+    ? SHORT_VISIT_MINUTES[loc.category ?? ""] ?? 20
+    : AVG_VISIT_MINUTES[loc.category ?? ""] ?? 30;
 
   const bScore = bloomScore(loc.bloom_status);
   const iScore = interestScore(vibeTags, profile);

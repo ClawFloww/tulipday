@@ -92,6 +92,7 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - **Opslag**: `PlannerProfile` in `localStorage` onder `PLANNER_PROFILE_KEY`
 - **Snelheidsprofielen (min/km):** `walking: 12, cycling: 4, car: 2`
 - **Tijdsbudgetten (min):** `2h: 120, half: 240, full: 420`
+- **Bezoektijden (min):** normaal `flower_field 25, photo_spot 20, attraction 45, food 50`; bij `2h` korter (`15, 10, 30, 30`) zodat alle gekozen vibes passen
 
 ### Navigatie-module (`app/[locale]/navigate/`)
 - GPS-navigatie via `watchPosition` met afslagen (OSRM turn-by-turn)
