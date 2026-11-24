@@ -12,8 +12,10 @@ import {
   Navigation2,
 } from "lucide-react";
 
+import { BloomBadge } from "@/components/ui/BloomBadge";
 import { Button } from "@/components/ui/Button";
 
+import type { BloomStatus } from "@/lib/types";
 import type { NavStop } from "./NavigationView";
 
 interface Props {
@@ -37,7 +39,7 @@ interface Props {
 
   // Bloei-status
   isFlower:      boolean;
-  reportedBloom: string | null;
+  reportedBloom: BloomStatus | null;
 
   // Acties
   onReportBloom:    () => void;
@@ -134,20 +136,10 @@ export default function NavigationActionSheet({
                 {approachPhase ? routeName : (activeStop?.name ?? routeName)}
               </p>
               {isFlower && !approachPhase && (
-                <div className="flex items-center gap-1.5 mt-1.5 text-xs" style={{ color: "var(--color-text-2)" }}>
-                  <span
-                    className={`block w-2 h-2 rounded-full ${
-                      reportedBloom === "in_bloom" ? "bg-success"
-                      : reportedBloom === "fading" ? "bg-warning"
-                      : reportedBloom === "finished" ? "bg-ink-3"
-                      : "bg-line"}`}
-                  />
-                  <span>
-                    {reportedBloom === "in_bloom" ? t("navigation.reported_in_bloom")
-                      : reportedBloom === "fading" ? t("navigation.reported_fading")
-                      : reportedBloom === "finished" ? t("navigation.reported_finished")
-                      : t("navigation.bloom_unknown")}
-                  </span>
+                <div className="mt-1.5">
+                  {reportedBloom
+                    ? <BloomBadge status={reportedBloom} />
+                    : <span className="text-caption text-ink-3">{t("navigation.bloom_unknown")}</span>}
                 </div>
               )}
             </div>

@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "Plena floración",
     "blooming": "Floreciendo",
-    "early": "Temprano",
+    "early": "A punto de florecer",
     "ending": "Finalizando"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "{count} resultado para \"{query}\"",
     "search_count_plural": "{count} resultados para \"{query}\"",
     "no_locations_found": "No se encontraron lugares.",
-    "locations_count": "{count} lugares"
+    "locations_count": "{count} lugares",
+    "discover_title": "Descubre campos",
+    "discover_body": "Desliza por los campos más bonitos ahora"
   },
   "map": {
     "filter_peak": "Plena floración",
@@ -449,21 +451,26 @@
     "checkin_stop": "Confirmar parada {n}"
   },
   "discover_page": {
-    "title": "🌷 Descubrir campos",
-    "loading_fields": "Cargando campos…",
+    "title": "Descubre campos",
     "all_seen_title": "¡Todos los campos vistos!",
     "all_seen_desc": "Prueba con otro filtro o empieza de nuevo.",
     "start_over": "Empezar de nuevo",
-    "load_more": "cargando más campos…",
-    "swipe_hint": "desliza o usa los botones",
-    "fields_label": "campos",
-    "count_visited": "{count} por visitar 📍",
-    "count_saved": "{count} guardados ♥"
-  },
-  "route_refresh": {
-    "fetching": "Cargando datos de floración...",
-    "stale": "Datos de floración con más de 4 horas",
-    "last_sync": "Última sincronización: {time}"
+    "load_more": "Cargando más campos…",
+    "swipe_hint": "Desliza o usa los botones",
+    "count": "{count} campos",
+    "visit": "Visitar",
+    "skip": "Saltar",
+    "save": "Guardar",
+    "unsave": "Quitar de guardados",
+    "filter_all": "Todos",
+    "filter_in_bloom": "En flor",
+    "filter_early": "A punto de florecer",
+    "filter_nearby": "A menos de 20 km",
+    "filter_public": "Acceso libre",
+    "access_public_access": "Acceso libre",
+    "access_roadside_only": "Desde la carretera",
+    "access_private_view_only": "Solo para ver",
+    "parking": "Aparcamiento"
   },
   "corso_upload": {
     "title": "📷 Subir foto",
@@ -490,12 +497,6 @@
     "then_begins_named": "Después empieza {name}",
     "stop_of_total": "parada {current} de {total}",
     "bloom_question": "¿Está este campo en flor?",
-    "bloom_in_bloom": "🌷 En plena floración",
-    "bloom_fading": "🌸 Empezando a marchitarse",
-    "bloom_finished": "🍃 Marchitado",
-    "reported_in_bloom": "En flor ✓",
-    "reported_fading": "Marchitándose ✓",
-    "reported_finished": "Marchitado ✓",
     "report_bloom": "Reportar floración",
     "navigate_now": "Navegando",
     "next_stop_label": "Próxima parada",
@@ -563,7 +564,10 @@
     "no_route_title": "No se encontró ruta",
     "no_route_body": "No pudimos calcular una ruta. Comprueba tu conexión a internet e inténtalo de nuevo.",
     "no_gps_unsupported": "Este dispositivo no puede compartir tu ubicación. Navega con una app de mapas.",
-    "open_in_maps": "Abrir en app de mapas"
+    "open_in_maps": "Abrir en app de mapas",
+    "bloom_thanks": "¡Gracias! Tu aviso se ha enviado.",
+    "bloom_too_often": "Acabas de avisar sobre este campo.",
+    "bloom_failed": "No se pudo enviar. Inténtalo más tarde."
   },
   "planner": {
     "header_eyebrow": "Tu ruta del día",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "Buscar lugares o rutas…"
   },
-  "bloom_prompt": {
-    "aria_label": "Reportar estado de floración",
-    "header_label": "Campo de tulipanes cerca",
-    "question": "¿Cómo está este campo ahora?",
-    "desc_in_bloom": "Flores coloridas y abiertas",
-    "desc_fading": "Las flores pierden color",
-    "desc_finished": "Las flores se han marchitado",
-    "not_now": "Ahora no",
-    "notifications": "Ajustar notificaciones"
-  },
-  "bloom_followup": {
-    "aria_label": "Añadir información extra",
-    "title": "Genial, gracias. ¿Quieres añadir algo?",
-    "camera_or_gallery": "Cámara o galería",
-    "rating_title": "Dar una valoración",
-    "rating_one_star": "1 estrella",
-    "rating_n_stars": "{n} estrellas",
-    "rating_label_1": "Mala",
-    "rating_label_2": "Regular",
-    "rating_label_3": "Buena",
-    "rating_label_4": "Muy buena",
-    "rating_label_5": "Fantástica",
-    "add_review": "+ Añadir comentario"
-  },
   "premium": {
     "already_active": "Tu pase de temporada está activo. ¡Disfruta de los campos!",
     "title": "🌷 Pase de Temporada TulipDay",
@@ -684,5 +664,15 @@
     "gate_period": "toda la temporada de tulipanes",
     "gate_activate": "Activar pase de temporada",
     "gate_early_bird": "🌱 Anticipado: {price} para usuarios existentes en {month} de {year}"
+  },
+  "partner_status": {
+    "open": "Abierto",
+    "closing_soon": "Cierra pronto",
+    "closed": "Cerrado",
+    "crowd_quiet": "Tranquilo",
+    "crowd_normal": "Normal",
+    "crowd_busy": "Concurrido",
+    "crowd_full": "Lleno",
+    "updated_by": "Actualizado {time} por {partner}"
   }
 }

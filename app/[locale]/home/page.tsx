@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
-import { AlertTriangle, ChevronRight, Flower2, Loader2, MapPin, Search, SearchX, X } from "lucide-react";
+import { AlertTriangle, ChevronRight, Flower2, Layers, Loader2, MapPin, Search, SearchX, X } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
 import { SKELETON_CARD_COUNT, SKELETON_ROUTE_COUNT } from "@/lib/constants";
@@ -212,7 +212,7 @@ export default function HomePage() {
       <header className="bg-surface-2 px-5 pt-safe pb-5 border-b border-line">
         <div className="flex items-center justify-between pt-6 mb-1">
           <div>
-            <p className="text-caption text-ink-3">{t(`home.${greetingKey}`)} 👋</p>
+            <p className="text-caption text-ink-3">{t(`home.${greetingKey}`)}</p>
             <Image src="/logo.png" alt="TulipDay" width={240} height={160} className="object-contain" priority />
           </div>
           {userCoords && <span className="text-caption font-bold text-primary bg-primary-subtle px-2.5 py-1 rounded-full">{t("home.near_me_active")}</span>}
@@ -287,6 +287,26 @@ export default function HomePage() {
               />
             )}
           </AnimatePresence>
+
+          {/* Veldontdekking (swipe) */}
+          <div className="px-5 mb-6">
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/discover`)}
+              className="w-full flex items-center gap-3 p-4 rounded-2xl text-left bg-primary text-on-primary shadow-md
+                         active:scale-[0.98] transition-transform duration-fast
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            >
+              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
+                <Layers size={22} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-headline">{t("home.discover_title")}</span>
+                <span className="block text-caption opacity-85">{t("home.discover_body")}</span>
+              </span>
+              <ChevronRight size={20} aria-hidden />
+            </button>
+          </div>
 
           {/* Weerkaart */}
           <div className="mb-6">

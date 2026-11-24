@@ -15,9 +15,9 @@ import {
   ArrowUp, ArrowLeft, ArrowRight, ArrowUpLeft, ArrowUpRight, CornerUpLeft, CornerUpRight,
   RotateCcw, RefreshCw, Navigation, Flag, Flower2, Layers, Locate, LocateOff, Volume2, VolumeX, SignalLow,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
 import { track } from "@/lib/analytics";
+import { BLOOM_STATUSES, BLOOM_TONE, isBloomStatus, reportBloom } from "@/lib/bloomStatus";
 import { tap, success as hapticSuccess } from "@/lib/haptics";
 import { speak, cancelSpeech, getVoiceEnabled, setVoiceEnabled as persistVoiceEnabled, isVoiceSupported } from "@/lib/speech";
 import { bearingAt, distanceM, pointAt, project, type LngLat, type NavLine } from "@/lib/navigation/geometry";
@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { IconButton } from "@/components/ui/IconButton";
 import { toast } from "@/components/ui/Toast";
+import type { BloomStatus } from "@/lib/types";
 import type { MapStyle, PuckFix } from "./NavigationMap";
 
 const NavigationMap = dynamic(() => import("./NavigationMap"), { ssr: false });
@@ -149,7 +150,7 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [mapStyle,        setMapStyle]        = useState<MapStyle>("streets");
   const [voiceEnabled,    setVoiceEnabled]    = useState(false);
-  const [bloomLocal,      setBloomLocal]      = useState<Record<string, string>>({});
+  const [bloomLocal,      setBloomLocal]      = useState<Record<string, BloomStatus>>({});
 
   // Refs voor de GPS-callback (die wordt één keer geregistreerd)
   const legRef       = useRef(leg);
@@ -409,12 +410,16 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
     if (next.size === navRoute.stops.length) finish();
   }
 
-  async function handleBloomReport(status: string) {
+  async function handleBloomReport(status: BloomStatus) {
     if (!activeStop) return;
-    setBloomLocal((prev) => ({ ...prev, [activeStop.id]: status }));
     setShowBloom(false);
-    const locId = activeStop.location_id ?? activeStop.id;
-    if (locId) await supabase.from("locations").update({ bloom_status: status }).eq("id", locId);
+    const result = await reportBloom(activeStop.location_id ?? activeStop.id, status);
+    if (result === "ok") {
+      setBloomLocal((prev) => ({ ...prev, [activeStop.id]: status }));
+      toast.success(t("navigation.bloom_thanks"));
+    } else {
+      toast.error(t(result === "too_often" ? "navigation.bloom_too_often" : "navigation.bloom_failed"));
+    }
   }
 
   // ── Aangekomen ─────────────────────────────────────────────────────────
@@ -586,7 +591,9 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
         currentIdx={currentStop}
         visited={visited}
         isFlower={isFlower}
-        reportedBloom={activeStop ? bloomLocal[activeStop.id] ?? null : null}
+        reportedBloom={activeStop
+          ? bloomLocal[activeStop.id] ?? (isBloomStatus(activeStop.bloom_status) ? activeStop.bloom_status : null)
+          : null}
         onReportBloom={() => setShowBloom(true)}
         onTakePhoto={() => setShowPhotoUpload(true)}
         onMarkArrived={() => handleMarkArrived(currentStop)}
@@ -598,15 +605,11 @@ export default function NavigationView({ navRoute, locale }: { navRoute: NavRout
       <BottomSheet open={showBloom && activeStop !== null} onClose={() => setShowBloom(false)} title={activeStop?.name}>
         <p className="text-label text-primary mb-3">{t("navigation.bloom_question")}</p>
         <div className="flex flex-col gap-2">
-          {[
-            { value: "in_bloom", label: t("navigation.bloom_in_bloom"), dot: "bg-success" },
-            { value: "fading",   label: t("navigation.bloom_fading"),   dot: "bg-warning" },
-            { value: "finished", label: t("navigation.bloom_finished"), dot: "bg-ink-3" },
-          ].map((opt) => (
-            <button key={opt.value} type="button" onClick={() => handleBloomReport(opt.value)}
+          {BLOOM_STATUSES.map((status) => (
+            <button key={status} type="button" onClick={() => handleBloomReport(status)}
                     className="flex min-h-touch items-center gap-3 rounded-2xl bg-surface-3 px-4 py-3 text-left text-body text-ink active:scale-[0.99] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <span className={`h-3 w-3 flex-shrink-0 rounded-full ${opt.dot}`} aria-hidden />
-              <span>{opt.label}</span>
+              <span className={`h-3 w-3 flex-shrink-0 rounded-full ${BLOOM_TONE[status].dot}`} aria-hidden />
+              <span>{t(`bloom.${status}`)}</span>
             </button>
           ))}
         </div>

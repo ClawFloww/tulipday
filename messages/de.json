@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "Volle Blüte",
     "blooming": "Blühend",
-    "early": "Früh",
+    "early": "Bald in Blüte",
     "ending": "Ausblühend"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "{count} Ergebnis für \"{query}\"",
     "search_count_plural": "{count} Ergebnisse für \"{query}\"",
     "no_locations_found": "Keine Orte gefunden.",
-    "locations_count": "{count} Orte"
+    "locations_count": "{count} Orte",
+    "discover_title": "Felder entdecken",
+    "discover_body": "Wische durch die schönsten Blumenfelder"
   },
   "map": {
     "filter_peak": "Volle Blüte",
@@ -449,21 +451,26 @@
     "checkin_stop": "Stopp {n} einchecken"
   },
   "discover_page": {
-    "title": "🌷 Felder entdecken",
-    "loading_fields": "Felder werden geladen…",
+    "title": "Felder entdecken",
     "all_seen_title": "Alle Felder gesehen!",
     "all_seen_desc": "Versuchen Sie einen anderen Filter oder beginnen Sie neu.",
     "start_over": "Neu starten",
-    "load_more": "weitere Felder laden…",
-    "swipe_hint": "wischen oder die Tasten verwenden",
-    "fields_label": "Felder",
-    "count_visited": "{count} zu besuchen 📍",
-    "count_saved": "{count} gespeichert ♥"
-  },
-  "route_refresh": {
-    "fetching": "Blütendaten werden abgerufen...",
-    "stale": "Blütendaten älter als 4 Stunden",
-    "last_sync": "Letzte Synchronisierung: {time}"
+    "load_more": "Weitere Felder laden…",
+    "swipe_hint": "Wischen oder Tasten nutzen",
+    "count": "{count} Felder",
+    "visit": "Besuchen",
+    "skip": "Überspringen",
+    "save": "Speichern",
+    "unsave": "Nicht mehr speichern",
+    "filter_all": "Alle",
+    "filter_in_bloom": "In Blüte",
+    "filter_early": "Bald in Blüte",
+    "filter_nearby": "Bis 20 km",
+    "filter_public": "Frei zugänglich",
+    "access_public_access": "Frei zugänglich",
+    "access_roadside_only": "Von der Straße aus",
+    "access_private_view_only": "Nur ansehen",
+    "parking": "Parken"
   },
   "corso_upload": {
     "title": "📷 Foto hochladen",
@@ -490,12 +497,6 @@
     "then_begins_named": "Dann beginnt {name}",
     "stop_of_total": "Stopp {current} von {total}",
     "bloom_question": "Steht dieses Feld in Blüte?",
-    "bloom_in_bloom": "🌷 Voll in Blüte",
-    "bloom_fading": "🌸 Verblüht langsam",
-    "bloom_finished": "🍃 Verblüht",
-    "reported_in_bloom": "In Blüte ✓",
-    "reported_fading": "Verblüht ✓",
-    "reported_finished": "Verblüht ✓",
     "report_bloom": "Blüte melden",
     "navigate_now": "Jetzt navigieren",
     "next_stop_label": "Nächster Halt",
@@ -563,7 +564,10 @@
     "no_route_title": "Keine Route gefunden",
     "no_route_body": "Wir konnten keine Route berechnen. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
     "no_gps_unsupported": "Dieses Gerät kann Ihren Standort nicht teilen. Navigieren Sie mit einer Karten-App.",
-    "open_in_maps": "In Karten-App öffnen"
+    "open_in_maps": "In Karten-App öffnen",
+    "bloom_thanks": "Danke! Ihre Meldung wurde gesendet.",
+    "bloom_too_often": "Sie haben dieses Feld gerade erst gemeldet.",
+    "bloom_failed": "Meldung fehlgeschlagen. Bitte später erneut versuchen."
   },
   "planner": {
     "header_eyebrow": "Ihre Tagesroute",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "Orte oder Routen suchen…"
   },
-  "bloom_prompt": {
-    "aria_label": "Blütestatus melden",
-    "header_label": "Tulpenfeld in der Nähe",
-    "question": "Wie sieht dieses Feld gerade aus?",
-    "desc_in_bloom": "Bunte, offene Blumen",
-    "desc_fading": "Blumen verlieren Farbe",
-    "desc_finished": "Blumen sind verblüht",
-    "not_now": "Nicht jetzt",
-    "notifications": "Benachrichtigungen anpassen"
-  },
-  "bloom_followup": {
-    "aria_label": "Zusätzliche Informationen hinzufügen",
-    "title": "Klasse, danke. Möchten Sie noch etwas hinzufügen?",
-    "camera_or_gallery": "Kamera oder Galerie",
-    "rating_title": "Bewertung abgeben",
-    "rating_one_star": "1 Stern",
-    "rating_n_stars": "{n} Sterne",
-    "rating_label_1": "Schlecht",
-    "rating_label_2": "Mäßig",
-    "rating_label_3": "Gut",
-    "rating_label_4": "Sehr gut",
-    "rating_label_5": "Fantastisch",
-    "add_review": "+ Kommentar hinzufügen"
-  },
   "premium": {
     "already_active": "Dein Saisonpass ist aktiv. Viel Spaß auf den Feldern!",
     "title": "🌷 TulipDay Saisonpass",
@@ -684,5 +664,15 @@
     "gate_period": "ganze Tulpensaison",
     "gate_activate": "Saisonpass aktivieren",
     "gate_early_bird": "🌱 Frühbucher: {price} für bestehende Nutzer im {month} {year}"
+  },
+  "partner_status": {
+    "open": "Geöffnet",
+    "closing_soon": "Schließt bald",
+    "closed": "Geschlossen",
+    "crowd_quiet": "Ruhig",
+    "crowd_normal": "Normal",
+    "crowd_busy": "Voll",
+    "crowd_full": "Überfüllt",
+    "updated_by": "Aktualisiert {time} von {partner}"
   }
 }

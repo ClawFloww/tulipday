@@ -1,33 +1,24 @@
 "use client";
 
-// Compacte status-badge op LocationCard. Toont een emoji + korte tekst voor
-// recente partner-updates (bloom of operational). Klik opent een tooltip
-// met details (bijgewerkt-tijd en partner-naam) — voor MVP volstaat een
-// title-attribuut zodat het zonder extra state-management werkt.
+// Compacte status-badge op LocationCard voor recente partner-updates: bloei
+// (vertaald naar de app-brede bloeistatus) of open/dicht met drukte.
+// Het title-attribuut toont wanneer en door wie het is bijgewerkt.
 
 import { formatDistanceToNow } from "date-fns";
-import { nl } from "date-fns/locale";
+import { de, enGB, es, fr, nl, zhCN } from "date-fns/locale";
+import { useT } from "@/lib/i18n-context";
+import { fromPartnerPhase } from "@/lib/bloomStatus";
+import { Badge } from "@/components/ui/Badge";
+import { BloomBadge } from "@/components/ui/BloomBadge";
 import type { LocationPartnerStatus } from "@/hooks/useLocationStatuses";
 
-const OP_BADGE: Record<string, { emoji: string; label: string; bg: string; fg: string }> = {
-  open:         { emoji: "🟢", label: "Open",         bg: "rgba(45,125,70,0.18)",  fg: "#2D7D46" },
-  closing_soon: { emoji: "🟡", label: "Sluit binnenkort", bg: "rgba(245,158,11,0.18)", fg: "#B07306" },
-  closed:       { emoji: "🔴", label: "Gesloten",     bg: "rgba(232,16,42,0.18)",  fg: "#E8102A" },
-};
+const DATE_LOCALE = { nl, en: enGB, de, fr, es, zh: zhCN } as const;
 
-const CROWD_HINT: Record<string, string> = {
-  quiet:  "Rustig",
-  normal: "Normaal",
-  busy:   "Druk",
-  full:   "Vol",
-};
-
-const BLOOM_BADGE: Record<string, { emoji: string; label: string; bg: string; fg: string }> = {
-  not_yet:    { emoji: "🌱", label: "Nog niet",     bg: "rgba(158,158,158,0.18)", fg: "#6B7280" },
-  first_buds: { emoji: "🌿", label: "Eerste knoppen", bg: "rgba(132,204,22,0.18)", fg: "#65a30d" },
-  starting:   { emoji: "🌷", label: "Beginnend",    bg: "rgba(245,158,11,0.18)",  fg: "#B07306" },
-  peak:       { emoji: "🌷", label: "Volle bloei",  bg: "rgba(45,125,70,0.18)",   fg: "#2D7D46" },
-  fading:     { emoji: "🥀", label: "Uitgebloeid",  bg: "rgba(158,158,158,0.18)", fg: "#6B7280" },
+// Volledige klassenamen, zodat Tailwind ze vindt
+const OPERATIONAL: Record<string, { tone: "success" | "warning" | "danger"; dot: string }> = {
+  open:         { tone: "success", dot: "bg-success" },
+  closing_soon: { tone: "warning", dot: "bg-warning" },
+  closed:       { tone: "danger",  dot: "bg-danger"  },
 };
 
 interface Props {
@@ -35,27 +26,31 @@ interface Props {
 }
 
 export function LocationStatusBadge({ status }: Props) {
-  const cfg = status.kind === "operational"
-    ? OP_BADGE[status.status]
-    : BLOOM_BADGE[status.status];
+  const { t, locale } = useT();
 
-  if (!cfg) return null;
-
-  const label = status.kind === "operational" && status.crowd
-    ? `${cfg.label} · ${CROWD_HINT[status.crowd] ?? ""}`
-    : cfg.label;
-
-  let tooltip = `Bijgewerkt ${formatDistanceToNow(new Date(status.updated_at), { locale: nl, addSuffix: true })} door ${status.partner_name}`;
+  const updated = formatDistanceToNow(new Date(status.updated_at), {
+    locale: DATE_LOCALE[locale as keyof typeof DATE_LOCALE] ?? nl,
+    addSuffix: true,
+  });
+  let tooltip = t("partner_status.updated_by", { time: updated, partner: status.partner_name });
   if (status.notes) tooltip += ` — "${status.notes}"`;
 
+  if (status.kind === "bloom") {
+    const bloom = fromPartnerPhase(status.status);
+    if (!bloom) return null;
+    return <span title={tooltip}><BloomBadge status={bloom} /></span>;
+  }
+
+  const op = OPERATIONAL[status.status];
+  if (!op) return null;
+  const label = t(`partner_status.${status.status}`);
+  const crowd = status.crowd ? t(`partner_status.crowd_${status.crowd}`) : null;
+
   return (
-    <span
-      title={tooltip}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-      style={{ backgroundColor: cfg.bg, color: cfg.fg }}
-    >
-      <span>{cfg.emoji}</span>
-      <span className="truncate max-w-[120px]">{label}</span>
+    <span title={tooltip}>
+      <Badge tone={op.tone} icon={<span className={`block h-1.5 w-1.5 rounded-full ${op.dot}`} />}>
+        <span className="block max-w-[140px] truncate">{crowd ? `${label} · ${crowd}` : label}</span>
+      </Badge>
     </span>
   );
 }

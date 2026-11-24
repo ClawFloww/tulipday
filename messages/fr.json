@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "Pleine floraison",
     "blooming": "En fleurs",
-    "early": "Début",
+    "early": "Bientôt en fleur",
     "ending": "Fin"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "{count} résultat pour \"{query}\"",
     "search_count_plural": "{count} résultats pour \"{query}\"",
     "no_locations_found": "Aucun lieu trouvé.",
-    "locations_count": "{count} lieux"
+    "locations_count": "{count} lieux",
+    "discover_title": "Découvrir les champs",
+    "discover_body": "Balayez les plus beaux champs du moment"
   },
   "map": {
     "filter_peak": "Pleine floraison",
@@ -449,21 +451,26 @@
     "checkin_stop": "Confirmer l'étape {n}"
   },
   "discover_page": {
-    "title": "🌷 Découvrir les champs",
-    "loading_fields": "Chargement des champs…",
+    "title": "Découvrir les champs",
     "all_seen_title": "Tous les champs vus !",
     "all_seen_desc": "Essayez un autre filtre ou recommencez.",
     "start_over": "Recommencer",
-    "load_more": "chargement de plus de champs…",
-    "swipe_hint": "glissez ou utilisez les boutons",
-    "fields_label": "champs",
-    "count_visited": "{count} à visiter 📍",
-    "count_saved": "{count} enregistrés ♥"
-  },
-  "route_refresh": {
-    "fetching": "Récupération des données de floraison...",
-    "stale": "Données de floraison datant de plus de 4 heures",
-    "last_sync": "Dernière synchro : {time}"
+    "load_more": "Chargement de champs…",
+    "swipe_hint": "Balayez ou utilisez les boutons",
+    "count": "{count} champs",
+    "visit": "Visiter",
+    "skip": "Passer",
+    "save": "Enregistrer",
+    "unsave": "Retirer des favoris",
+    "filter_all": "Tous",
+    "filter_in_bloom": "En fleur",
+    "filter_early": "Bientôt en fleur",
+    "filter_nearby": "À moins de 20 km",
+    "filter_public": "Accès libre",
+    "access_public_access": "Accès libre",
+    "access_roadside_only": "Depuis la route",
+    "access_private_view_only": "Vue seulement",
+    "parking": "Parking"
   },
   "corso_upload": {
     "title": "📷 Téléverser une photo",
@@ -490,12 +497,6 @@
     "then_begins_named": "Puis {name} commence",
     "stop_of_total": "étape {current} sur {total}",
     "bloom_question": "Ce champ est-il en fleurs ?",
-    "bloom_in_bloom": "🌷 En pleine floraison",
-    "bloom_fading": "🌸 Commence à se faner",
-    "bloom_finished": "🍃 Fané",
-    "reported_in_bloom": "En fleurs ✓",
-    "reported_fading": "Se fane ✓",
-    "reported_finished": "Fané ✓",
     "report_bloom": "Signaler la floraison",
     "navigate_now": "Navigation en cours",
     "next_stop_label": "Prochain arrêt",
@@ -563,7 +564,10 @@
     "no_route_title": "Aucun itinéraire trouvé",
     "no_route_body": "Impossible de calculer un itinéraire. Vérifiez votre connexion internet et réessayez.",
     "no_gps_unsupported": "Cet appareil ne peut pas partager votre position. Naviguez avec une application de cartes.",
-    "open_in_maps": "Ouvrir dans une app de cartes"
+    "open_in_maps": "Ouvrir dans une app de cartes",
+    "bloom_thanks": "Merci ! Votre signalement a été envoyé.",
+    "bloom_too_often": "Vous venez de signaler ce champ.",
+    "bloom_failed": "L'envoi a échoué. Réessayez plus tard."
   },
   "planner": {
     "header_eyebrow": "Votre itinéraire du jour",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "Rechercher des lieux ou itinéraires…"
   },
-  "bloom_prompt": {
-    "aria_label": "Signaler l'état de floraison",
-    "header_label": "Champ de tulipes à proximité",
-    "question": "Comment se porte ce champ en ce moment ?",
-    "desc_in_bloom": "Fleurs colorées et ouvertes",
-    "desc_fading": "Les fleurs perdent leur couleur",
-    "desc_finished": "Les fleurs sont fanées",
-    "not_now": "Pas maintenant",
-    "notifications": "Modifier les notifications"
-  },
-  "bloom_followup": {
-    "aria_label": "Ajouter des informations supplémentaires",
-    "title": "Super, merci. Voulez-vous ajouter autre chose ?",
-    "camera_or_gallery": "Caméra ou galerie",
-    "rating_title": "Donner une note",
-    "rating_one_star": "1 étoile",
-    "rating_n_stars": "{n} étoiles",
-    "rating_label_1": "Médiocre",
-    "rating_label_2": "Moyen",
-    "rating_label_3": "Bien",
-    "rating_label_4": "Très bien",
-    "rating_label_5": "Fantastique",
-    "add_review": "+ Ajouter un commentaire"
-  },
   "premium": {
     "already_active": "Ton pass saison est actif. Profite des champs !",
     "title": "🌷 Pass Saison TulipDay",
@@ -684,5 +664,15 @@
     "gate_period": "toute la saison des tulipes",
     "gate_activate": "Activer le pass saison",
     "gate_early_bird": "🌱 Lève-tôt : {price} pour les utilisateurs existants en {month} {year}"
+  },
+  "partner_status": {
+    "open": "Ouvert",
+    "closing_soon": "Ferme bientôt",
+    "closed": "Fermé",
+    "crowd_quiet": "Calme",
+    "crowd_normal": "Normal",
+    "crowd_busy": "Animé",
+    "crowd_full": "Complet",
+    "updated_by": "Mis à jour {time} par {partner}"
   }
 }

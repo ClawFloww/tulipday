@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "Volle bloei",
     "blooming": "In bloei",
-    "early": "Vroeg",
+    "early": "Bijna in bloei",
     "ending": "Uitbloeiend"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "{count} resultaat voor \"{query}\"",
     "search_count_plural": "{count} resultaten voor \"{query}\"",
     "no_locations_found": "Geen locaties gevonden.",
-    "locations_count": "{count} locaties"
+    "locations_count": "{count} locaties",
+    "discover_title": "Ontdek velden",
+    "discover_body": "Veeg door de mooiste bollenvelden van nu"
   },
   "map": {
     "filter_peak": "Volle bloei",
@@ -449,21 +451,26 @@
     "checkin_stop": "Stop {n} aftekenen"
   },
   "discover_page": {
-    "title": "🌷 Ontdek velden",
-    "loading_fields": "Velden laden…",
+    "title": "Ontdek velden",
     "all_seen_title": "Alle velden bekeken!",
     "all_seen_desc": "Probeer een ander filter of begin opnieuw.",
     "start_over": "Opnieuw beginnen",
-    "load_more": "meer velden laden…",
-    "swipe_hint": "sleep of gebruik de knoppen",
-    "fields_label": "velden",
-    "count_visited": "{count} te bezoeken 📍",
-    "count_saved": "{count} opgeslagen ♥"
-  },
-  "route_refresh": {
-    "fetching": "Bloeidata ophalen...",
-    "stale": "Bloeidata ouder dan 4 uur",
-    "last_sync": "Laatste sync: {time}"
+    "load_more": "Meer velden laden…",
+    "swipe_hint": "Veeg of gebruik de knoppen",
+    "count": "{count} velden",
+    "visit": "Bezoeken",
+    "skip": "Overslaan",
+    "save": "Opslaan",
+    "unsave": "Niet meer opslaan",
+    "filter_all": "Alle",
+    "filter_in_bloom": "In bloei",
+    "filter_early": "Bijna in bloei",
+    "filter_nearby": "Binnen 20 km",
+    "filter_public": "Vrij toegankelijk",
+    "access_public_access": "Vrij toegankelijk",
+    "access_roadside_only": "Vanaf de weg",
+    "access_private_view_only": "Alleen kijken",
+    "parking": "Parkeren"
   },
   "corso_upload": {
     "title": "📷 Foto uploaden",
@@ -490,12 +497,6 @@
     "then_begins_named": "Dan begint {name}",
     "stop_of_total": "stop {current} van {total}",
     "bloom_question": "Staat dit veld in bloei?",
-    "bloom_in_bloom": "🌷 Volop in bloei",
-    "bloom_fading": "🌸 Aan het vervagen",
-    "bloom_finished": "🍃 Uitgebloeid",
-    "reported_in_bloom": "In bloei ✓",
-    "reported_fading": "Vervagend ✓",
-    "reported_finished": "Uitgebloeid ✓",
     "report_bloom": "Bloei melden",
     "navigate_now": "Nu navigeren",
     "next_stop_label": "Volgende stop",
@@ -563,7 +564,10 @@
     "no_route_title": "Geen route gevonden",
     "no_route_body": "We konden hier geen route voor berekenen. Controleer je internetverbinding en probeer het opnieuw.",
     "no_gps_unsupported": "Dit apparaat kan je locatie niet doorgeven. Navigeer met een kaart-app.",
-    "open_in_maps": "Open in kaart-app"
+    "open_in_maps": "Open in kaart-app",
+    "bloom_thanks": "Bedankt! Je melding is doorgegeven.",
+    "bloom_too_often": "Je hebt dit veld net al gemeld.",
+    "bloom_failed": "Melden lukte niet. Probeer het later opnieuw."
   },
   "planner": {
     "header_eyebrow": "Jouw dagroute",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "Zoek locaties of routes…"
   },
-  "bloom_prompt": {
-    "aria_label": "Bloei-status melden",
-    "header_label": "Bollenveld in de buurt",
-    "question": "Hoe staat dit veld er nu bij?",
-    "desc_in_bloom": "Kleurrijke, open bloemen",
-    "desc_fading": "Bloemen verliezen kleur",
-    "desc_finished": "Bloemen zijn uitgebloeid",
-    "not_now": "Niet nu",
-    "notifications": "Meldingen aanpassen"
-  },
-  "bloom_followup": {
-    "aria_label": "Extra informatie toevoegen",
-    "title": "Top, dank je. Wil je nog iets toevoegen?",
-    "camera_or_gallery": "Camera of galerij",
-    "rating_title": "Beoordeling geven",
-    "rating_one_star": "1 ster",
-    "rating_n_stars": "{n} sterren",
-    "rating_label_1": "Slecht",
-    "rating_label_2": "Matig",
-    "rating_label_3": "Goed",
-    "rating_label_4": "Heel goed",
-    "rating_label_5": "Fantastisch",
-    "add_review": "+ Reactie toevoegen"
-  },
   "premium": {
     "already_active": "Je seizoenspas is actief. Veel plezier in de velden!",
     "title": "🌷 TulipDay Seizoenspas",
@@ -684,5 +664,15 @@
     "gate_period": "heel tulpenseizoen",
     "gate_activate": "Activeer seizoenspas",
     "gate_early_bird": "🌱 Vroegboeker: {price} voor bestaande gebruikers in {month} {year}"
+  },
+  "partner_status": {
+    "open": "Open",
+    "closing_soon": "Sluit binnenkort",
+    "closed": "Gesloten",
+    "crowd_quiet": "Rustig",
+    "crowd_normal": "Normaal",
+    "crowd_busy": "Druk",
+    "crowd_full": "Vol",
+    "updated_by": "Bijgewerkt {time} door {partner}"
   }
 }

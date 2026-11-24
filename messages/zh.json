@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "盛开期",
     "blooming": "盛开中",
-    "early": "初开",
+    "early": "即将开花",
     "ending": "末期"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "\"{query}\"有{count}个结果",
     "search_count_plural": "\"{query}\"有{count}个结果",
     "no_locations_found": "未找到地点。",
-    "locations_count": "{count} 个地点"
+    "locations_count": "{count} 个地点",
+    "discover_title": "发现花田",
+    "discover_body": "滑动浏览当下最美的花田"
   },
   "map": {
     "filter_peak": "盛开期",
@@ -449,21 +451,26 @@
     "checkin_stop": "第 {n} 站签到"
   },
   "discover_page": {
-    "title": "🌷 探索花田",
-    "loading_fields": "加载花田中…",
+    "title": "发现花田",
     "all_seen_title": "所有花田都看过了!",
     "all_seen_desc": "尝试其他筛选条件或重新开始。",
     "start_over": "重新开始",
-    "load_more": "加载更多花田…",
+    "load_more": "正在加载更多花田…",
     "swipe_hint": "滑动或使用按钮",
-    "fields_label": "片花田",
-    "count_visited": "{count} 个待访问 📍",
-    "count_saved": "{count} 个已收藏 ♥"
-  },
-  "route_refresh": {
-    "fetching": "正在获取花期数据...",
-    "stale": "花期数据已超过 4 小时",
-    "last_sync": "上次同步: {time}"
+    "count": "{count} 片花田",
+    "visit": "前往",
+    "skip": "跳过",
+    "save": "收藏",
+    "unsave": "取消收藏",
+    "filter_all": "全部",
+    "filter_in_bloom": "正在开花",
+    "filter_early": "即将开花",
+    "filter_nearby": "20 公里内",
+    "filter_public": "可自由进入",
+    "access_public_access": "可自由进入",
+    "access_roadside_only": "路边观赏",
+    "access_private_view_only": "仅可观赏",
+    "parking": "停车"
   },
   "corso_upload": {
     "title": "📷 上传照片",
@@ -490,12 +497,6 @@
     "then_begins_named": "然后开始 {name}",
     "stop_of_total": "第 {current} / {total} 站",
     "bloom_question": "这片花田正在盛开吗?",
-    "bloom_in_bloom": "🌷 盛开中",
-    "bloom_fading": "🌸 开始凋谢",
-    "bloom_finished": "🍃 已凋谢",
-    "reported_in_bloom": "盛开中 ✓",
-    "reported_fading": "正在凋谢 ✓",
-    "reported_finished": "已凋谢 ✓",
     "report_bloom": "上报花期",
     "navigate_now": "正在导航",
     "next_stop_label": "下一站",
@@ -563,7 +564,10 @@
     "no_route_title": "未找到路线",
     "no_route_body": "无法计算路线。请检查网络连接后重试。",
     "no_gps_unsupported": "此设备无法提供您的位置。请使用地图应用导航。",
-    "open_in_maps": "在地图应用中打开"
+    "open_in_maps": "在地图应用中打开",
+    "bloom_thanks": "谢谢！已提交你的报告。",
+    "bloom_too_often": "你刚刚已报告过这片花田。",
+    "bloom_failed": "提交失败，请稍后再试。"
   },
   "planner": {
     "header_eyebrow": "您的当日路线",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "搜索地点或路线…"
   },
-  "bloom_prompt": {
-    "aria_label": "上报花期状态",
-    "header_label": "附近的郁金香花田",
-    "question": "这片花田现在状况如何?",
-    "desc_in_bloom": "色彩缤纷,绽放中",
-    "desc_fading": "花朵正在褪色",
-    "desc_finished": "花朵已凋谢",
-    "not_now": "暂不",
-    "notifications": "调整通知"
-  },
-  "bloom_followup": {
-    "aria_label": "添加额外信息",
-    "title": "太棒了,谢谢。还想补充点什么吗?",
-    "camera_or_gallery": "相机或图库",
-    "rating_title": "评分",
-    "rating_one_star": "1 星",
-    "rating_n_stars": "{n} 星",
-    "rating_label_1": "差",
-    "rating_label_2": "一般",
-    "rating_label_3": "好",
-    "rating_label_4": "很好",
-    "rating_label_5": "极佳",
-    "add_review": "+ 添加评论"
-  },
   "premium": {
     "already_active": "你的季票已激活。尽情欣赏花田吧！",
     "title": "🌷 TulipDay 季票",
@@ -684,5 +664,15 @@
     "gate_period": "整个郁金香季",
     "gate_activate": "激活季票",
     "gate_early_bird": "🌱 早鸟:现有用户 {year} 年 {month} 享 {price}"
+  },
+  "partner_status": {
+    "open": "营业中",
+    "closing_soon": "即将关闭",
+    "closed": "已关闭",
+    "crowd_quiet": "人少",
+    "crowd_normal": "一般",
+    "crowd_busy": "人多",
+    "crowd_full": "已满",
+    "updated_by": "{partner} 更新于 {time}"
   }
 }

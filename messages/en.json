@@ -97,7 +97,7 @@
   "bloom": {
     "peak": "Peak bloom",
     "blooming": "Blooming",
-    "early": "Early",
+    "early": "Almost blooming",
     "ending": "Ending"
   },
   "category": {
@@ -155,7 +155,9 @@
     "search_count": "{count} result for \"{query}\"",
     "search_count_plural": "{count} results for \"{query}\"",
     "no_locations_found": "No locations found.",
-    "locations_count": "{count} locations"
+    "locations_count": "{count} locations",
+    "discover_title": "Discover fields",
+    "discover_body": "Swipe through the best bulb fields right now"
   },
   "map": {
     "filter_peak": "Peak bloom",
@@ -449,21 +451,26 @@
     "checkin_stop": "Check in stop {n}"
   },
   "discover_page": {
-    "title": "🌷 Discover fields",
-    "loading_fields": "Loading fields…",
+    "title": "Discover fields",
     "all_seen_title": "All fields seen!",
     "all_seen_desc": "Try a different filter or start again.",
     "start_over": "Start over",
-    "load_more": "loading more fields…",
-    "swipe_hint": "swipe or use the buttons",
-    "fields_label": "fields",
-    "count_visited": "{count} to visit 📍",
-    "count_saved": "{count} saved ♥"
-  },
-  "route_refresh": {
-    "fetching": "Fetching bloom data...",
-    "stale": "Bloom data older than 4 hours",
-    "last_sync": "Last sync: {time}"
+    "load_more": "Loading more fields…",
+    "swipe_hint": "Swipe or use the buttons",
+    "count": "{count} fields",
+    "visit": "Visit",
+    "skip": "Skip",
+    "save": "Save",
+    "unsave": "Remove from saved",
+    "filter_all": "All",
+    "filter_in_bloom": "In bloom",
+    "filter_early": "Almost blooming",
+    "filter_nearby": "Within 20 km",
+    "filter_public": "Free access",
+    "access_public_access": "Free access",
+    "access_roadside_only": "View from the road",
+    "access_private_view_only": "View only",
+    "parking": "Parking"
   },
   "corso_upload": {
     "title": "📷 Upload photo",
@@ -490,12 +497,6 @@
     "then_begins_named": "Then {name} begins",
     "stop_of_total": "stop {current} of {total}",
     "bloom_question": "Is this field in bloom?",
-    "bloom_in_bloom": "🌷 In full bloom",
-    "bloom_fading": "🌸 Starting to fade",
-    "bloom_finished": "🍃 Past peak",
-    "reported_in_bloom": "In bloom ✓",
-    "reported_fading": "Fading ✓",
-    "reported_finished": "Past peak ✓",
     "report_bloom": "Report bloom",
     "navigate_now": "Navigating now",
     "next_stop_label": "Next stop",
@@ -563,7 +564,10 @@
     "no_route_title": "No route found",
     "no_route_body": "We couldn't calculate a route. Check your internet connection and try again.",
     "no_gps_unsupported": "This device can't share your location. Navigate with a maps app instead.",
-    "open_in_maps": "Open in maps app"
+    "open_in_maps": "Open in maps app",
+    "bloom_thanks": "Thanks! Your report has been sent.",
+    "bloom_too_often": "You just reported this field.",
+    "bloom_failed": "Couldn't send your report. Please try again later."
   },
   "planner": {
     "header_eyebrow": "Your day route",
@@ -625,30 +629,6 @@
   "search": {
     "placeholder": "Search locations or routes…"
   },
-  "bloom_prompt": {
-    "aria_label": "Report bloom status",
-    "header_label": "Flower field nearby",
-    "question": "How is this field looking right now?",
-    "desc_in_bloom": "Colourful, open flowers",
-    "desc_fading": "Flowers losing colour",
-    "desc_finished": "Flowers have finished blooming",
-    "not_now": "Not now",
-    "notifications": "Adjust notifications"
-  },
-  "bloom_followup": {
-    "aria_label": "Add extra information",
-    "title": "Great, thanks. Want to add anything?",
-    "camera_or_gallery": "Camera or gallery",
-    "rating_title": "Give a rating",
-    "rating_one_star": "1 star",
-    "rating_n_stars": "{n} stars",
-    "rating_label_1": "Poor",
-    "rating_label_2": "Mediocre",
-    "rating_label_3": "Good",
-    "rating_label_4": "Very good",
-    "rating_label_5": "Fantastic",
-    "add_review": "+ Add a comment"
-  },
   "premium": {
     "already_active": "Your season pass is active. Enjoy the fields!",
     "title": "🌷 TulipDay Season Pass",
@@ -684,5 +664,15 @@
     "gate_period": "entire tulip season",
     "gate_activate": "Activate season pass",
     "gate_early_bird": "🌱 Early bird: {price} for existing users in {month} {year}"
+  },
+  "partner_status": {
+    "open": "Open",
+    "closing_soon": "Closing soon",
+    "closed": "Closed",
+    "crowd_quiet": "Quiet",
+    "crowd_normal": "Normal",
+    "crowd_busy": "Busy",
+    "crowd_full": "Full",
+    "updated_by": "Updated {time} by {partner}"
   }
 }
