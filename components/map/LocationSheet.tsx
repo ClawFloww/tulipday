@@ -1,10 +1,10 @@
 "use client";
 
 // Sheet bij het aantikken van een locatie op de kaart: foto, bloeistatus en
-// "Navigeer hierheen". Niet-modaal, zodat de kaart erboven bedienbaar blijft.
+// "Navigeer hierheen" (in-app navigatie op de fiets). Niet-modaal, zodat de kaart erboven bedienbaar blijft.
 
 import Image from "next/image";
-import { Capacitor } from "@capacitor/core";
+import { useParams, useRouter } from "next/navigation";
 import { ChevronRight, MapPin, Navigation } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
 import { isCurrentlyOpen } from "@/lib/openingHours";
@@ -21,16 +21,6 @@ export type SheetLocation = Pick<Location,
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1490750967868-88df5691cc8c?w=800";
 
-/** Opent de route ernaartoe in Apple Maps (iOS) of Google Maps, op de fiets. */
-function openDirections(lat: number, lng: number) {
-  const url = Capacitor.getPlatform() === "ios"
-    ? `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
-    : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=bicycling`;
-  // _system opent in Capacitor de externe app i.p.v. de WebView
-  const win = window.open(url, "_system");
-  if (!win) window.location.href = url;
-}
-
 export function LocationSheet({
   location,
   onClose,
@@ -41,6 +31,8 @@ export function LocationSheet({
   onDetails: () => void;
 }) {
   const { t } = useT();
+  const router = useRouter();
+  const { locale } = useParams<{ locale: string }>();
   const isOpen = location?.category === "food" ? isCurrentlyOpen(location.opening_hours) : null;
 
   return (
@@ -77,7 +69,14 @@ export function LocationSheet({
               <Button
                 fullWidth
                 icon={<Navigation size={16} aria-hidden />}
-                onClick={() => openDirections(location.latitude as number, location.longitude as number)}
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    dest: `${location.latitude},${location.longitude}`,
+                    name: location.title,
+                    mode: "bike",
+                  });
+                  router.push(`/${locale}/navigate?${params.toString()}`);
+                }}
               >
                 {t("map.navigate_here")}
               </Button>
