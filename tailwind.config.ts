@@ -12,6 +12,16 @@ const config: Config = {
 
   theme: {
     extend: {
+      // `text-primary` gebruikt een eigen tint die ook in dark mode 4,5:1 haalt;
+      // bg-/border-/ring-primary blijven exact #E8102A
+      textColor: {
+        primary: {
+          DEFAULT: "var(--color-primary-text)",
+          dark:    "var(--color-primary-dark)",
+          light:   "var(--color-primary-light)",
+          subtle:  "var(--color-primary-subtle)",
+        },
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -29,6 +39,12 @@ const config: Config = {
           subtle:  "var(--color-primary-subtle)",
         },
         "on-primary": "var(--color-on-primary)",
+
+        // ── Bloemencorso: eigen event-kleur (bewust apart van het merkrood) ──
+        corso: {
+          DEFAULT: "var(--color-corso)",
+          light:   "var(--color-corso-light)",
+        },
 
         // ── Tekst & randen (semantisch, schakelen per thema) ──
         ink: {

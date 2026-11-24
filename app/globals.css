@@ -14,6 +14,8 @@
   --color-primary-light:  #F5483A;
   --color-primary-subtle: #FFF3F1;
   --color-on-primary:     #FFFFFF;
+  /* Rood als tekst (links, labels); voldoet aan 4,5:1 op de oppervlakken */
+  --color-primary-text:   #E8102A;
 
   /* Oppervlakken */
   --color-surface:   #FAFAF7;
@@ -28,11 +30,11 @@
   /* Tekst */
   --color-text:   #1A1A18;
   --color-text-2: #5C5C58;
-  --color-text-3: #8C8C88;
+  --color-text-3: #6F6F6B; /* ≥ 4,5:1 op surface t/m surface-3 */
 
   /* Status */
   --color-success: #2D7D46;
-  --color-warning: #D4820A;
+  --color-warning: #9E5E00; /* ook als tekst leesbaar (≥ 4,5:1) */
   --color-danger:  #E8102A;
   --color-info:    #2563EB;
 
@@ -86,6 +88,8 @@
   --color-primary-light:  #F5483A;
   --color-primary-subtle: #2A0A0C;
   --color-on-primary:     #FFFFFF;
+  /* #E8102A haalt als kleine tekst op donker maar 4,15:1; vlakken blijven #E8102A */
+  --color-primary-text:   #FF5A69;
 
   /* Oppervlakken */
   --color-surface:   #0F0F0E;
@@ -100,12 +104,12 @@
   /* Tekst */
   --color-text:   #F5F5F2;
   --color-text-2: #A8A8A4;
-  --color-text-3: #6C6C68;
+  --color-text-3: #92928E; /* ≥ 4,5:1 op surface t/m surface-3 */
 
   /* Status */
   --color-success: #34D070;
   --color-warning: #F0A020;
-  --color-danger:  #F5483A;
+  --color-danger:  #FF5A69;
   --color-info:    #60A5FA;
 
   /* Skeleton */
