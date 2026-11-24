@@ -7,7 +7,10 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import type { Location } from "@/lib/types";
-import { X, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap } from "lucide-react";
+import {
+  X, MapPin, Locate, PenLine, Trash2, BookmarkPlus, Check, Loader2, List, Bike, Footprints, Mountain, Zap,
+  Car, Flower2, Leaf, Camera, Users, Eye, Utensils, Plus, Minus, Image as ImageIcon, type LucideIcon,
+} from "lucide-react";
 import { isCurrentlyOpen } from "@/lib/openingHours";
 import { useT } from "@/lib/i18n-context";
 import { locationPath, routePath } from "@/lib/links";
@@ -17,6 +20,10 @@ import { addRouteLayers, boundsOf, routeLayerIds, setRouteLines } from "@/lib/ma
 import { MAP_FONT_BOLD, MAP_STYLE, tintMap } from "@/lib/mapStyle";
 import { LocationSheet } from "@/components/map/LocationSheet";
 import { RouteSheet, type RouteSheetDetail, type SheetRoute } from "@/components/map/RouteSheet";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -37,13 +44,13 @@ type MapRoute = SheetRoute;
 const toLngLat = (points: [number, number][] | null): [number, number][] =>
   (points ?? []).map(([lat, lng]) => [lng, lat]);
 
-type PanelActivity = { id: string; label: string; Icon?: typeof Bike };
-const PANEL_ACTIVITIES: PanelActivity[] = [
-  { id: "all",               label: "Alle" },
-  { id: "Fietsroute",        label: "Fietsen",  Icon: Bike },
-  { id: "Wandelroute",       label: "Wandelen", Icon: Footprints },
-  { id: "Mountainbikeroute", label: "MTB",      Icon: Mountain },
-  { id: "E-Step Route",      label: "E-Step",   Icon: Zap },
+// id = waarde van routes.activity in Supabase
+const PANEL_ACTIVITIES: { id: string; key: string; Icon?: LucideIcon }[] = [
+  { id: "all",               key: "all" },
+  { id: "Fietsroute",        key: "bike",  Icon: Bike },
+  { id: "Wandelroute",       key: "walk",  Icon: Footprints },
+  { id: "Mountainbikeroute", key: "mtb",   Icon: Mountain },
+  { id: "E-Step Route",      key: "estep", Icon: Zap },
 ];
 
 // Aparte OSRM-instanties per modus (routing.openstreetmap.de)
@@ -63,14 +70,14 @@ type MapLocation = Pick<Location,
 
 type FilterId = "peak" | "nearby" | "quiet" | "photo" | "family" | "free" | "horeca";
 
-const FILTER_IDS: { id: FilterId; emoji: string }[] = [
-  { id: "peak",   emoji: "🌸" },
-  { id: "nearby", emoji: "📍" },
-  { id: "quiet",  emoji: "🌿" },
-  { id: "photo",  emoji: "📷" },
-  { id: "family", emoji: "👨‍👩‍👧" },
-  { id: "free",   emoji: "✅" },
-  { id: "horeca", emoji: "🍴" },
+const FILTER_IDS: { id: FilterId; Icon: LucideIcon }[] = [
+  { id: "peak",   Icon: Flower2 },
+  { id: "nearby", Icon: MapPin },
+  { id: "quiet",  Icon: Leaf },
+  { id: "photo",  Icon: Camera },
+  { id: "family", Icon: Users },
+  { id: "free",   Icon: Eye },
+  { id: "horeca", Icon: Utensils },
 ];
 
 // ─── Route drawing types ──────────────────────────────────────────────────────
@@ -96,11 +103,10 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function fmtDuration(sec: number): string {
+function fmtDuration(sec: number, t: (k: string, p?: Record<string, string | number>) => string): string {
   const min = Math.round(sec / 60);
-  if (min < 60) return `${min} min`;
-  const h = Math.floor(min / 60), m = min % 60;
-  return m === 0 ? `${h}u` : `${h}u ${m}m`;
+  if (min < 60) return `${min} ${t("navigation.minute_short")}`;
+  return t("navigation.duration_hm", { h: Math.floor(min / 60), m: min % 60 });
 }
 
 function fmtDistance(m: number): string {
@@ -176,6 +182,12 @@ function locationsToGeoJSON(
 
 // ─── RoutesPanel ──────────────────────────────────────────────────────────────
 
+const TRAVEL_ROWS: { key: keyof RouteResult; label: string; Icon: LucideIcon }[] = [
+  { key: "walking", label: "map.on_foot", Icon: Footprints },
+  { key: "cycling", label: "map.by_bike", Icon: Bike },
+  { key: "driving", label: "map.by_car",  Icon: Car },
+];
+
 function RoutesPanel({
   result,
   loading,
@@ -189,63 +201,48 @@ function RoutesPanel({
   onClear: () => void;
   onSave: () => void;
 }) {
-  const rows: { emoji: string; label: string; key: keyof RouteResult }[] = [
-    { emoji: "🚶", label: "Wandelen", key: "walking" },
-    { emoji: "🚴", label: "Fietsen",  key: "cycling" },
-    { emoji: "🚗", label: "Rijden",   key: "driving" },
-  ];
-
+  const { t } = useT();
   return (
-    <div className="absolute bottom-above-nav left-3 right-3 z-30 bg-white rounded-3xl shadow-2xl shadow-black/15 overflow-hidden animate-slide-up">
+    <div className="absolute bottom-above-nav left-3 right-3 z-30 overflow-hidden rounded-3xl border border-line bg-surface-2 shadow-sheet animate-slide-up">
       <div className="flex justify-center pt-2.5 pb-1">
-        <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        <div className="h-1 w-10 rounded-full bg-line-strong" />
       </div>
       <div className="px-4 pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm font-extrabold text-gray-900">Reistijden</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">{waypointCount} punt{waypointCount !== 1 ? "en" : ""} · fietsroute op kaart</p>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-headline text-ink">{t("map.travel_times")}</p>
+            <p className="text-caption text-ink-3">{t("map.points_count", { count: waypointCount })}</p>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={onSave}
-              disabled={loading || !result}
-              className="flex items-center gap-1.5 text-xs font-semibold text-tulip-600 hover:text-white
-                         transition-colors px-2.5 py-1.5 rounded-xl hover:bg-tulip-500 bg-tulip-50
-                         disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <BookmarkPlus size={13} /> Opslaan
-            </button>
-            <button
-              onClick={onClear}
-              className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-xl hover:bg-rose-50"
-            >
-              <Trash2 size={13} />
-            </button>
+            <Button size="sm" variant="secondary" onClick={onSave} disabled={loading || !result}
+                    icon={<BookmarkPlus size={14} aria-hidden />}>
+              {t("common.save")}
+            </Button>
+            <IconButton variant="ghost" aria-label={t("map.clear_route")} onClick={onClear} className="hover:text-danger">
+              <Trash2 size={16} />
+            </IconButton>
           </div>
         </div>
 
         {loading ? (
           <div className="space-y-2 pb-1">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-11 rounded-xl bg-gray-100 animate-pulse" />
-            ))}
+            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-11 rounded-xl" />)}
           </div>
         ) : (
           <div className="space-y-1.5 pb-1">
-            {rows.map(({ emoji, label, key }) => {
+            {TRAVEL_ROWS.map(({ key, label, Icon }) => {
               const r = result?.[key];
               return (
-                <div key={key} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50">
-                  <span className="text-lg w-6 text-center leading-none">{emoji}</span>
-                  <span className="flex-1 text-sm font-bold text-gray-800">{label}</span>
+                <div key={key} className="flex items-center gap-3 rounded-xl bg-surface-3 px-3 py-2.5">
+                  <Icon size={18} className="text-ink-2" aria-hidden />
+                  <span className="flex-1 text-label text-ink">{t(label)}</span>
                   {r ? (
-                    <div className="text-right">
-                      <span className="text-sm font-extrabold text-gray-900">{fmtDuration(r.duration)}</span>
-                      <span className="text-xs text-gray-400 ml-1.5">{fmtDistance(r.distance)}</span>
-                    </div>
+                    <span className="font-mono text-label text-ink">
+                      {fmtDuration(r.duration, t)}
+                      <span className="ml-1.5 text-caption text-ink-3">{fmtDistance(r.distance)}</span>
+                    </span>
                   ) : (
-                    <span className="text-xs text-gray-400">—</span>
+                    <span className="text-caption text-ink-3">—</span>
                   )}
                 </div>
               );
@@ -278,6 +275,7 @@ function RoutesBrowserPanel({
   onSelect: (route: MapRoute) => void;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const [showThumbs, setShowThumbs] = useState(true);
 
   const filtered = activeActivity === "all"
@@ -285,96 +283,73 @@ function RoutesBrowserPanel({
     : routes.filter((r) => r.activity === activeActivity);
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-12 pb-2 border-b border-gray-100">
-        <div>
-          <p className="text-sm font-extrabold text-gray-900">Routes</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">{filtered.length} routes</p>
+    <div className="flex h-full flex-col bg-surface-2">
+      <div className="flex items-center justify-between border-b border-line px-4 pt-safe pb-2">
+        <div className="pt-3">
+          <p className="text-headline text-ink">{t("map.routes_panel")}</p>
+          <p className="text-caption text-ink-3">{t("map.routes_count", { count: filtered.length })}</p>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setShowThumbs((p) => !p)}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-          >
-            <List size={14} />
-          </button>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-          >
-            <X size={14} />
-          </button>
+        <div className="flex items-center pt-3">
+          <IconButton variant="ghost" aria-label={t(showThumbs ? "map.hide_photos" : "map.show_photos")}
+                      aria-pressed={showThumbs} onClick={() => setShowThumbs((p) => !p)}>
+            {showThumbs ? <List size={16} /> : <ImageIcon size={16} />}
+          </IconButton>
+          <IconButton variant="ghost" aria-label={t("common.close")} onClick={onClose}>
+            <X size={16} />
+          </IconButton>
         </div>
       </div>
 
-      {/* Activity filter pills */}
-      <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-hide border-b border-gray-50">
-        {PANEL_ACTIVITIES.map((act) => {
-          const isActive = activeActivity === act.id;
-          const Icon = act.Icon;
-          return (
-            <button
-              key={act.id}
-              onClick={() => onActivityChange(act.id)}
-              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all
-                ${isActive
-                  ? "bg-rose-600 border-rose-600 text-white"
-                  : "bg-white border-gray-200 text-gray-600"
-                }`}
-            >
-              {Icon && <Icon size={10} />}
-              {act.label}
-            </button>
-          );
-        })}
+      <div className="scrollbar-hide flex gap-1.5 overflow-x-auto border-b border-line px-3 py-2">
+        {PANEL_ACTIVITIES.map((act) => (
+          <Chip key={act.id} selected={activeActivity === act.id} onClick={() => onActivityChange(act.id)}
+                icon={act.Icon ? <act.Icon size={12} aria-hidden /> : undefined} className="!h-8 !px-2.5 !text-caption">
+            {t(`map.activity_${act.key}`)}
+          </Chip>
+        ))}
       </div>
 
-      {/* Route list */}
       <div className="flex-1 overflow-y-auto">
         {filtered.map((route) => {
           const isOnMap   = onMapIds.includes(route.id);
           const isFocused = route.id === focusedId;
 
           return (
-            <div
-              key={route.id}
-              onClick={() => onSelect(route)}
-              className={`flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-50
-                          transition-colors cursor-pointer
-                          ${isOnMap ? "bg-gray-50" : "bg-white"} active:bg-gray-100`}
-            >
-              {showThumbs && (
-                <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100">
-                  {route.cover_image_url ? (
-                    <Image src={route.cover_image_url} alt={route.title} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <MapPin size={18} />
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-gray-900 leading-tight line-clamp-2">{route.title}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  {route.distance_km && (
-                    <span className="text-[10px] text-gray-400">{route.distance_km} km</span>
-                  )}
-                  {route.difficulty && (
-                    <span className="text-[10px] text-gray-400">· {route.difficulty}</span>
-                  )}
-                </div>
-              </div>
+            <div key={route.id} className={`flex items-center border-b border-line pr-1 ${isOnMap ? "bg-surface-3" : ""}`}>
+              <button
+                type="button"
+                onClick={() => onSelect(route)}
+                className="flex min-w-0 flex-1 items-center gap-2.5 py-2.5 pl-3 text-left active:bg-surface-3
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+              >
+                {showThumbs && (
+                  <span className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-surface-3">
+                    {route.cover_image_url ? (
+                      <Image src={route.cover_image_url} alt="" fill sizes="56px" className="object-cover" />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-ink-3">
+                        <MapPin size={18} aria-hidden />
+                      </span>
+                    )}
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-2 text-label leading-tight text-ink">{route.title}</span>
+                  <span className="mt-0.5 block font-mono text-caption text-ink-3">
+                    {[route.distance_km ? `${route.distance_km} km` : null, route.difficulty].filter(Boolean).join(" · ")}
+                  </span>
+                </span>
+              </button>
               {/* Geselecteerde route in merkrood, andere routes op de kaart gedimd */}
               <button
-                onClick={(e) => { e.stopPropagation(); onToggle(route); }}
-                aria-label={isOnMap ? "Van kaart halen" : "Op kaart tonen"}
+                type="button"
+                onClick={() => onToggle(route)}
+                aria-label={t(isOnMap ? "map.route_off_map" : "map.route_on_map")}
                 aria-pressed={isOnMap}
-                className="flex-shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-full
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-fast
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors duration-fast
                   ${isOnMap ? (isFocused ? "bg-primary" : "bg-ink-3") : "border-2 border-line-strong"}`}>
                   {isOnMap && <Check size={12} className="text-on-primary" aria-hidden />}
                 </span>
@@ -383,9 +358,7 @@ function RoutesBrowserPanel({
           );
         })}
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-            <p className="text-xs text-gray-400">Geen routes gevonden</p>
-          </div>
+          <p className="px-4 py-12 text-center text-caption text-ink-3">{t("map.no_routes")}</p>
         )}
       </div>
     </div>
@@ -1000,51 +973,35 @@ export default function MapView() {
   return (
     <div className="fixed inset-0 flex flex-col">
 
-      {/* ── Filter chips (floating) ── */}
+      {/* ── Filter chips (zwevend) ── */}
       <div
-        className="absolute top-0 left-0 right-0 z-20 pt-12 pb-3 px-4"
+        className="absolute left-0 right-0 top-0 z-20 px-4 pb-3 pt-safe"
         style={{
           background:
             "linear-gradient(to bottom, var(--color-surface) 0%, color-mix(in srgb, var(--color-surface) 70%, transparent) 60%, transparent 100%)",
         }}
       >
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {filters.map((f) => {
-            const isActive = activeFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                onClick={() => handleFilter(f.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
-                  transition-all duration-200 active:scale-95
-                  ${f.id === "nearby" && locating ? "opacity-60" : ""}
-                `}
-                style={isActive
-                  ? {
-                      backgroundColor: "#E8102A",
-                      color: "#ffffff",
-                      border: "1.5px solid #E8102A",
-                      boxShadow: "0 4px 12px rgba(232,16,42,0.32)",
-                    }
-                  : {
-                      backgroundColor: "var(--color-surface-2)",
-                      color: "var(--color-text)",
-                      border: "1.5px solid var(--color-border)",
-                    }}
-              >
-                <span>{f.id === "nearby" && locating ? "⏳" : f.emoji}</span>
-                {f.label}
-              </button>
-            );
-          })}
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 pt-3">
+          {filters.map((f) => (
+            <Chip
+              key={f.id}
+              selected={activeFilter === f.id}
+              onClick={() => handleFilter(f.id)}
+              className="shadow-sm"
+              icon={f.id === "nearby" && locating
+                ? <Loader2 size={14} className="animate-spin" aria-hidden />
+                : <f.Icon size={14} aria-hidden />}
+            >
+              {f.label}
+            </Chip>
+          ))}
         </div>
       </div>
 
       {/* ── Draw mode banner ── */}
       {drawMode && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-          <div className="bg-gray-900/80 backdrop-blur-sm text-white text-xs font-semibold
-                          px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+          <div className="whitespace-nowrap rounded-full bg-ink px-4 py-2 text-caption text-surface shadow-lg" role="status">
             {waypoints.length === 0
               ? t("map.draw_first_point")
               : waypoints.length === 1
@@ -1062,13 +1019,13 @@ export default function MapView() {
             return !p;
           });
         }}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-30
-                   flex items-center gap-1.5 pl-2.5 pr-3 py-2.5
-                   bg-white rounded-r-full shadow-lg border border-l-0 border-gray-100
-                   transition-all active:scale-95"
+        aria-expanded={routePanelOpen}
+        className="absolute left-0 top-1/2 z-30 flex min-h-touch -translate-y-1/2 items-center gap-1.5
+                   rounded-r-full border border-l-0 border-line bg-surface-2 py-2.5 pl-2.5 pr-3 shadow-lg
+                   transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        <List size={16} className={routePanelOpen ? "text-rose-600" : "text-gray-600"} />
-        <span className="text-xs font-bold text-gray-700">{t("map.routes_panel")}</span>
+        <List size={16} className={routePanelOpen ? "text-primary" : "text-ink-2"} aria-hidden />
+        <span className="text-label text-ink">{t("map.routes_panel")}</span>
         {onMapRouteIds.length > 0 && (
           <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-on-primary text-[10px] font-extrabold flex items-center justify-center">
             {onMapRouteIds.length}
@@ -1079,12 +1036,10 @@ export default function MapView() {
       {/* ── Onboarding tooltip ── */}
       {showRouteHint && !routePanelOpen && (
         <div className="absolute left-20 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
-          <div className="relative bg-gray-900/90 backdrop-blur-sm text-white text-xs font-semibold
-                          px-3 py-2 rounded-xl shadow-lg whitespace-nowrap">
-            <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-0 h-0
-                            border-t-[6px] border-t-transparent
-                            border-b-[6px] border-b-transparent
-                            border-r-[7px] border-r-gray-900/90" />
+          <div className="relative whitespace-nowrap rounded-xl bg-ink px-3 py-2 text-caption text-surface shadow-lg">
+            <div className="absolute -left-[7px] top-1/2 h-0 w-0 -translate-y-1/2
+                            border-y-[6px] border-r-[7px] border-y-transparent"
+                 style={{ borderRightColor: "var(--color-text)" }} />
             {t("map.routes_hint")}
           </div>
         </div>
@@ -1114,47 +1069,38 @@ export default function MapView() {
       {/* ── Route draw toggle ── */}
       <button
         onClick={toggleDrawMode}
-        className={`absolute left-4 bottom-44 z-20 h-11 px-4 rounded-full
-                   shadow-lg flex items-center gap-2 text-sm font-bold
-                   border transition-all active:scale-95
-                   ${drawMode
-                     ? "bg-rose-600 border-rose-600 text-white shadow-rose-200"
-                     : "bg-white border-gray-100 text-gray-700 hover:bg-gray-50"
-                   }`}
+        aria-pressed={drawMode}
+        className={`absolute bottom-44 left-4 z-20 flex h-11 items-center gap-2 rounded-full border px-4 text-label shadow-lg
+                   transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                   ${drawMode ? "border-primary bg-primary text-on-primary" : "border-line bg-surface-2 text-ink"}`}
       >
-        <PenLine size={16} />
+        <PenLine size={16} aria-hidden />
         {drawMode ? t("map.stop_drawing") : t("map.draw_route")}
       </button>
 
-      {/* ── My location button ── */}
-      <button
+      {/* ── Mijn locatie ── */}
+      <IconButton
+        aria-label={t("map.my_location")}
         onClick={locateUser}
-        className={`absolute right-4 bottom-44 z-20 w-11 h-11 bg-white rounded-full
-                   shadow-lg flex items-center justify-center
-                   hover:bg-rose-50 active:scale-95 transition-all border border-gray-100
-                   ${userCoords ? "text-blue-500" : "text-rose-600"}`}
+        className={`absolute bottom-44 right-4 z-20 shadow-lg ${userCoords ? "text-info" : "text-primary"}`}
       >
-        {locating
-          ? <Loader2 size={20} className="animate-spin text-rose-400" />
-          : <Locate size={20} />}
-      </button>
+        {locating ? <Loader2 size={20} className="animate-spin" /> : <Locate size={20} />}
+      </IconButton>
 
-      {/* ── Zoom buttons ── */}
-      <div className="absolute right-4 bottom-60 z-20 flex flex-col gap-1">
-        {["+", "−"].map((sign) => (
-          <button
-            key={sign}
+      {/* ── Zoomen ── */}
+      <div className="absolute bottom-60 right-4 z-20 flex flex-col gap-1">
+        {([["in", Plus, 1], ["out", Minus, -1]] as const).map(([key, Icon, delta]) => (
+          <IconButton
+            key={key}
+            aria-label={t(`map.zoom_${key}`)}
+            className="shadow-lg"
             onClick={() => {
               if (!mapRef.current) return;
-              const z = mapRef.current.getZoom() ?? 11;
-              mapRef.current.setZoom(sign === "+" ? z + 1 : z - 1);
+              mapRef.current.easeTo({ zoom: mapRef.current.getZoom() + delta, duration: 250 });
             }}
-            className="w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center
-                       text-gray-700 font-bold text-lg hover:bg-gray-50 active:scale-95
-                       transition-all border border-gray-100"
           >
-            {sign}
-          </button>
+            <Icon size={18} />
+          </IconButton>
         ))}
       </div>
 
@@ -1169,52 +1115,43 @@ export default function MapView() {
         />
       )}
 
-      {/* ── Save route sheet ── */}
+      {/* ── Route opslaan ── */}
       {showSaveSheet && (
-        <div className="absolute bottom-20 left-3 right-3 z-40 bg-white rounded-3xl shadow-2xl shadow-black/20 overflow-hidden animate-slide-up">
+        <div className="absolute bottom-above-nav left-3 right-3 z-40 overflow-hidden rounded-3xl border border-line bg-surface-2 shadow-sheet animate-slide-up">
           <div className="flex justify-center pt-2.5 pb-1">
-            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+            <div className="h-1 w-10 rounded-full bg-line-strong" />
           </div>
           <div className="px-4 pb-5">
             {saveConfirmed ? (
-              <div className="flex flex-col items-center py-4 gap-2">
-                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-                  <Check size={24} className="text-green-600" />
-                </div>
-                <p className="text-sm font-extrabold text-gray-900">{t("map.route_saved")}</p>
-                <p className="text-xs text-gray-400">{t("map.route_saved_sub")}</p>
+              <div className="flex flex-col items-center gap-2 py-4" role="status">
+                <span className="relative flex h-12 w-12 items-center justify-center rounded-full">
+                  <span aria-hidden className="absolute inset-0 rounded-full bg-success opacity-[0.15]" />
+                  <Check size={24} className="relative text-success" aria-hidden />
+                </span>
+                <p className="text-headline text-ink">{t("map.route_saved")}</p>
+                <p className="text-caption text-ink-3">{t("map.route_saved_sub")}</p>
               </div>
             ) : (
               <>
-                <p className="text-sm font-extrabold text-gray-900 mb-1">{t("map.save_route")}</p>
-                <p className="text-xs text-gray-400 mb-3">{t("map.save_route_sub")}</p>
+                <label htmlFor="save-route-name" className="mb-1 block text-headline text-ink">{t("map.save_route")}</label>
+                <p className="mb-3 text-caption text-ink-3">{t("map.save_route_sub")}</p>
                 <input
+                  id="save-route-name"
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   maxLength={60}
-                  className="w-full px-3.5 py-3 rounded-xl border border-gray-200 text-sm font-semibold
-                             text-gray-800 bg-gray-50 focus:outline-none focus:border-tulip-400
-                             focus:bg-white transition-colors mb-3"
+                  className="mb-3 min-h-touch w-full rounded-xl border border-line bg-surface px-3.5 py-3 text-body text-ink
+                             transition-colors focus:border-primary focus:outline-none"
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowSaveSheet(false)}
-                    className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-500
-                               hover:bg-gray-50 active:scale-95 transition-all"
-                  >
+                  <Button variant="secondary" fullWidth onClick={() => setShowSaveSheet(false)}>
                     {t("common.cancel")}
-                  </button>
-                  <button
-                    onClick={confirmSave}
-                    disabled={!saveName.trim()}
-                    className="flex-1 py-3 rounded-xl bg-tulip-500 text-white text-sm font-bold
-                               hover:bg-tulip-600 active:scale-95 transition-all
-                               disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
+                  </Button>
+                  <Button fullWidth onClick={confirmSave} disabled={!saveName.trim()}>
                     {t("common.save")}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -1250,8 +1187,6 @@ export default function MapView() {
         onClose={closeLocationSheet}
         onDetails={() => selected && router.push(locationPath(locale, selected.slug))}
       />
-
-      {/* ── Bottom nav ── */}
 
       {/* ── Animations ── */}
       <style jsx global>{`

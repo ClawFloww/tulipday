@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Car, Bike, Footprints, Camera, Users, Clock, ArrowLeft, ChevronRight,
-  Mountain, Zap, Map, SlidersHorizontal, X,
+  Mountain, Zap, Map, SlidersHorizontal, X, Star,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Route, RouteType } from "@/lib/types";
@@ -88,14 +88,6 @@ const ROUTE_ICON: Record<string, React.ReactNode> = {
   family: <Users      size={13} />,
 };
 
-const ROUTE_PILL: Record<string, string> = {
-  bike:   "bg-sky-100 text-sky-700",
-  car:    "bg-orange-100 text-orange-700",
-  walk:   "bg-forest-100 text-forest-600",
-  photo:  "bg-tulip-100 text-tulip-600",
-  family: "bg-petal/40 text-tulip-600",
-};
-
 function formatDuration(min: number): string {
   const h = Math.floor(min / 60), m = min % 60;
   if (h === 0) return `${m} min`;
@@ -106,7 +98,7 @@ function formatDuration(min: number): string {
 
 function SkeletonRouteCard() {
   return (
-    <div className="rounded-2xl overflow-hidden shadow-card" style={{ backgroundColor: "var(--color-surface-2)" }}>
+    <div className="rounded-2xl overflow-hidden shadow-card bg-surface-2" >
       <div className="h-52 skeleton-shimmer" />
       <div className="p-4 space-y-3">
         <div className="h-5 skeleton-shimmer rounded w-2/3" />
@@ -146,7 +138,7 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
 
         {type && (
           <div className="absolute top-3 left-3">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${ROUTE_PILL[type]} backdrop-blur-sm`}>
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-caption font-bold text-ink shadow-sm">
               {ROUTE_ICON[type]} {t(`route_type.${type}_route`)}
             </span>
           </div>
@@ -154,8 +146,8 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
 
         {route.is_featured && (
           <div className="absolute top-3 right-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-amber-900">
-              ⭐ {t("common.featured")}
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-caption font-bold text-on-primary shadow-sm">
+              <Star size={12} className="fill-current" aria-hidden /> {t("common.featured")}
             </span>
           </div>
         )}
@@ -175,27 +167,27 @@ function RouteListCard({ route, onClick }: { route: Route; onClick: () => void }
       </div>
 
       <div className="p-4">
-        <h3 className="text-base font-extrabold leading-snug mb-1.5"
-            style={{ color: "var(--color-text)" }}>{route.title}</h3>
+        <h3 className="text-base font-extrabold leading-snug mb-1.5 text-ink"
+            >{route.title}</h3>
         {route.description && (
-          <p className="text-sm leading-relaxed line-clamp-2 mb-3"
-             style={{ color: "var(--color-text-2)" }}>{route.description}</p>
+          <p className="text-sm leading-relaxed line-clamp-2 mb-3 text-ink-2"
+             >{route.description}</p>
         )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {route.distance_km != null && (
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${type ? ROUTE_PILL[type] : "bg-surface-3 text-[var(--color-text-2)]"}`}>
+              <span className="rounded-full bg-surface-3 px-2.5 py-1 font-mono text-caption font-semibold text-ink-2">
                 {route.distance_km} km
               </span>
             )}
             {route.duration_minutes != null && (
-              <span className="flex items-center gap-1 text-xs font-semibold bg-surface-3 px-2.5 py-1 rounded-full"
-                    style={{ color: "var(--color-text-2)" }}>
+              <span className="flex items-center gap-1 text-xs font-semibold bg-surface-3 px-2.5 py-1 rounded-full text-ink-2"
+                    >
                 <Clock size={11} /> {formatDuration(route.duration_minutes)}
               </span>
             )}
           </div>
-          <span className="flex items-center gap-1 text-xs font-bold text-tulip-500">
+          <span className="flex items-center gap-1 text-xs font-bold text-primary">
             {t("routes.view_route")} <ChevronRight size={14} />
           </span>
         </div>
@@ -220,7 +212,7 @@ function FilterPills({ options, selected, onToggle }: {
             key={opt}
             onClick={() => onToggle(opt)}
             className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all duration-150 active:scale-95
-              ${isActive ? "bg-tulip-500 border-tulip-500 text-white" : "border-[var(--color-border)]"}`}
+              ${isActive ? "bg-primary border-primary text-white" : "border-line"}`}
             style={!isActive ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" } : {}}
           >
             {opt}
@@ -261,11 +253,11 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: "var(--color-border)" }} />
+          <div className="w-10 h-1 rounded-full bg-line"  />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-line">
           <button
             onClick={() => onChange({ ...DEFAULT_FILTERS, activity: filters.activity })}
             className={`text-sm font-semibold transition-opacity ${hasActive ? "opacity-100" : "opacity-30 cursor-default"}`}
@@ -273,11 +265,11 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
           >
             Wis filters
           </button>
-          <h2 className="text-base font-bold" style={{ color: "var(--color-text)" }}>Filters</h2>
+          <h2 className="text-base font-bold text-ink" >Filters</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-3 text-ink-2"
+            
           >
             <X size={16} />
           </button>
@@ -286,38 +278,38 @@ function FilterSheet({ show, filters, filteredCount, onClose, onChange }: {
         {/* Scrollable content */}
         <div className="overflow-y-auto flex-1 px-5 pt-5 pb-2">
           <div className="mb-5">
-            <h3 className="text-sm font-bold mb-2.5" style={{ color: "var(--color-text)" }}>Afstand</h3>
+            <h3 className="text-sm font-bold mb-2.5 text-ink" >Afstand</h3>
             <FilterPills options={DISTANCES} selected={filters.distances}
               onToggle={(v) => onChange({ ...filters, distances: toggle(filters.distances, v) })} />
           </div>
           <div className="mb-5">
-            <h3 className="text-sm font-bold mb-2.5" style={{ color: "var(--color-text)" }}>Moeilijkheid</h3>
+            <h3 className="text-sm font-bold mb-2.5 text-ink" >Moeilijkheid</h3>
             <FilterPills options={DIFFICULTIES} selected={filters.difficulty ? [filters.difficulty] : []}
               onToggle={(v) => onChange({ ...filters, difficulty: filters.difficulty === v ? null : v })} />
           </div>
           <div className="mb-5">
-            <h3 className="text-sm font-bold mb-2.5" style={{ color: "var(--color-text)" }}>Omgeving</h3>
+            <h3 className="text-sm font-bold mb-2.5 text-ink" >Omgeving</h3>
             <FilterPills options={ENVIRONMENTS} selected={filters.environments}
               onToggle={(v) => onChange({ ...filters, environments: toggle(filters.environments, v) })} />
           </div>
           <div className="mb-5">
-            <h3 className="text-sm font-bold mb-2.5" style={{ color: "var(--color-text)" }}>Thema</h3>
+            <h3 className="text-sm font-bold mb-2.5 text-ink" >Thema</h3>
             <FilterPills options={FILTER_THEMES} selected={filters.themes}
               onToggle={(v) => onChange({ ...filters, themes: toggle(filters.themes, v) })} />
           </div>
           <div className="mb-5">
-            <h3 className="text-sm font-bold mb-2.5" style={{ color: "var(--color-text)" }}>Doelgroep</h3>
+            <h3 className="text-sm font-bold mb-2.5 text-ink" >Doelgroep</h3>
             <FilterPills options={AUDIENCES} selected={filters.audiences}
               onToggle={(v) => onChange({ ...filters, audiences: toggle(filters.audiences, v) })} />
           </div>
         </div>
 
         {/* Sticky apply button — extra padding voor tabbar */}
-        <div className="px-5 pt-4 pb-8 flex-shrink-0 border-t border-[var(--color-border)]"
+        <div className="px-5 pt-4 pb-8 flex-shrink-0 border-t border-line"
              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}>
           <button
             onClick={onClose}
-            className="w-full py-3.5 bg-tulip-500 text-white font-bold rounded-2xl text-sm
+            className="w-full py-3.5 bg-primary text-white font-bold rounded-2xl text-sm
                        active:scale-[0.98] transition-transform"
           >
             Toon {filteredCount} route{filteredCount !== 1 ? "s" : ""}
@@ -356,21 +348,21 @@ export default function RoutesPage() {
   return (
     <div className="min-h-screen bg-surface pb-28">
 
-      <div className="bg-surface-2 px-5 pt-12 pb-4 border-b border-[var(--color-border)]">
+      <div className="bg-surface-2 px-5 pt-12 pb-4 border-b border-line">
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => router.push(`/${locale}/home`)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 tap-scale"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 tap-scale bg-surface-3 text-ink-2"
+            
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="font-display text-xl font-bold text-[var(--color-text)] leading-tight">
+            <h1 className="font-display text-xl font-bold text-ink leading-tight">
               {t("routes.title")}
             </h1>
-            <p className="text-xs text-[var(--color-text-3)]">
+            <p className="text-xs text-ink-3">
               {loading
                 ? t("common.loading")
                 : t(filtered.length === 1 ? "routes.count_one" : "routes.count", { count: filtered.length })}
@@ -394,7 +386,7 @@ export default function RoutesPage() {
                   onClick={() => setFilters((f) => ({ ...f, activity: a.id }))}
                   className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold
                               border transition-all duration-200 active:scale-95
-                              ${isActive ? "bg-tulip-500 border-tulip-500 text-white shadow-sm" : "border-[var(--color-border)]"}`}
+                              ${isActive ? "bg-primary border-primary text-white shadow-sm" : "border-line"}`}
                   style={!isActive ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" } : {}}
                 >
                   {a.icon} {t(a.labelKey)}
@@ -418,14 +410,14 @@ export default function RoutesPage() {
             className={`relative flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold
                         border transition-all duration-200 active:scale-95
                         ${secondaryCount > 0
-                          ? "bg-tulip-50 border-tulip-300 text-tulip-600"
-                          : "border-[var(--color-border)]"}`}
+                          ? "bg-primary-subtle border-tulip-300 text-primary"
+                          : "border-line"}`}
             style={secondaryCount === 0 ? { backgroundColor: "var(--color-surface-2)", color: "var(--color-text-2)" } : {}}
           >
             <SlidersHorizontal size={13} />
             {secondaryCount > 0 && (
               <span
-                className="absolute flex items-center justify-center bg-tulip-500 text-white font-extrabold rounded-full"
+                className="absolute flex items-center justify-center bg-primary text-white font-extrabold rounded-full"
                 style={{ top: "-6px", right: "-6px", width: "18px", height: "18px", fontSize: "9px", lineHeight: 1 }}
               >
                 {secondaryCount}
@@ -444,17 +436,17 @@ export default function RoutesPage() {
           Array.from({ length: 3 }).map((_, i) => <SkeletonRouteCard key={i} />)
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-            <div className="w-20 h-20 rounded-full bg-tulip-50 flex items-center justify-center mb-5">
-              <span className="text-4xl">🚴</span>
+            <div className="w-20 h-20 rounded-full bg-primary-subtle flex items-center justify-center mb-5">
+              <Bike size={36} className="text-primary" aria-hidden />
             </div>
-            <h3 className="font-display font-bold text-[var(--color-text)] text-lg mb-1.5">
+            <h3 className="font-display font-bold text-ink text-lg mb-1.5">
               {t("routes.no_routes_title")}
             </h3>
-            <p className="text-sm text-[var(--color-text-3)] mb-5">{t("routes.no_routes_desc")}</p>
+            <p className="text-sm text-ink-3 mb-5">{t("routes.no_routes_desc")}</p>
             <button
               onClick={() => setFilters(DEFAULT_FILTERS)}
-              className="px-5 py-2.5 bg-tulip-500 text-white text-sm font-bold rounded-full
-                         tap-scale hover:bg-tulip-600 transition-colors"
+              className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-full
+                         tap-scale hover:bg-primary-dark transition-colors"
             >
               {t("routes.show_all")}
             </button>

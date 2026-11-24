@@ -13,17 +13,9 @@ const ROUTE_ICON: Record<string, React.ReactNode> = {
   family: <Users      size={11} />,
 };
 
-const ROUTE_COLOR: Record<string, string> = {
-  bike:   "bg-sky-100 text-sky-700",
-  car:    "bg-orange-100 text-orange-700",
-  walk:   "bg-forest-100 text-forest-600",
-  photo:  "bg-tulip-100 text-tulip-600",
-  family: "bg-petal/40 text-tulip-600",
-};
-
 function formatDuration(min: number) {
   const h = Math.floor(min / 60), m = min % 60;
-  return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+  return h > 0 ? (m > 0 ? `${h} u ${m} min` : `${h} u`) : `${m} min`;
 }
 
 export function RouteCard({ route, onClick }: { route: Route; onClick?: () => void }) {
@@ -35,7 +27,7 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
     <button
       onClick={onClick}
       className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-surface-2 shadow-card
-                 border border-[var(--color-border)] text-left
+                 border border-line text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
                  hover:shadow-card-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
     >
       <div className="relative h-[200px] overflow-hidden">
@@ -43,7 +35,7 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         {type && (
           <div className="absolute bottom-2 left-2">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${ROUTE_COLOR[type] ?? "bg-gray-100 text-gray-600"}`}>
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-caption font-bold text-ink shadow-sm">
               {ROUTE_ICON[type]} {t(`route_type.${type}`)}
             </span>
           </div>
@@ -51,12 +43,12 @@ export function RouteCard({ route, onClick }: { route: Route; onClick?: () => vo
       </div>
 
       <div className="px-3 pt-2.5 pb-3 space-y-1.5">
-        <h3 className="text-sm font-bold leading-tight line-clamp-2"
-            style={{ color: "var(--color-text)" }}>
+        <h3 className="text-sm font-bold leading-tight line-clamp-2 text-ink"
+            >
           {route.title}
         </h3>
-        <div className="flex items-center gap-3 text-[11px]"
-             style={{ color: "var(--color-text-3)" }}>
+        <div className="flex items-center gap-3 text-[11px] text-ink-3"
+             >
           {route.distance_km != null && <span className="font-medium">{route.distance_km} km</span>}
           {route.duration_minutes != null && (
             <span className="flex items-center gap-0.5">

@@ -42,18 +42,18 @@ export function LocationCard({ location, onClick, status }: LocationCardProps) {
       </div>
 
       <div className="px-3 pt-2.5 pb-3 space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide"
-           style={{ color: "var(--color-primary)" }}>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-primary"
+           >
           {t(`category.${location.category}`)}
         </p>
-        <h3 className="text-sm font-bold leading-tight line-clamp-2 min-h-10"
-            style={{ color: "var(--color-text)" }}>
+        <h3 className="text-sm font-bold leading-tight line-clamp-2 min-h-10 text-ink"
+            >
           {location.title}
         </h3>
 
         {location.address && (
-          <p className="flex items-center gap-1 text-[11px] truncate"
-             style={{ color: "var(--color-text-3)" }}>
+          <p className="flex items-center gap-1 text-[11px] truncate text-ink-3"
+             >
             <MapPin size={10} className="flex-shrink-0" />
             <span className="truncate">{location.address}</span>
           </p>

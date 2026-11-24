@@ -7,10 +7,10 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { RouteStop } from "@/lib/types";
-import { addMapIcons } from "@/lib/mapIcons";
+import { addMapIcons, CATEGORY_COLOR } from "@/lib/mapIcons";
 import { addRouteLayers, setRouteLines } from "@/lib/mapLayers";
 import { MAP_STYLE, tintMap } from "@/lib/mapStyle";
+import type { Category, RouteStop } from "@/lib/types";
 
 export type MapLocation = {
   id:                string;
@@ -24,25 +24,6 @@ export type MapLocation = {
   longitude:         number;
   bloom_status?:     string | null;
 };
-
-export const CATEGORY_COLOR: Record<string, string> = {
-  flower_field: "#E8102A",
-  photo_spot:   "#8b5cf6",
-  attraction:   "#f59e0b",
-  food:         "#10b981",
-  parking:      "#6b7280",
-  bike_rental:  "#a855f7",
-};
-
-export const CATEGORY_LABEL: Record<string, string> = {
-  flower_field: "Bollenveld",
-  photo_spot:   "Fotoplek",
-  attraction:   "Attractie",
-  food:         "Eten & Drinken",
-  parking:      "Parkeren",
-  bike_rental:  "Fietsverhuur",
-};
-
 
 interface Props {
   points?:          [number, number][] | null;
@@ -114,7 +95,7 @@ export function RouteInteractiveMap({ points, stops, locations, onLocationSelect
       // Locatiemarkers — gekleurde stippen, afbeelding verschijnt bij aantikken (bottom sheet)
       locations.forEach((loc) => {
         if (!loc.latitude || !loc.longitude) return;
-        const color = CATEGORY_COLOR[loc.category] ?? "#6b7280";
+        const color = CATEGORY_COLOR[loc.category as Category] ?? CATEGORY_COLOR.parking;
 
         // Marker-element: gekleurde stip — afbeelding verschijnt alleen bij aantikken
         const el = document.createElement("div");

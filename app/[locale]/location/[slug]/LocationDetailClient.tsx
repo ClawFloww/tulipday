@@ -7,6 +7,7 @@ import {
   ArrowLeft, MapPin, Star, Heart, Navigation,
   ChevronRight, Camera, Clock, Footprints, ParkingCircle,
   ShieldCheck, Flower2, Users, Plus, Share2, Check, ExternalLink, SearchX,
+  Ban, Car, VolumeX, Trash2, type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
@@ -145,7 +146,13 @@ export default function LocationDetailPage() {
   function handleNavigate() {
     if (!location?.latitude || !location?.longitude) return;
     track("navigate", { location_id: location.id });
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`, "_blank");
+    // In-app navigatie (fase 3); Google/Apple Maps blijft daar als terugvaloptie
+    const query = new URLSearchParams({
+      dest: `${location.latitude},${location.longitude}`,
+      name: location.title,
+      mode: "bike",
+    });
+    router.push(`/${params.locale}/navigate?${query.toString()}`);
   }
 
   async function handleShare() {
@@ -202,13 +209,13 @@ export default function LocationDetailPage() {
   const access = location.access_type ? accessMap[location.access_type] : null;
 
   const etiquetteRules = [
-    { emoji: "🌷", rule: t("location.etiquette_rule1") },
-    { emoji: "🚷", rule: t("location.etiquette_rule2") },
-    { emoji: "🚗", rule: t("location.etiquette_rule3") },
-    { emoji: "📸", rule: t("location.etiquette_rule4") },
-    { emoji: "🔇", rule: t("location.etiquette_rule5") },
-    { emoji: "🗑️", rule: t("location.etiquette_rule6") },
-  ];
+    { Icon: Flower2, rule: t("location.etiquette_rule1") },
+    { Icon: Ban,     rule: t("location.etiquette_rule2") },
+    { Icon: Car,     rule: t("location.etiquette_rule3") },
+    { Icon: Camera,  rule: t("location.etiquette_rule4") },
+    { Icon: VolumeX, rule: t("location.etiquette_rule5") },
+    { Icon: Trash2,  rule: t("location.etiquette_rule6") },
+  ] satisfies { Icon: LucideIcon; rule: string }[];
 
   return (
     <div className="min-h-screen bg-surface"
@@ -388,7 +395,7 @@ export default function LocationDetailPage() {
             <ul className="space-y-3">
               {etiquetteRules.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="text-base leading-none mt-0.5 flex-shrink-0" aria-hidden>{item.emoji}</span>
+                  <item.Icon size={16} className="mt-0.5 flex-shrink-0 text-primary" aria-hidden />
                   <p className="text-label font-normal leading-snug text-ink-2">{item.rule}</p>
                 </li>
               ))}
@@ -483,22 +490,22 @@ function OpeningHoursCard({
                 </span>
                 {schedule ? (
                   <>
-                    <span className="text-[10px] font-semibold leading-tight" style={{ color: "var(--color-text)" }}>
+                    <span className="text-[10px] font-semibold leading-tight text-ink">
                       {schedule[0]}
                     </span>
-                    <span className="text-[10px] leading-tight" style={{ color: "var(--color-text-3)" }}>
+                    <span className="text-[10px] leading-tight text-ink-3">
                       {schedule[1]}
                     </span>
                   </>
                 ) : (
-                  <span className="text-[10px] font-medium" style={{ color: "var(--color-text-3)" }}>—</span>
+                  <span className="text-[10px] font-medium text-ink-3">—</span>
                 )}
               </div>
             );
           })}
         </div>
       ) : (
-        <p className="text-sm" style={{ color: "var(--color-text-3)" }}>{t("location.hours_unknown")}</p>
+        <p className="text-body text-ink-3">{t("location.hours_unknown")}</p>
       )}
     </div>
   );
