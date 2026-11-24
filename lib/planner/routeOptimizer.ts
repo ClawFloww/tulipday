@@ -1,7 +1,8 @@
 // Route optimizer — selecteert en sorteert stops op basis van tijdsbudget
-// Strategie: kies topscorers, cluster per dorp, sorteer via nearest-neighbor TSP
+// Strategie: eerst één ankerstop per gekozen vibe, daarna aanvullen met topscorers
+// in de buurt (max 2 per dorp); volgorde via nearest-neighbor TSP + 2-opt
 
-import type { ScoredLocation, PlannedStop, DayPlan, PlannerProfile, TimeBudget, Transport } from "./types";
+import type { ScoredLocation, PlannedStop, DayPlan, PlannerProfile, TimeBudget, Transport, Vibe } from "./types";
 
 // ── Tijdsbudgetten (in minuten) ───────────────────────────────────────────
 const BUDGET_MINUTES: Record<TimeBudget, number> = {
@@ -16,6 +17,17 @@ export const TRAVEL_MIN_PER_KM: Record<Transport, number> = {
   cycling:   4,
   car:       2,
 };
+
+// Afstandsstraf (scorepunten per km) bij het kiezen van stops: houdt de route
+// compact, vooral te voet
+const DISTANCE_PENALTY_PER_KM: Record<Transport, number> = {
+  walking: 0.15,
+  cycling: 0.04,
+  car:     0.01,
+};
+
+const MAX_STOPS            = 8;
+const MAX_STOPS_PER_VILLAGE = 2;
 
 // ── Preset dorpen voor clustering ─────────────────────────────────────────
 const VILLAGES = [
@@ -113,6 +125,60 @@ function travelMinutes(
   return Math.round(km * TRAVEL_MIN_PER_KM[transport]);
 }
 
+// ── Volgorde + totale tijd (reizen + bezoeken) van een set stops ──────────
+function orderStops(stops: ScoredLocation[]): ScoredLocation[] {
+  return twoOpt(sortByNearestNeighbor(stops));
+}
+
+function routeMinutes(route: ScoredLocation[], transport: Transport): number {
+  let min = 0;
+  for (let i = 0; i < route.length; i++) {
+    min += route[i].avgVisitMin;
+    if (i > 0) {
+      min += travelMinutes(
+        { lat: route[i - 1].latitude, lng: route[i - 1].longitude },
+        { lat: route[i].latitude,     lng: route[i].longitude },
+        transport,
+      );
+    }
+  }
+  return min;
+}
+
+// ── Score min afstandsstraf tot de dichtstbijzijnde al gekozen stop ──────
+function rankNear(loc: ScoredLocation, chosen: ScoredLocation[], transport: Transport): number {
+  if (chosen.length === 0) return loc.score;
+  let nearest = Infinity;
+  for (const c of chosen) {
+    nearest = Math.min(nearest, haversineKm(loc.latitude, loc.longitude, c.latitude, c.longitude));
+  }
+  return loc.score - nearest * DISTANCE_PENALTY_PER_KM[transport];
+}
+
+/**
+ * Eén ankerstop per gekozen vibe, zodat elk aangevinkt onderwerp in de route
+ * zit. Een stop kan meerdere vibes dekken (bollenveld: bloemen, natuur,
+ * fotografie). Zeldzame vibes eerst, zodat de route rond die plekken ligt.
+ */
+function pickVibeAnchors(scored: ScoredLocation[], profile: PlannerProfile): ScoredLocation[] {
+  const optionsFor = (vibe: Vibe) => scored.filter((l) => l.vibeTags.includes(vibe));
+  const vibes = [...profile.vibes].sort((a, b) => optionsFor(a).length - optionsFor(b).length);
+
+  const anchors: ScoredLocation[] = [];
+  for (const vibe of vibes) {
+    if (anchors.some((a) => a.vibeTags.includes(vibe))) continue;
+    let best: ScoredLocation | null = null;
+    let bestRank = -Infinity;
+    for (const loc of optionsFor(vibe)) {
+      if (anchors.includes(loc)) continue;
+      const rank = rankNear(loc, anchors, profile.transport);
+      if (rank > bestRank) { bestRank = rank; best = loc; }
+    }
+    if (best) anchors.push(best);
+  }
+  return anchors;
+}
+
 // ── Hoofd-functie: bouw optimale dagroute ─────────────────────────────────
 export function buildOptimalRoute(
   scored: ScoredLocation[],
@@ -120,42 +186,49 @@ export function buildOptimalRoute(
 ): DayPlan {
   const budget = BUDGET_MINUTES[profile.time];
 
-  // 1. Sorteer op score (hoog → laag)
-  const byScore = [...scored].sort((a, b) => b.score - a.score);
+  // 1. Ankers: elke gekozen vibe minstens één keer
+  let selected = orderStops(pickVibeAnchors(scored, profile));
 
-  // 2. Cluster kandidaten per dorp
-  const clusters: Record<string, ScoredLocation[]> = {};
-  for (const loc of byScore) {
+  // Past het niet in het budget, laat dan het anker vallen dat de meeste tijd kost
+  while (selected.length > 1 && routeMinutes(selected, profile.transport) > budget) {
+    let bestRoute = selected;
+    let bestMin = Infinity;
+    for (let i = 0; i < selected.length; i++) {
+      const route = orderStops(selected.filter((_, k) => k !== i));
+      const min = routeMinutes(route, profile.transport);
+      if (min < bestMin) { bestMin = min; bestRoute = route; }
+    }
+    selected = bestRoute;
+  }
+
+  // 2. Aanvullen met de beste stops in de buurt, binnen het tijdsbudget
+  //    (max 2 per dorp voor variatie)
+  const perVillage: Record<string, number> = {};
+  for (const loc of selected) {
     const v = nearestVillage(loc.latitude, loc.longitude);
-    if (!clusters[v]) clusters[v] = [];
-    clusters[v].push(loc);
+    perVillage[v] = (perVillage[v] ?? 0) + 1;
   }
+  const rejected = new Set<string>();
 
-  // 3. Pak de top-scorers uit elke cluster (max 2 per dorp voor variatie)
-  const candidates: ScoredLocation[] = [];
-  const villageOrder = Object.keys(clusters).sort(
-    (a, b) => (clusters[b][0]?.score ?? 0) - (clusters[a][0]?.score ?? 0),
-  );
-  for (const village of villageOrder) {
-    candidates.push(...clusters[village].slice(0, 2));
-  }
+  while (selected.length < MAX_STOPS) {
+    let next: ScoredLocation | null = null;
+    let nextRank = -Infinity;
+    for (const loc of scored) {
+      if (rejected.has(loc.id) || selected.includes(loc)) continue;
+      if ((perVillage[nearestVillage(loc.latitude, loc.longitude)] ?? 0) >= MAX_STOPS_PER_VILLAGE) continue;
+      const rank = rankNear(loc, selected, profile.transport);
+      if (rank > nextRank) { nextRank = rank; next = loc; }
+    }
+    if (!next) break;
 
-  // 4. Vul tijdsbudget met nearest-neighbor TSP
-  const sorted = twoOpt(sortByNearestNeighbor(candidates));
-  const selected: ScoredLocation[] = [];
-  let usedMin = 0;
-  let prevPos: { lat: number; lng: number } | null = null;
-
-  for (const loc of sorted) {
-    const travel = prevPos
-      ? travelMinutes(prevPos, { lat: loc.latitude, lng: loc.longitude }, profile.transport)
-      : 0;
-    const visit = loc.avgVisitMin;
-    if (usedMin + travel + visit > budget) continue;
-    selected.push(loc);
-    usedMin += travel + visit;
-    prevPos = { lat: loc.latitude, lng: loc.longitude };
-    if (selected.length >= 8) break; // hard cap
+    const route = orderStops([...selected, next]);
+    if (routeMinutes(route, profile.transport) <= budget) {
+      selected = route;
+      const v = nearestVillage(next.latitude, next.longitude);
+      perVillage[v] = (perVillage[v] ?? 0) + 1;
+    } else {
+      rejected.add(next.id);
+    }
   }
 
   // 5. Bouw tijdblokken (start om 09:00)

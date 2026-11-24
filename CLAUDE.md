@@ -87,7 +87,7 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 ### Planner-module (`app/[locale]/plan/`)
 - **PlannerFlow** — 5-staps geanimeerde vragenflow: Groep → Tijd → Vervoer → Vibes → Tempo
 - **Scoring-engine** (`lib/planner/scoring.ts`) — profiel-gebaseerd, `matchScore` per locatie
-- **Route-optimizer** (`lib/planner/routeOptimizer.ts`) — village-clustering + nearest-neighbor TSP + 2-opt
+- **Route-optimizer** (`lib/planner/routeOptimizer.ts`) — eerst één ankerstop per gekozen vibe (elk aangevinkt onderwerp komt aan bod, tenzij het tijdsbudget het onmogelijk maakt), daarna aanvullen met topscorers in de buurt (afstandsstraf per vervoer, max 2 per dorp, max 8 stops); volgorde via nearest-neighbor TSP + 2-opt
 - **Results-pagina** (`app/[locale]/plan/results/page.tsx`) — tijdblokken, "Waarom voor jou"-chips
 - **Opslag**: `PlannerProfile` in `localStorage` onder `PLANNER_PROFILE_KEY`
 - **Snelheidsprofielen (min/km):** `walking: 12, cycling: 4, car: 2`
