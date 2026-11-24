@@ -114,6 +114,14 @@ describe("buildOptimalRoute — acceptatiecriteria", () => {
     expect(long?.avgVisitMin).toBe(50);
   });
 
+  it("rekent bij rustig tempo langere en bij actief tempo kortere bezoektijden", () => {
+    const visit = (pace: PlannerProfile["pace"]) =>
+      plan({ time: "full", pace }).scored.find((l) => l.category === "attraction")?.avgVisitMin;
+    expect(visit("relaxed")).toBe(55); // 45 × 1,25 → afgerond op 5
+    expect(visit("normal")).toBe(45);
+    expect(visit("active")).toBe(35);  // 45 × 0,8
+  });
+
   it("reistijd tussen stops volgt het snelheidsprofiel", () => {
     expect(TRAVEL_MIN_PER_KM).toEqual({ walking: 12, cycling: 4, car: 2 });
   });

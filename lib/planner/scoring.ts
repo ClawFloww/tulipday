@@ -22,6 +22,13 @@ const SHORT_VISIT_MINUTES: Record<string, number> = {
   bike_rental:  10,
 };
 
+// Tempo: rustig blijft langer op een plek, actief korter
+const PACE_VISIT_FACTOR: Record<PlannerProfile["pace"], number> = {
+  relaxed: 1.25,
+  normal:  1,
+  active:  0.8,
+};
+
 // ── Vibe-tags per categorie ───────────────────────────────────────────────
 const CATEGORY_VIBE_TAGS: Record<string, Vibe[]> = {
   flower_field: ["bloemen", "natuur", "fotografie"],
@@ -135,9 +142,11 @@ export function scoreLocation(
 ): ScoredLocation {
   const vibeTags = CATEGORY_VIBE_TAGS[loc.category ?? ""] ?? [];
   const accessible = loc.access_type === "public_access";
-  const avgVisitMin = profile.time === "2h"
+  const baseVisitMin = profile.time === "2h"
     ? SHORT_VISIT_MINUTES[loc.category ?? ""] ?? 20
     : AVG_VISIT_MINUTES[loc.category ?? ""] ?? 30;
+  // Afgerond op 5 minuten, voor nette tijdblokken
+  const avgVisitMin = Math.max(5, Math.round((baseVisitMin * PACE_VISIT_FACTOR[profile.pace]) / 5) * 5);
 
   const bScore = bloomScore(loc.bloom_status);
   const iScore = interestScore(vibeTags, profile);
