@@ -32,27 +32,27 @@ export default function StartChoiceModal({
         initial={{ y: "30%", opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", damping: 26, stiffness: 280 }}
-        className="w-full max-w-md rounded-3xl p-5 shadow-2xl"
-        style={{ backgroundColor: "var(--color-surface-2)" }}
+        className="w-full max-w-md rounded-3xl p-5 shadow-2xl bg-surface-2"
+        
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-5">
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-extrabold tracking-wider uppercase text-tulip-500 mb-1">
+            <p className="text-[11px] font-extrabold tracking-wider uppercase text-primary mb-1">
               {t("navigation.start_choice_eyebrow")}
             </p>
-            <p className="text-xl font-extrabold leading-tight truncate" style={{ color: "var(--color-text)" }}>
+            <p className="text-xl font-extrabold leading-tight truncate text-ink" >
               {routeName}
             </p>
-            <p className="text-sm mt-1.5" style={{ color: "var(--color-text-2)" }}>
+            <p className="text-sm mt-1.5 text-ink-2" >
               {t("navigation.start_choice_prompt")}
             </p>
           </div>
           <button
             type="button"
             onClick={onCancel}
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-3)" }}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform bg-surface-3 text-ink-3"
+            
             aria-label={t("common.cancel")}
           >
             <X size={18} />
@@ -64,7 +64,7 @@ export default function StartChoiceModal({
           <button
             type="button"
             onClick={onUseCurrentLocation}
-            className="flex items-center gap-3 w-full bg-tulip-500 text-white px-4 py-4 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform"
+            className="flex items-center gap-3 w-full bg-primary text-white px-4 py-4 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform"
             style={{ boxShadow: "0 6px 18px rgba(232,16,42,0.32)" }}
           >
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -79,19 +79,16 @@ export default function StartChoiceModal({
           <button
             type="button"
             onClick={onPickOnMap}
-            className="flex items-center gap-3 w-full px-4 py-4 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform"
-            style={{
-              backgroundColor: "var(--color-surface-3)",
-              color: "var(--color-text)",
-            }}
+            className="flex items-center gap-3 w-full px-4 py-4 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform bg-surface-3 text-ink"
+            
           >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-tulip-500"
-                 style={{ backgroundColor: "var(--color-surface-2)" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-primary bg-surface-2"
+                 >
               <MapPin size={20} />
             </div>
             <div className="flex-1 text-left">
               <p className="text-base font-extrabold">{t("navigation.start_pick_on_map")}</p>
-              <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
+              <p className="text-xs mt-0.5 text-ink-3" >
                 {t("navigation.start_pick_on_map_hint")}
               </p>
             </div>

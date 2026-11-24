@@ -317,7 +317,6 @@ export default function HomePage() {
                 error={weather.error}
                 lastUpdated={weather.lastUpdated}
                 onRefresh={weather.refresh}
-                locationLabel={location.locationLabel}
                 isUsingGPS={location.isUsingGPS}
                 onLocationClick={() => setShowLocationCard(true)}
               />

@@ -4,13 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Loader2, MapPin, Share2, BookmarkPlus, Check, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bike, BookmarkPlus, Car, Check, Footprints, MapPin, MapPinOff, Share2 } from "lucide-react";
 import { getSharedRoute, type SharedRoute } from "@/lib/sharedRoutes";
 import { saveCustomRoute, getCustomRoutes } from "@/lib/customRoutes";
 import { addMapIcons } from "@/lib/mapIcons";
 import { addRouteLayers, setRouteLines } from "@/lib/mapLayers";
 import { MAP_STYLE, tintMap } from "@/lib/mapStyle";
 import { publicUrl, resolveParam } from "@/lib/links";
+import { useT } from "@/lib/i18n-context";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 
 function fmtDur(sec: number) {
@@ -28,6 +33,7 @@ export default function SharedRoutePage() {
   const searchParams = useSearchParams();
   const shareId      = resolveParam(params.shareId, searchParams, "shareId");
   const router       = useRouter();
+  const { t, locale } = useT();
 
   const [route,    setRoute]   = useState<SharedRoute | null>(null);
   const [loading,  setLoading] = useState(true);
@@ -131,123 +137,104 @@ export default function SharedRoutePage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
-        <Loader2 size={32} className="text-tulip-400 animate-spin" />
+      <div className="min-h-screen bg-surface" aria-busy="true">
+        <Skeleton className="h-14 rounded-none" />
+        <Skeleton className="h-[420px] rounded-none" />
+        <div className="mx-auto max-w-lg space-y-4 px-4 py-5"><Skeleton className="h-28 rounded-2xl" /></div>
       </div>
     );
   }
 
   if (notFound || !route) {
     return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4 px-8 text-center">
-        <span className="text-5xl">🗺️</span>
-        <h1 className="text-xl font-extrabold text-gray-900">Route niet gevonden</h1>
-        <p className="text-sm text-gray-500">Deze link is verlopen of ongeldig.</p>
-        <button onClick={() => router.push(`/${params.locale}/home`)} className="px-5 py-2.5 bg-tulip-500 text-white rounded-xl text-sm font-bold">
-          Naar TulipDay
-        </button>
+      <div className="fixed inset-0 flex items-center justify-center bg-surface px-6">
+        <EmptyState icon={<MapPinOff size={28} />} title={t("shared_route.not_found_title")}
+                    description={t("shared_route.not_found_body")}
+                    actionLabel={t("shared_route.to_app")} onAction={() => router.push(`/${params.locale}/home`)} />
       </div>
     );
   }
 
   const waypoints = route.waypoints as [number, number][];
-  const date = new Date(route.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  const date = new Date(route.created_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  const travel = [
+    { key: "walking", label: t("map.on_foot"), Icon: Footprints, data: route.walking },
+    { key: "cycling", label: t("map.by_bike"), Icon: Bike,       data: route.cycling },
+    { key: "driving", label: t("map.by_car"),  Icon: Car,        data: route.driving },
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-extrabold text-gray-900 truncate">{route.name}</p>
-            <p className="text-[11px] text-gray-400">{waypoints.length} punt{waypoints.length !== 1 ? "en" : ""} · {date}</p>
+    <div className="min-h-screen bg-surface pb-safe-nav">
+      <header className="sticky top-0 z-30 border-b border-line bg-surface-2 pt-safe">
+        <div className="mx-auto flex h-14 max-w-lg items-center gap-2 px-2">
+          <IconButton variant="ghost" aria-label={t("common.back")} onClick={() => router.back()}>
+            <ArrowLeft size={18} />
+          </IconButton>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-headline text-ink">{route.name}</h1>
+            <p className="text-caption text-ink-3">{t("map.points_count", { count: waypoints.length })} · {date}</p>
           </div>
-          <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-            {copied ? <Check size={13} className="text-green-600" /> : <Share2 size={13} />}
-            {copied ? "Gekopieerd" : "Deel"}
-          </button>
+          <Button size="sm" variant="secondary" onClick={handleShare}
+                  icon={copied ? <Check size={14} className="text-success" aria-hidden /> : <Share2 size={14} aria-hidden />}>
+            {copied ? t("common.copied") : t("common.share")}
+          </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Kaart */}
       <div ref={mapContainerRef} className="w-full" style={{ height: "55vmax", maxHeight: "420px" }} />
 
-      {/* Info */}
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
-
-        {/* Reisinformatie */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Reisinformatie</p>
-          </div>
-          <div className="grid grid-cols-3 divide-x divide-gray-100">
-            {([
-              { emoji: "🚶", label: "Wandelen", data: route.walking },
-              { emoji: "🚴", label: "Fietsen",  data: route.cycling },
-              { emoji: "🚗", label: "Rijden",   data: route.driving },
-            ] as const).map(({ emoji, label, data }) => (
-              <div key={label} className="px-3 py-4 text-center">
-                <p className="text-xl mb-1">{emoji}</p>
-                <p className="text-[11px] text-gray-400 font-medium">{label}</p>
+      <div className="mx-auto max-w-lg space-y-4 px-4 py-5">
+        <section className="overflow-hidden rounded-2xl border border-line bg-surface-2 shadow-sm">
+          <h2 className="border-b border-line px-4 py-3 text-caption font-bold uppercase tracking-wide text-ink-3">
+            {t("shared_route.travel_info")}
+          </h2>
+          <div className="grid grid-cols-3 divide-x divide-line">
+            {travel.map(({ key, label, Icon, data }) => (
+              <div key={key} className="px-3 py-4 text-center">
+                <Icon size={20} className="mx-auto mb-1 text-ink-2" aria-hidden />
+                <p className="text-caption text-ink-3">{label}</p>
                 {data ? (
                   <>
-                    <p className="text-sm font-extrabold text-gray-900 mt-0.5">{fmtDur(data.duration)}</p>
-                    <p className="text-[11px] text-gray-400">{fmtDist(data.distance)}</p>
+                    <p className="mt-0.5 font-mono text-label text-ink">{fmtDur(data.duration)}</p>
+                    <p className="font-mono text-caption text-ink-3">{fmtDist(data.distance)}</p>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-300 mt-0.5">—</p>
+                  <p className="mt-0.5 text-label text-ink-3">—</p>
                 )}
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Waypoints */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Punten</p>
-          </div>
-          <div className="divide-y divide-gray-50">
+        <section className="overflow-hidden rounded-2xl border border-line bg-surface-2 shadow-sm">
+          <h2 className="border-b border-line px-4 py-3 text-caption font-bold uppercase tracking-wide text-ink-3">
+            {t("shared_route.points")}
+          </h2>
+          <ol className="divide-y divide-line">
             {waypoints.map(([lng, lat], i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                <div className="w-6 h-6 rounded-full bg-tulip-500 text-white text-xs font-extrabold flex items-center justify-center flex-shrink-0">
+              <li key={i} className="flex items-center gap-3 px-4 py-2.5">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-caption font-bold text-on-primary">
                   {i + 1}
-                </div>
-                <span className="text-xs text-gray-500 font-mono">{lat.toFixed(5)}, {lng.toFixed(5)}</span>
-              </div>
+                </span>
+                <span className="font-mono text-caption text-ink-3">{lat.toFixed(5)}, {lng.toFixed(5)}</span>
+              </li>
             ))}
-          </div>
+          </ol>
+        </section>
+
+        <div className="flex gap-3">
+          <Button fullWidth size="lg" variant={saved ? "secondary" : "primary"} onClick={handleSave} disabled={saved}
+                  icon={saved ? <Check size={16} className="text-success" aria-hidden /> : <BookmarkPlus size={16} aria-hidden />}>
+            {saved ? t("map.route_saved") : t("shared_route.save_on_device")}
+          </Button>
+          <Button size="lg" variant="secondary" onClick={() => router.push(`/${params.locale}/map`)}
+                  icon={<MapPin size={16} aria-hidden />}>
+            {t("shared_route.map")}
+          </Button>
         </div>
 
-        {/* Acties */}
-        <div className="flex gap-3 pb-8">
-          <button
-            onClick={handleSave}
-            disabled={saved}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold shadow-sm transition-all
-                       disabled:opacity-60"
-            style={saved
-              ? { backgroundColor: "#d1fae5", color: "#065f46" }
-              : { backgroundColor: "#E8102A", color: "white" }}
-          >
-            {saved ? <Check size={15} /> : <BookmarkPlus size={15} />}
-            {saved ? "Opgeslagen!" : "Sla op op mijn apparaat"}
-          </button>
-          <button
-            onClick={() => router.push(`/${params.locale}/map`)}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
-          >
-            <MapPin size={15} />
-            Kaart
-          </button>
-        </div>
-
-        {/* TulipDay branding */}
-        <p className="text-center text-xs text-gray-300 pb-4">
-          Gedeeld via <span className="font-bold text-tulip-400">TulipDay</span> 🌷
+        <p className="pb-4 text-center text-caption text-ink-3">
+          {t("shared_route.shared_via")} <span className="font-bold text-primary">TulipDay</span>
         </p>
       </div>
     </div>

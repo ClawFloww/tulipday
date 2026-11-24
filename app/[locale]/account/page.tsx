@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Crown, LogOut, Mail, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, Check, Crown, LogOut, Mail, Trash2, UserRound } from "lucide-react";
 import {
   appleSignInAvailable,
   deleteAccount,
@@ -124,7 +124,7 @@ function SignedIn({ account, premium, onChange }: { account: AccountInfo; premiu
           {premium ? t("account.premium_active") : t("account.premium_inactive")}
         </p>
         {premium
-          ? <Badge tone="success">✓</Badge>
+          ? <Badge tone="success" icon={<Check size={12} aria-hidden />}>{t("account.linked")}</Badge>
           : <Button size="sm" variant="secondary" onClick={() => router.push(`/${locale}/premium`)}>{t("account.get_premium")}</Button>}
       </Card>
 

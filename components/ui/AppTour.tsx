@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 
 const TOUR_KEY = "tulipday_feature_tour_v1";
 
@@ -43,7 +45,7 @@ export function AppTour({ onDone }: { onDone: () => void }) {
   const [rect, setRect]   = useState<Rect | null>(null);
 
   const updateRect = useCallback(() => {
-    setRect(getRect(STEPS[index].selector));
+    setRect(getRect(STEP_DEFS[index].selector));
   }, [index]);
 
   useEffect(() => {
@@ -118,17 +120,17 @@ export function AppTour({ onDone }: { onDone: () => void }) {
             zIndex: 2,
           }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-4">
+          <div className="rounded-2xl border border-line bg-surface-2 p-4 shadow-lg">
             {/* Header */}
             <div className="flex items-start justify-between gap-2 mb-2">
-              <h2 className="text-base font-extrabold text-gray-900 leading-tight">{step.title}</h2>
-              <button onClick={finish} className="text-gray-300 hover:text-gray-500 flex-shrink-0 mt-0.5">
+              <h2 className="text-headline leading-tight text-ink">{step.title}</h2>
+              <IconButton variant="ghost" aria-label={t("common.close")} onClick={finish} className="-mr-2 -mt-2">
                 <X size={16} />
-              </button>
+              </IconButton>
             </div>
 
             {/* Body */}
-            <p className="text-sm text-gray-500 leading-relaxed mb-4">{step.body}</p>
+            <p className="mb-4 text-body leading-relaxed text-ink-2">{step.body}</p>
 
             {/* Footer */}
             <div className="flex items-center justify-between">
@@ -137,24 +139,17 @@ export function AppTour({ onDone }: { onDone: () => void }) {
                 {STEPS.map((_, i) => (
                   <div
                     key={i}
-                    className="h-1.5 rounded-full transition-all duration-300"
-                    style={{
-                      width:           i === index ? 16 : 6,
-                      backgroundColor: i === index ? "#E8102A" : "#e5e7eb",
-                    }}
+                    aria-hidden
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-4 bg-primary" : "w-1.5 bg-line-strong"}`}
                   />
                 ))}
               </div>
 
               {/* Knop */}
-              <button
-                onClick={next}
-                className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold text-white"
-                style={{ backgroundColor: "#E8102A" }}
-              >
+              <Button size="sm" onClick={next}>
                 {isLast ? t("tour.done") : t("common.next")}
-                {!isLast && <ChevronRight size={14} />}
-              </button>
+                {!isLast && <ChevronRight size={14} aria-hidden />}
+              </Button>
             </div>
           </div>
         </motion.div>

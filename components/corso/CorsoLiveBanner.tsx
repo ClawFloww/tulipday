@@ -49,21 +49,21 @@ export function CorsoLiveBanner() {
       <button
         onClick={() => router.push(`/${locale}/corso`)}
         className="w-full px-5 py-4 rounded-2xl text-white flex items-center justify-between gap-3 shadow-md active:scale-95 transition-all"
-        style={{ background: "linear-gradient(135deg, #F0306A 0%, #FF6B9D 100%)" }}
+        style={{ background: "linear-gradient(135deg, var(--color-corso) 0%, color-mix(in srgb, var(--color-corso) 70%, white) 100%)" }}
       >
         <div className="text-left">
           {/* Live indicator */}
           <div className="flex items-center gap-1.5 mb-1">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-surface-2 opacity-70" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-surface-2" />
             </span>
             <span className="text-[10px] font-bold uppercase tracking-widest opacity-90">
               Live · {new Date().getFullYear()}
             </span>
           </div>
 
-          <p className="text-base font-extrabold leading-tight">🌸 Bloemencorso Live</p>
+          <p className="text-base font-extrabold leading-tight">Bloemencorso Live</p>
 
           <p className="text-xs opacity-80 mt-0.5">
             {photoCount !== null

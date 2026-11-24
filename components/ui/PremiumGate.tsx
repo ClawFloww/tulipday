@@ -65,8 +65,8 @@ export function PremiumGate({ children }: Props) {
 
       {/* Vroegboekers-notitie onder de card, klein */}
       <p
-        className="absolute left-0 right-0 bottom-2 text-center text-[10px] font-semibold z-10 px-4"
-        style={{ color: "var(--color-text-3)" }}
+        className="absolute left-0 right-0 bottom-2 text-center text-[10px] font-semibold z-10 px-4 text-ink-3"
+        
       >
         {t("premium.gate_early_bird", {
           price: formatPriceEur(EARLY_BIRD_PRICE),

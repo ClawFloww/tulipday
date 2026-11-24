@@ -55,14 +55,14 @@ export function AppBar({
           <button
             onClick={() => (backHref ? router.push(backHref) : router.back())}
             className="w-8 h-8 rounded-full flex items-center justify-center
-                       transition-colors flex-shrink-0 tap-scale"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+                       transition-colors flex-shrink-0 tap-scale bg-surface-3 text-ink-2"
+            
             aria-label="Terug"
           >
             <ArrowLeft size={16} />
           </button>
         ) : (
-          <span className="text-tulip-500 text-lg leading-none select-none">🌷</span>
+          <span className="text-primary text-lg leading-none select-none">🌷</span>
         )}
 
         {/* Midden: paginatitel */}

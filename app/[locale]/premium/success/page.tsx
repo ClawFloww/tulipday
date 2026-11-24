@@ -42,8 +42,8 @@ export default function PremiumSuccessPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
          style={{ backgroundColor: "var(--color-surface)" }}>
       {status === "active"
-        ? <CheckCircle size={64} className="text-green-500 mb-4" />
-        : <Loader2 size={48} className="text-tulip-500 mb-4 animate-spin" />}
+        ? <CheckCircle size={64} className="text-success mb-4" />
+        : <Loader2 size={48} className="text-primary mb-4 animate-spin" />}
 
       <h1 className="text-2xl font-extrabold mb-2" style={{ color: "var(--color-text)" }}>
         {status === "active" ? t("premium.success_title") : t("premium.success_checking")}
@@ -55,7 +55,7 @@ export default function PremiumSuccessPage() {
 
       <button
         onClick={() => router.replace(`/${locale}/home`)}
-        className="px-8 py-3 rounded-xl bg-tulip-500 text-white font-bold hover:bg-tulip-600 active:scale-95 transition-all"
+        className="px-8 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark active:scale-95 transition-all"
       >
         {t("premium.success_cta")}
       </button>

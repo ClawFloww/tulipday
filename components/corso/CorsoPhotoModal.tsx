@@ -70,7 +70,8 @@ export function CorsoPhotoModal({
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white flex-shrink-0"
+            aria-label="Sluiten"
+            className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white flex-shrink-0"
           >
             <X size={18} />
           </button>
@@ -120,7 +121,7 @@ export function CorsoPhotoModal({
           <button
             onClick={() => { if (!likedIds.has(photo.id)) onLike(photo.id); }}
             className={`flex items-center gap-2 text-sm font-bold transition-colors active:scale-90 ${
-              likedIds.has(photo.id) ? "text-red-400" : "text-white/60 hover:text-white"
+              likedIds.has(photo.id) ? "text-danger" : "text-white/60 hover:text-white"
             }`}
           >
             <Heart size={22} className={likedIds.has(photo.id) ? "fill-red-400" : ""} />
@@ -133,7 +134,7 @@ export function CorsoPhotoModal({
 
           <button
             onClick={() => { onReport(photo.id); onClose(); }}
-            className="flex items-center gap-2 text-sm font-bold text-white/40 hover:text-red-400 transition-colors active:scale-90"
+            className="flex items-center gap-2 text-sm font-bold text-white/40 hover:text-danger transition-colors active:scale-90"
           >
             <Flag size={18} /> Melden
           </button>

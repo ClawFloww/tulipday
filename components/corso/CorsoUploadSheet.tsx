@@ -97,7 +97,8 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
           {!isUploading && (
             <button
               onClick={handleClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              aria-label={t("common.close")}
+              className="w-11 h-11 rounded-full flex items-center justify-center"
               style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
             >
               <X size={16} />
@@ -118,7 +119,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8 rounded-2xl border-2 border-dashed active:scale-95 transition-all"
                 style={{ borderColor: "var(--color-border-strong)" }}
               >
-                <Camera size={32} style={{ color: "#F0306A" }} />
+                <Camera size={32} style={{ color: "var(--color-corso)" }} />
                 <span className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t("photos.pick_camera")}</span>
               </button>
 
@@ -128,7 +129,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8 rounded-2xl border-2 border-dashed active:scale-95 transition-all"
                 style={{ borderColor: "var(--color-border-strong)" }}
               >
-                <ImageIcon size={32} style={{ color: "#F0306A" }} />
+                <ImageIcon size={32} style={{ color: "var(--color-corso)" }} />
                 <span className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t("photos.pick_gallery")}</span>
               </button>
             </div>
@@ -153,7 +154,8 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
               />
               <button
                 onClick={() => { setStep("source"); setPreview(null); setFile(null); }}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white"
+                aria-label={t("common.close")}
+                className="absolute top-2 right-2 w-11 h-11 rounded-full bg-black/50 flex items-center justify-center text-white"
               >
                 <X size={14} />
               </button>
@@ -166,7 +168,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
               placeholder={t("corso_upload.caption_placeholder")}
               maxLength={120}
               rows={2}
-              className="w-full text-sm px-3 py-2.5 rounded-xl border resize-none focus:outline-none focus:ring-2 focus:ring-[#F0306A]/40 mb-3"
+              className="w-full text-sm px-3 py-2.5 rounded-xl border resize-none focus:outline-none focus:ring-2 focus:ring-corso mb-3"
               style={{
                 backgroundColor: "var(--color-surface-3)",
                 borderColor:     "var(--color-border)",
@@ -190,7 +192,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
                   }`}
                   style={
                     location === stop
-                      ? { backgroundColor: "#F0306A" }
+                      ? { backgroundColor: "var(--color-corso)" }
                       : { borderColor: "var(--color-border)", color: "var(--color-text-2)" }
                   }
                 >
@@ -203,7 +205,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
             <button
               onClick={handleUpload}
               className="w-full py-3.5 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-              style={{ backgroundColor: "#F0306A" }}
+              style={{ backgroundColor: "var(--color-corso)" }}
             >
               {t("corso_upload.share_photo")}
             </button>
@@ -216,7 +218,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
             <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-3)" }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ backgroundColor: "#F0306A" }}
+                style={{ backgroundColor: "var(--color-corso)" }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.4 }}
               />
@@ -233,7 +235,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
         {/* ── Succes ── */}
         {step === "done" && (
           <div className="px-5 pb-12 flex flex-col items-center gap-3">
-            <CheckCircle size={44} className="text-green-500" />
+            <CheckCircle size={44} className="text-success" />
             <p className="text-base font-bold" style={{ color: "var(--color-text)" }}>
               {t("corso_upload.shared")}
             </p>
@@ -246,7 +248,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
         {/* ── Fout ── */}
         {step === "error" && (
           <div className="px-5 pb-10 flex flex-col items-center gap-3">
-            <AlertCircle size={44} className="text-red-500" />
+            <AlertCircle size={44} className="text-danger" />
             <p className="text-base font-bold" style={{ color: "var(--color-text)" }}>
               {t("corso_upload.upload_failed")}
             </p>
@@ -256,7 +258,7 @@ export function CorsoUploadSheet({ onClose, onUploaded }: Props) {
             <button
               onClick={() => setStep("preview")}
               className="px-6 py-2.5 rounded-xl text-sm font-bold text-white"
-              style={{ backgroundColor: "#F0306A" }}
+              style={{ backgroundColor: "var(--color-corso)" }}
             >
               {t("common.retry")}
             </button>

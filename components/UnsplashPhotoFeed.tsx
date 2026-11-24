@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n-context";
 import { fetchUnsplashPhotos, UnsplashPhoto } from "@/lib/unsplash";
 
 // Module-level cache to avoid repeat fetches
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function UnsplashPhotoFeed({ locationName, maxPhotos = 8 }: Props) {
+  const { t } = useT();
   const [photos, setPhotos] = useState<UnsplashPhoto[] | null>(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function UnsplashPhotoFeed({ locationName, maxPhotos = 8 }: Props
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-40 h-[120px] rounded-xl bg-gray-200 animate-pulse"
+            className="flex-shrink-0 w-40 h-[120px] rounded-xl bg-surface-3 animate-pulse"
           />
         ))}
       </div>
@@ -78,9 +80,9 @@ export default function UnsplashPhotoFeed({ locationName, maxPhotos = 8 }: Props
             href="https://unsplash.com?utm_source=tulipday&utm_medium=referral"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-gray-400 hover:underline whitespace-nowrap"
+            className="text-[11px] text-ink-3 hover:underline whitespace-nowrap"
           >
-            Photos from Unsplash
+            {t("photos.from_unsplash")}
           </a>
         </div>
       </div>

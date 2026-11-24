@@ -61,8 +61,8 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-transform active:scale-95 disabled:opacity-40 disabled:active:scale-100"
-      style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
+      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-transform active:scale-95 disabled:opacity-40 disabled:active:scale-100 bg-surface-3 text-ink"
+      
     >
       {icon}
       <span className="truncate max-w-full px-1">{label}</span>
@@ -128,11 +128,11 @@ export default function NavigationActionSheet({
             className="overflow-hidden"
           >
             {/* Stop card */}
-            <div className="px-5 pt-3 pb-3" style={{ borderTop: "1px solid var(--color-border)" }}>
-              <p className="text-[11px] font-extrabold tracking-wider uppercase text-tulip-500 mb-1">
+            <div className="px-5 pt-3 pb-3 border-t border-line" >
+              <p className="text-[11px] font-extrabold tracking-wider uppercase text-primary mb-1">
                 {approachPhase ? t("navigation.to_start") : t("navigation.next_stop_label")}
               </p>
-              <p className="text-lg font-extrabold truncate" style={{ color: "var(--color-text)" }}>
+              <p className="text-lg font-extrabold truncate text-ink" >
                 {approachPhase ? routeName : (activeStop?.name ?? routeName)}
               </p>
               {isFlower && !approachPhase && (
@@ -147,7 +147,7 @@ export default function NavigationActionSheet({
             {/* Actie-knoppen 4-grid */}
             <div className="grid grid-cols-4 gap-2 px-3 pb-3">
               <ActionButton
-                icon={<Flower2 size={18} className="text-tulip-500" />}
+                icon={<Flower2 size={18} className="text-primary" />}
                 label={t("navigation.action_bloom")}
                 disabled={!isFlower || approachPhase}
                 onClick={onReportBloom}
@@ -165,7 +165,7 @@ export default function NavigationActionSheet({
                 onClick={onMarkArrived}
               />
               <ActionButton
-                icon={<Navigation2 size={18} className="text-tulip-500" />}
+                icon={<Navigation2 size={18} className="text-primary" />}
                 label={t("navigation.action_external_nav")}
                 disabled={!activeStop}
                 onClick={onOpenMapsPicker}
@@ -174,8 +174,8 @@ export default function NavigationActionSheet({
 
             {/* Alle stops lijst */}
             <div
-              className="max-h-[36vh] overflow-y-auto py-1"
-              style={{ borderTop: "1px solid var(--color-border)" }}
+              className="max-h-[36vh] overflow-y-auto py-1 border-t border-line"
+              
             >
               {stops.map((stop, idx) => {
                 const isVisited = visited.has(idx);
@@ -199,11 +199,11 @@ export default function NavigationActionSheet({
                       {isVisited ? <Check size={12} /> : idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>
+                      <p className="text-sm font-semibold truncate text-ink" >
                         {stop.name}
                       </p>
                       {isActive && (
-                        <p className="text-[11px] font-bold text-tulip-500">
+                        <p className="text-[11px] font-bold text-primary">
                           {t("navigation.navigate_now")}
                         </p>
                       )}

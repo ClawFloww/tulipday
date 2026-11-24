@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import { Heart, Flag, MoreHorizontal, X } from "lucide-react";
+import { Camera, Heart, Flag, MoreHorizontal, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCorsoPhotos, type CorsoPhoto } from "@/hooks/useCorsoPhotos";
 import { CorsoPhotoModal } from "./CorsoPhotoModal";
@@ -67,11 +67,11 @@ function PhotoCard({
             <button
               onClick={() => { if (!liked) onLike(photo.id); }}
               className={`flex items-center gap-1 text-xs font-semibold transition-all active:scale-90 ${
-                liked ? "text-[#F0306A]" : "hover:text-[#F0306A]"
+                liked ? "text-corso" : "hover:text-corso"
               }`}
-              style={{ color: liked ? "#F0306A" : "var(--color-text-3)" }}
+              style={{ color: liked ? "var(--color-corso)" : "var(--color-text-3)" }}
             >
-              <Heart size={13} className={liked ? "fill-[#F0306A]" : ""} />
+              <Heart size={13} className={liked ? "fill-corso" : ""} />
               {photo.likes > 0 && <span>{photo.likes}</span>}
             </button>
 
@@ -97,7 +97,7 @@ function PhotoCard({
               >
                 <button
                   onClick={() => { onReport(photo.id); setShowMenu(false); }}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-semibold text-[#F0306A] hover:bg-[#FFF0F5] dark:hover:bg-[#F0306A]/10 transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-semibold text-corso hover:bg-corso-light transition-colors"
                 >
                   <Flag size={12} /> Foto melden
                 </button>
@@ -211,13 +211,13 @@ export function CorsoFeed() {
       <div className="px-4 pt-3 pb-2 flex items-center gap-2">
         <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70"
-                style={{ backgroundColor: "#F0306A" }} />
+                style={{ backgroundColor: "var(--color-corso)" }} />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5"
-                style={{ backgroundColor: "#F0306A" }} />
+                style={{ backgroundColor: "var(--color-corso)" }} />
         </span>
         <span className={`text-xs font-bold transition-all ${totalCount > 0 ? "scale-105" : ""}`}
               style={{ color: "var(--color-text-2)" }}>
-          🌸 {totalCount} foto{totalCount !== 1 ? "'s" : ""} gedeeld vandaag · LIVE
+          {totalCount} foto{totalCount !== 1 ? "'s" : ""} gedeeld vandaag · LIVE
         </span>
       </div>
 
@@ -233,7 +233,7 @@ export function CorsoFeed() {
             <button
               onClick={refreshWithNew}
               className="w-full py-2.5 rounded-xl text-xs font-bold text-white active:scale-95 transition-all"
-              style={{ backgroundColor: "#F0306A" }}
+              style={{ backgroundColor: "var(--color-corso)" }}
             >
               ↑ {newPhotoCount} nieuwe foto{newPhotoCount !== 1 ? "'s" : ""} · Tik om te vernieuwen
             </button>
@@ -244,7 +244,7 @@ export function CorsoFeed() {
       {/* Lege state */}
       {!isLoading && photos.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <p className="text-5xl mb-4">📷</p>
+          <Camera size={44} className="mb-4 text-corso" aria-hidden />
           <p className="text-base font-bold" style={{ color: "var(--color-text)" }}>
             Wees de eerste die een foto deelt!
           </p>

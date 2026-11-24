@@ -7,7 +7,7 @@ import {
   CORSO_STOPS, LICHTJES_CORSO, CorsoStopData, StopStatus,
   getStopStatuses, getCorsoPhase, msUntilCorso, getCorsoDate,
 } from "@/lib/corsoData";
-import { X, Star } from "lucide-react";
+import { Clock, X, Star } from "lucide-react";
 
 // ─── Color palette ─────────────────────────────────────────────────────────
 
@@ -52,25 +52,25 @@ function CorsoHeader() {
   return (
     <div className={`px-4 py-3 flex items-center justify-between gap-2
       ${phase === "live"
-        ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white"
-        : "bg-white border-b border-gray-100"}`}
+        ? "bg-corso text-white"
+        : "bg-surface-2 border-b border-line"}`}
     >
       <div>
-        <p className={`text-xs font-semibold uppercase tracking-widest ${phase === "live" ? "text-white/70" : "text-gray-400"}`}>
+        <p className={`text-xs font-semibold uppercase tracking-widest ${phase === "live" ? "text-white/70" : "text-ink-3"}`}>
           Bloemencorso Bollenstreek
         </p>
-        <p className={`text-sm font-extrabold ${phase === "live" ? "text-white" : "text-gray-800"}`}>
-          {phase === "live"      && "🌷 Corso rijdt nu!"}
-          {phase === "ended"     && `✅ Corso ${year} afgelopen`}
+        <p className={`text-sm font-extrabold ${phase === "live" ? "text-white" : "text-ink"}`}>
+          {phase === "live"      && "Corso rijdt nu!"}
+          {phase === "ended"     && `Corso ${year} afgelopen`}
           {phase === "before"    && dateStr}
-          {phase === "today_countdown" && `🌸 Start vandaag om 09:00`}
+          {phase === "today_countdown" && "Start vandaag om 09:00"}
         </p>
       </div>
 
       {(phase === "before" || phase === "today_countdown") && remaining > 0 && (
         <div className="text-right flex-shrink-0">
-          <p className="text-[10px] text-gray-400 font-medium">Nog</p>
-          <p className="text-sm font-extrabold text-rose-500 tabular-nums">
+          <p className="text-[10px] text-ink-3 font-medium">Nog</p>
+          <p className="text-sm font-extrabold text-corso tabular-nums">
             <Countdown targetMs={remaining} />
           </p>
         </div>
@@ -92,13 +92,13 @@ interface SheetStop extends CorsoStopData { status: StopStatus }
 function StopSheet({ stop, onClose }: { stop: SheetStop; onClose: () => void }) {
   const color = STATUS_COLOR[stop.status];
   const statusLabel =
-    stop.status === "passed"     ? "Gepasseerd ✓" :
-    stop.status === "current"    ? "Corso hier nu 🌷" :
+    stop.status === "passed"     ? "Gepasseerd" :
+    stop.status === "current"    ? "Corso is hier nu" :
     stop.status === "future_day" ? `Aankomsttijd` :
                                     "Aankomsttijd";
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-20 p-5 pb-8">
+    <div className="absolute bottom-0 left-0 right-0 bg-surface-2 rounded-t-3xl shadow-2xl z-20 p-5 pb-8">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div
@@ -108,33 +108,33 @@ function StopSheet({ stop, onClose }: { stop: SheetStop; onClose: () => void }) 
             {stop.id}
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-gray-900">{stop.plaats}</h3>
-            <p className="text-xs text-gray-400">{statusLabel}</p>
+            <h3 className="text-base font-extrabold text-ink">{stop.plaats}</h3>
+            <p className="text-xs text-ink-3">{statusLabel}</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-1 text-gray-400">
+        <button onClick={onClose} aria-label="Sluiten" className="-mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-3">
           <X size={18} />
         </button>
       </div>
 
       <div className="flex items-center gap-2 mb-3">
         <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: color }}>
-          🕐 {stop.tijd}
+          <Clock size={12} className="mr-1 inline" aria-hidden />{stop.tijd}
         </span>
         {stop.tribune && (
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-            🎪 Tribune
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-surface-3 text-ink-2">
+            Tribune
           </span>
         )}
         {stop.pauze && (
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-            ⏸ Pauze
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-surface-3 text-ink-2">
+            Pauze
           </span>
         )}
       </div>
 
       {stop.info && (
-        <p className="text-sm text-gray-600 leading-relaxed">{stop.info}</p>
+        <p className="text-sm text-ink-2 leading-relaxed">{stop.info}</p>
       )}
     </div>
   );
@@ -142,25 +142,25 @@ function StopSheet({ stop, onClose }: { stop: SheetStop; onClose: () => void }) 
 
 function LichtjesSheet({ onClose }: { onClose: () => void }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-20 p-5 pb-8">
+    <div className="absolute bottom-0 left-0 right-0 bg-surface-2 rounded-t-3xl shadow-2xl z-20 p-5 pb-8">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-extrabold bg-amber-400 flex-shrink-0">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-extrabold bg-warning flex-shrink-0">
             <Star size={18} fill="white" />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-gray-900">{LICHTJES_CORSO.plaats}</h3>
-            <p className="text-xs text-amber-600 font-semibold">Lichtjescorso — vrijdagavond</p>
+            <h3 className="text-base font-extrabold text-ink">{LICHTJES_CORSO.plaats}</h3>
+            <p className="text-xs text-warning font-semibold">Lichtjescorso — vrijdagavond</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-1 text-gray-400"><X size={18} /></button>
+        <button onClick={onClose} aria-label="Sluiten" className="-mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-3"><X size={18} /></button>
       </div>
       <div className="mb-3">
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-          🌟 {LICHTJES_CORSO.tijd} uur
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-surface-3 text-ink-2">
+          {LICHTJES_CORSO.tijd} uur
         </span>
       </div>
-      <p className="text-sm text-gray-600 leading-relaxed">{LICHTJES_CORSO.info}</p>
+      <p className="text-sm text-ink-2 leading-relaxed">{LICHTJES_CORSO.info}</p>
     </div>
   );
 }
@@ -251,9 +251,8 @@ export function CorsoRouteMap() {
           width:14px; height:14px; border-radius:50%;
           background:#a855f7; border:1.5px solid white;
           display:flex; align-items:center; justify-content:center;
-          font-size:8px;
         `;
-        badge.textContent = "🎪";
+        badge.setAttribute("aria-label", "Tribune");
         el.style.position = "relative";
         el.appendChild(badge);
       }
@@ -280,7 +279,8 @@ export function CorsoRouteMap() {
       display:flex; align-items:center; justify-content:center;
       font-size:16px; cursor:pointer; transition:transform 0.15s;
     `;
-    lEl.textContent = "🌟";
+    // Ster (lucide-vorm) in plaats van een emoji
+    lEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
     lEl.addEventListener("mouseenter", () => { lEl.style.transform = "scale(1.2)"; });
     lEl.addEventListener("mouseleave", () => { lEl.style.transform = "scale(1)"; });
     lEl.addEventListener("click", () => setSheet({ type: "lichtjes" }));
@@ -316,12 +316,12 @@ export function CorsoRouteMap() {
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: color }} />
-            <span className="text-[11px] text-gray-600 font-medium">{label}</span>
+            <span className="text-[11px] text-ink-2 font-medium">{label}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px]">🎪</span>
-          <span className="text-[11px] text-gray-600 font-medium">Tribune</span>
+          <span className="h-3 w-3 flex-shrink-0 rounded-full border border-white" style={{ background: "#a855f7" }} aria-hidden />
+          <span className="text-[11px] text-ink-2 font-medium">Tribune</span>
         </div>
       </div>
 

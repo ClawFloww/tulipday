@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Globe, Info, Mail, ShieldCheck, Flower2, Monitor, Settings,
   ChevronDown, ChevronRight, Check, Crown, Bell, BellOff, Loader2, UserRound, FileText,
+  Ban, Camera, Car, Trash2, VolumeX, Dog, CloudRain, Handshake, ShoppingBag, type LucideIcon,
 } from "lucide-react";
 import { getAccount } from "@/lib/account";
 import { tap } from "@/lib/haptics";
@@ -218,17 +219,17 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const etiquetteRows = [
-    { emoji: "🌷", key: "etiquette_r1" },
-    { emoji: "🚷", key: "etiquette_r2" },
-    { emoji: "📸", key: "etiquette_r3" },
-    { emoji: "🚗", key: "etiquette_r4" },
-    { emoji: "🗑️", key: "etiquette_r5" },
-    { emoji: "🔇", key: "etiquette_r6" },
-    { emoji: "🐾", key: "etiquette_r7" },
-    { emoji: "🌧️", key: "etiquette_r8" },
-    { emoji: "🤝", key: "etiquette_r9" },
-    { emoji: "💛", key: "etiquette_r10" },
-  ];
+    { Icon: Flower2,     key: "etiquette_r1" },
+    { Icon: Ban,         key: "etiquette_r2" },
+    { Icon: Camera,      key: "etiquette_r3" },
+    { Icon: Car,         key: "etiquette_r4" },
+    { Icon: Trash2,      key: "etiquette_r5" },
+    { Icon: VolumeX,     key: "etiquette_r6" },
+    { Icon: Dog,         key: "etiquette_r7" },
+    { Icon: CloudRain,   key: "etiquette_r8" },
+    { Icon: Handshake,   key: "etiquette_r9" },
+    { Icon: ShoppingBag, key: "etiquette_r10" },
+  ] satisfies { Icon: LucideIcon; key: string }[];
 
   return (
     <div className="min-h-screen bg-surface pb-safe-nav">
@@ -318,9 +319,9 @@ export default function SettingsPage() {
 
         <Accordion icon={<Flower2 size={18} />} title={t("settings.etiquette_title")} accent="text-primary">
           <p className="font-bold text-ink mb-1">{t("settings.etiquette_intro")}</p>
-          {etiquetteRows.map(({ emoji, key }) => (
+          {etiquetteRows.map(({ Icon, key }) => (
             <div key={key} className="flex items-start gap-3">
-              <span className="text-base leading-none mt-0.5 flex-shrink-0" aria-hidden>{emoji}</span>
+              <Icon size={16} className="mt-0.5 flex-shrink-0 text-primary" aria-hidden />
               <p className="leading-snug">{t(`settings.${key}`)}</p>
             </div>
           ))}

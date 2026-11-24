@@ -28,14 +28,14 @@ export default function SpeedIndicator({ speedMps }: Props) {
       }}
     >
       <span
-        className="text-2xl font-extrabold leading-none"
-        style={{ color: "var(--color-text)" }}
+        className="text-2xl font-extrabold leading-none text-ink"
+        
       >
         {kmh}
       </span>
       <span
-        className="text-[10px] font-bold uppercase tracking-wide mt-0.5"
-        style={{ color: "var(--color-text-3)" }}
+        className="text-[10px] font-bold uppercase tracking-wide mt-0.5 text-ink-3"
+        
       >
         km/u
       </span>

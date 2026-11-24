@@ -29,7 +29,7 @@ function isToday(dateStr: string): boolean {
 
 function PhotoSkeleton() {
   return (
-    <div className="w-full aspect-[4/3] rounded-2xl animate-pulse" style={{ backgroundColor: "var(--color-surface-3)" }} />
+    <div className="w-full aspect-[4/3] rounded-2xl animate-pulse bg-surface-3"  />
   );
 }
 
@@ -90,11 +90,11 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
     return (
       <div className="space-y-3">
         <SectionTitle t={t} />
-        <div className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl text-center"
-             style={{ backgroundColor: "var(--color-surface-3)" }}>
+        <div className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl text-center bg-surface-3"
+             >
           <Camera size={28} style={{ color: "var(--color-text-3)" }} />
-          <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t("photos.empty_title")}</p>
-          <p className="text-xs max-w-[220px] leading-relaxed" style={{ color: "var(--color-text-3)" }}>{t("photos.empty_body")}</p>
+          <p className="text-sm font-bold text-ink" >{t("photos.empty_title")}</p>
+          <p className="text-xs max-w-[220px] leading-relaxed text-ink-3" >{t("photos.empty_body")}</p>
         </div>
       </div>
     );
@@ -107,14 +107,14 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <SectionTitle t={t} />
-        <span className="text-xs font-medium" style={{ color: "var(--color-text-3)" }}>
+        <span className="text-xs font-medium text-ink-3" >
           {activeIdx + 1} / {allPhotos.length}
         </span>
       </div>
 
       {/* Swipe stack */}
       <div className="relative">
-        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden select-none" style={{ backgroundColor: "var(--color-surface-3)" }}>
+        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden select-none bg-surface-3" >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={current.id}
@@ -129,10 +129,10 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
               <Badge color="amber" label={t("photos.pending_label")} />
             )}
             {current.status === "approved" && isToday(current.uploaded_at) && (
-              <Badge color="green" label={`📸 ${t("photos.badge_today")}`} />
+              <Badge color="green" label={t("photos.badge_today")} />
             )}
             {current.bloom_confirmed && (
-              <Badge color="tulip" label={`🌷 ${t("photos.badge_bloom")}`} />
+              <Badge color="tulip" label={t("photos.badge_bloom")} />
             )}
           </div>
 
@@ -163,7 +163,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
 
         {/* Caption */}
         {current.caption && (
-          <p className="mt-2 text-sm italic leading-relaxed px-1" style={{ color: "var(--color-text-2)" }}>
+          <p className="mt-2 text-sm italic leading-relaxed px-1 text-ink-2" >
             &ldquo;{current.caption}&rdquo;
           </p>
         )}
@@ -178,7 +178,7 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
               onClick={() => setActiveIdx(i)}
               aria-label={`Foto ${i + 1}`}
               className={`flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all
-                ${i === activeIdx ? "border-tulip-400 scale-105" : "border-transparent opacity-60 hover:opacity-100"}`}
+                ${i === activeIdx ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -196,8 +196,8 @@ export default function LocationPhotoGallery({ locationId, pendingPhotos = [] }:
 
 function SectionTitle({ t }: { t: (k: string) => string }) {
   return (
-    <h2 className="flex items-center gap-2 text-base font-extrabold" style={{ color: "var(--color-text)" }}>
-      <Flower2 size={16} className="text-tulip-500" />
+    <h2 className="flex items-center gap-2 text-base font-extrabold text-ink" >
+      <Flower2 size={16} className="text-primary" />
       {t("photos.gallery_title")}
     </h2>
   );
@@ -205,12 +205,13 @@ function SectionTitle({ t }: { t: (k: string) => string }) {
 
 function Badge({ color, label }: { color: "amber" | "green" | "tulip"; label: string }) {
   const cls = {
-    amber: "bg-amber-500/80 text-white",
-    green: "bg-green-500/80 text-white",
-    tulip: "bg-tulip-500/80 text-white",
+    // Volle kleur: CSS-variabelen ondersteunen geen /opacity-modifier
+    amber: "bg-warning text-white",
+    green: "bg-success text-white",
+    tulip: "bg-primary text-on-primary",
   }[color];
   return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full backdrop-blur-sm ${cls}`}>
+    <span className={`text-caption font-bold px-2 py-0.5 rounded-full shadow-sm ${cls}`}>
       {label}
     </span>
   );

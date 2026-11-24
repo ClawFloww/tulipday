@@ -141,8 +141,8 @@ export default function StartPointPicker({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] flex flex-col"
-      style={{ backgroundColor: "var(--color-surface)" }}
+      className="fixed inset-0 z-[70] flex flex-col bg-surface"
+      
     >
       {/* Top instructie */}
       <div
@@ -150,22 +150,22 @@ export default function StartPointPicker({
         style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}
       >
         <div
-          className="rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3"
-          style={{ backgroundColor: "var(--color-surface-2)", border: "1px solid var(--color-border)" }}
+          className="rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 bg-surface-2 border border-line"
+          
         >
-          <div className="w-9 h-9 rounded-full bg-tulip-500/15 flex items-center justify-center flex-shrink-0">
-            <MapPin size={18} className="text-tulip-500" />
+          <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+            <MapPin size={18} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-extrabold leading-tight" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm font-extrabold leading-tight text-ink" >
               {t("navigation.pick_start_title")}
             </p>
-            <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-3)" }}>
+            <p className="text-xs mt-0.5 truncate text-ink-3" >
               {routeName}
             </p>
           </div>
         </div>
-        <p className="text-center text-xs mt-2 px-4 font-semibold" style={{ color: "var(--color-text-2)" }}>
+        <p className="text-center text-xs mt-2 px-4 font-semibold text-ink-2" >
           {t("navigation.pick_start_hint")}
         </p>
       </div>
@@ -185,8 +185,8 @@ export default function StartPointPicker({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-transform"
-          style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text)" }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-transform bg-surface-3 text-ink"
+          
         >
           <X size={14} />
           {t("common.cancel")}
@@ -195,7 +195,7 @@ export default function StartPointPicker({
           type="button"
           onClick={() => picked && onConfirm(picked)}
           disabled={!picked}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-tulip-500 text-white text-sm font-bold active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-primary text-white text-sm font-bold active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
           style={{ boxShadow: picked ? "0 4px 12px rgba(232,16,42,0.35)" : "none" }}
         >
           <Check size={14} />

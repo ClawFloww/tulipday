@@ -32,7 +32,7 @@ export default function CorsoPage() {
           </button>
           <div>
             <h1 className="text-lg font-extrabold leading-tight" style={{ color: "var(--color-text)" }}>
-              🌸 Bloemencorso
+              Bloemencorso
             </h1>
             <p className="text-xs font-medium" style={{ color: "var(--color-text-3)" }}>
               Bollenstreek · Noordwijk → Haarlem
@@ -50,7 +50,7 @@ export default function CorsoPage() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold border-b-2 transition-colors ${
-                tab === t.id ? "border-[#F0306A] text-[#F0306A]" : "border-transparent"
+                tab === t.id ? "border-corso text-corso" : "border-transparent"
               }`}
               style={tab !== t.id ? { color: "var(--color-text-3)" } : undefined}
             >
@@ -70,7 +70,7 @@ export default function CorsoPage() {
         <button
           onClick={() => setShowUpload(true)}
           className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white active:scale-90 transition-all"
-          style={{ backgroundColor: "#F0306A" }}
+          style={{ backgroundColor: "var(--color-corso)" }}
           aria-label="Foto uploaden"
         >
           <Plus size={26} strokeWidth={2.5} />

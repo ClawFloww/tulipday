@@ -107,7 +107,7 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
         <p className="text-sm text-gray-400 mt-1">Je foto wordt zichtbaar na goedkeuring.</p>
         <button
           onClick={() => setStatus("idle")}
-          className="mt-5 px-6 py-2.5 rounded-xl bg-tulip-500 text-white text-sm font-bold"
+          className="mt-5 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold"
         >
           Nog een foto delen
         </button>
@@ -121,7 +121,7 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
       {!preview ? (
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full h-48 rounded-2xl border-2 border-dashed border-tulip-200 bg-tulip-50 flex flex-col items-center justify-center gap-2 text-tulip-400 hover:bg-tulip-100 transition-colors"
+          className="w-full h-48 rounded-2xl border-2 border-dashed border-tulip-200 bg-primary-subtle flex flex-col items-center justify-center gap-2 text-primary hover:bg-primary-subtle transition-colors"
         >
           <Camera size={32} />
           <span className="text-sm font-semibold">Foto kiezen of maken</span>
@@ -172,7 +172,7 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
           <button
             onClick={handleGps}
             disabled={gpsLoading}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-tulip-500 text-white text-xs font-bold flex-shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-primary text-white text-xs font-bold flex-shrink-0"
           >
             {gpsLoading ? <Loader2 size={13} className="animate-spin" /> : <MapPin size={13} />}
             GPS
@@ -192,8 +192,8 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
               <button
                 key={stop.id}
                 onClick={() => { setSelectedStop(stop); setShowStopPicker(false); }}
-                className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center gap-2 hover:bg-tulip-50 transition-colors
-                  ${selectedStop?.id === stop.id ? "text-tulip-600 bg-tulip-50" : "text-gray-700"}`}
+                className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center gap-2 hover:bg-primary-subtle transition-colors
+                  ${selectedStop?.id === stop.id ? "text-primary bg-primary-subtle" : "text-gray-700"}`}
               >
                 <span className="text-xs text-gray-400 w-4">{stop.order}</span>
                 {stop.name}
@@ -207,7 +207,7 @@ export function CorsoPhotoUpload({ onUploaded }: { onUploaded?: () => void }) {
       <button
         onClick={handleSubmit}
         disabled={!file || !selectedStop || status === "uploading"}
-        className="w-full py-3.5 rounded-xl bg-tulip-500 text-white font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:bg-tulip-600 active:scale-95 transition-all"
+        className="w-full py-3.5 rounded-xl bg-primary text-white font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:bg-primary-dark active:scale-95 transition-all"
       >
         {status === "uploading" ? (
           <><Loader2 size={16} className="animate-spin" /> Uploaden…</>
