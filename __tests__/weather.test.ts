@@ -13,8 +13,9 @@ import {
   calcWalkingScore,
   cyclingScoreLabel,
   walkingScoreLabel,
-  weatherIcon,
-  weatherLabel,
+  weatherCondition,
+  scoreBand,
+  scoreColor,
   windDirectionLabel,
   parseOpenMeteo,
 } from "@/lib/weather";
@@ -179,31 +180,39 @@ describe("walkingScoreLabel", () => {
   });
 });
 
-// ── weatherIcon & weatherLabel ────────────────────────────────────────────────
+// ── weatherCondition, scoreBand, scoreColor ──────────────────────────────────
 
-describe("weatherIcon", () => {
-  it("geeft zon-emoji bij code 0", () => {
-    expect(weatherIcon(0)).toBe("☀️");
+describe("weatherCondition", () => {
+  it("vertaalt WMO-codes naar weertypes", () => {
+    expect(weatherCondition(0)).toBe("clear");
+    expect(weatherCondition(2)).toBe("partly_cloudy");
+    expect(weatherCondition(48)).toBe("fog");
+    expect(weatherCondition(53)).toBe("drizzle");
+    expect(weatherCondition(65)).toBe("rain");
+    expect(weatherCondition(81)).toBe("showers");
+    expect(weatherCondition(96)).toBe("thunder");
   });
 
-  it("geeft onweer-emoji bij code 95", () => {
-    expect(weatherIcon(95)).toBe("⛈️");
-  });
-
-  it("geeft een fallback emoji voor onbekende code", () => {
-    const icon = weatherIcon(999);
-    expect(typeof icon).toBe("string");
-    expect(icon.length).toBeGreaterThan(0);
+  it("valt terug op bewolkt bij een onbekende code", () => {
+    expect(weatherCondition(20)).toBe("cloudy");
   });
 });
 
-describe("weatherLabel", () => {
-  it("geeft 'Helder' bij code 0", () => {
-    expect(weatherLabel(0)).toBe("Helder");
+describe("scoreBand", () => {
+  it("volgt dezelfde grenzen als de labels", () => {
+    expect(scoreBand(80)).toBe("perfect");
+    expect(scoreBand(79)).toBe("good");
+    expect(scoreBand(40)).toBe("fair");
+    expect(scoreBand(20)).toBe("moderate");
+    expect(scoreBand(5)).toBe("poor");
   });
+});
 
-  it("geeft 'Onbekend' voor onbekende code", () => {
-    expect(weatherLabel(999)).toBe("Onbekend");
+describe("scoreColor", () => {
+  it("geeft token-kleuren", () => {
+    expect(scoreColor(90)).toBe("var(--color-success)");
+    expect(scoreColor(50)).toBe("var(--color-warning)");
+    expect(scoreColor(10)).toBe("var(--color-danger)");
   });
 });
 

@@ -1,10 +1,11 @@
 "use client";
 
-// Eenmalige locatietoestemmings-kaart — verschijnt boven WeatherCard op homepage
-// Gebruikt CSS variabelen voor donker thema ondersteuning
+// Eenmalige vraag om de locatie te gebruiken voor het weer (boven de WeatherCard).
 
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   onGrant:   () => void;
@@ -12,62 +13,29 @@ interface Props {
 }
 
 export default function LocationPermissionCard({ onGrant, onDecline }: Props) {
+  const { t } = useT();
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.22 }}
-      className="mx-4 mb-3 rounded-2xl bg-surface-2 shadow-card overflow-hidden"
+      className="mx-4 mb-3 overflow-hidden rounded-2xl bg-surface-2 shadow-card"
     >
-      <div className="px-4 pt-4 pb-3 flex items-start gap-3">
-        {/* Icoon */}
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "var(--color-primary-subtle)" }}
-        >
-          <MapPin size={18} style={{ color: "var(--color-primary)" }} />
+      <div className="flex items-start gap-3 px-4 pb-3 pt-4">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-subtle">
+          <MapPin size={18} className="text-primary" aria-hidden />
         </div>
-
-        {/* Tekst */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-extrabold leading-tight mb-0.5"
-             style={{ color: "var(--color-text)" }}>
-            Fietsweer voor jouw locatie
-          </p>
-          <p className="text-xs leading-snug mb-3"
-             style={{ color: "var(--color-text-2)" }}>
-            Krijg weerbericht voor jouw exacte locatie
-          </p>
-
-          {/* Knoppen */}
+        <div className="min-w-0 flex-1">
+          <p className="mb-0.5 text-headline leading-tight text-ink">{t("weather.permission_title")}</p>
+          <p className="mb-3 text-caption leading-snug text-ink-2">{t("weather.permission_body")}</p>
           <div className="flex gap-2">
-            <button
-              onClick={onGrant}
-              className="flex-1 py-2.5 rounded-xl text-white text-xs font-bold tap-scale"
-              style={{ backgroundColor: "var(--color-primary)" }}
-            >
-              Locatie gebruiken
-            </button>
-            <button
-              onClick={onDecline}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold tap-scale"
-              style={{
-                backgroundColor: "var(--color-surface-3)",
-                color:           "var(--color-text-2)",
-              }}
-            >
-              Nee, gebruik Lisse
-            </button>
+            <Button size="sm" fullWidth onClick={onGrant}>{t("weather.permission_allow")}</Button>
+            <Button size="sm" fullWidth variant="secondary" onClick={onDecline}>{t("weather.permission_decline")}</Button>
           </div>
         </div>
       </div>
-
-      {/* Privacy-tekst */}
-      <p className="text-[10px] text-center px-4 pb-3 leading-snug"
-         style={{ color: "var(--color-text-3)" }}>
-        Je locatie wordt alleen gebruikt voor het weerbericht en niet opgeslagen of gedeeld.
-      </p>
+      <p className="px-4 pb-3 text-center text-caption leading-snug text-ink-3">{t("weather.permission_privacy")}</p>
     </motion.div>
   );
 }

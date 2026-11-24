@@ -1,60 +1,43 @@
 "use client";
 
-// Compacte weerstrook voor boven filterbalk — met optionele locatienaam
+// Compacte weerstrook boven de filterbalk van de routelijst
 
+import { useT } from "@/lib/i18n-context";
+import { scoreColor, windDirectionLabel } from "@/lib/weather";
+import { WeatherIcon } from "@/components/weather/WeatherIcon";
 import type { CurrentWeather } from "@/lib/weather";
-import { weatherIcon, cyclingScoreColor, windDirectionLabel } from "@/lib/weather";
 
 interface Props {
   current:        CurrentWeather | null;
+  /** "bij jouw locatie" of "in Lisse" (useUserLocation). */
   locationLabel?: string;
   className?:     string;
 }
 
 export default function WeatherCompact({ current, locationLabel, className = "" }: Props) {
+  const { t } = useT();
   if (!current) return null;
 
-  const icon  = weatherIcon(current.weathercode);
-  const color = cyclingScoreColor(current.cyclingScore);
-
-  // Extraheer alleen de plaatsnaam
-  const cityName = locationLabel?.startsWith("in ")
-    ? locationLabel.slice(3)
-    : locationLabel === "bij jouw locatie"
-    ? "Jouw locatie"
-    : null;
+  const color = scoreColor(current.cyclingScore);
+  const place = locationLabel === "in Lisse" ? "Lisse" : locationLabel ? t("weather.your_location") : null;
 
   return (
-    <div
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm ${className}`}
-      style={{
-        backgroundColor: "var(--color-surface-2)",
-        borderBottom:    "1px solid var(--color-border)",
-      }}
-    >
-      <span className="text-base leading-none" aria-hidden="true">{icon}</span>
-      <span className="font-semibold" style={{ color: "var(--color-text)" }}>
-        {Math.round(current.temperature)}°C
+    <div className={`flex items-center gap-2 border-b border-line bg-surface-2 px-4 py-2.5 text-label ${className}`}>
+      <WeatherIcon code={current.weathercode} size={18} />
+      <span className="font-mono text-ink">{Math.round(current.temperature)}°C</span>
+      <span className="text-ink-3" aria-hidden>·</span>
+      <span className="font-mono text-caption text-ink-2">
+        {Math.round(current.windspeed)} km/h {t(`weather.dir_${windDirectionLabel(current.winddirection)}`)}
       </span>
-      <span style={{ color: "var(--color-border-strong)" }} className="font-light">·</span>
-      <span className="font-medium text-xs" style={{ color: "var(--color-text-2)" }}>
-        {Math.round(current.windspeed)} km/u {windDirectionLabel(current.winddirection)}
-      </span>
-      {cityName && (
+      {place && (
         <>
-          <span style={{ color: "var(--color-border-strong)" }} className="font-light">·</span>
-          <span className="text-xs font-semibold" style={{ color: "var(--color-text-2)" }}>
-            {cityName}
-          </span>
+          <span className="text-ink-3" aria-hidden>·</span>
+          <span className="text-caption text-ink-2">{place}</span>
         </>
       )}
-      <span className="ml-auto flex-shrink-0">
-        <span
-          className="text-[11px] font-extrabold px-2 py-0.5 rounded-full"
-          style={{ color, backgroundColor: `${color}18` }}
-        >
-          Score {current.cyclingScore}
-        </span>
+      <span className="relative ml-auto flex-shrink-0 rounded-full px-2 py-0.5 font-mono text-caption font-bold" style={{ color }}>
+        <span aria-hidden className="absolute inset-0 rounded-full opacity-[0.14]" style={{ backgroundColor: color }} />
+        <span className="relative">{t("weather.score", { score: current.cyclingScore })}</span>
       </span>
     </div>
   );

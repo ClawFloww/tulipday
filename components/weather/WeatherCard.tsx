@@ -4,13 +4,12 @@
 
 import { motion } from "framer-motion";
 import { Wind, Thermometer, RefreshCw, Droplets, MapPin } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
+import { scoreBand, scoreColor, weatherCondition, windDirectionLabel } from "@/lib/weather";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { WeatherIcon } from "@/components/weather/WeatherIcon";
 import type { CurrentWeather } from "@/lib/weather";
-import {
-  weatherIcon,
-  weatherLabel,
-  cyclingScoreColor,
-  windDirectionLabel,
-} from "@/lib/weather";
 
 // SVG-ring parameters
 const R    = 48;
@@ -22,13 +21,8 @@ interface Props {
   error:            string | null;
   lastUpdated:      Date | null;
   onRefresh:        () => void;
-  locationLabel?:   string;
   isUsingGPS?:      boolean;
   onLocationClick?: () => void;
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function WeatherCard({
@@ -37,53 +31,34 @@ export default function WeatherCard({
   error,
   lastUpdated,
   onRefresh,
-  locationLabel,
   isUsingGPS = false,
   onLocationClick,
 }: Props) {
-  const titleSuffix = locationLabel ?? "vandaag";
-  const isFallback  = !isUsingGPS && (locationLabel === "in Lisse" || !locationLabel);
+  const { t, locale } = useT();
+  const place = t(isUsingGPS ? "weather.near_you" : "weather.in_lisse");
+  const time  = lastUpdated?.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
-  // ── Skeleton ──────────────────────────────────────────────────
   if (isLoading && !current) {
     return (
-      <div className="mx-4 rounded-2xl bg-surface-2 shadow-card p-5">
+      <div className="mx-4 rounded-2xl bg-surface-2 p-5 shadow-card" aria-busy="true">
         <div className="flex items-center gap-5">
-          {/* Score-ring placeholder */}
-          <div className="w-24 h-24 rounded-full skeleton-shimmer flex-shrink-0" />
-          <div className="flex-1 space-y-2.5">
-            <div className="h-3 skeleton-shimmer rounded w-2/5" />
-            <div className="h-5 skeleton-shimmer rounded w-2/3" />
-            <div className="h-3 skeleton-shimmer rounded w-1/2" />
-            <div className="flex gap-3 pt-1">
-              <div className="h-3 skeleton-shimmer rounded w-16" />
-              <div className="h-3 skeleton-shimmer rounded w-16" />
-            </div>
-          </div>
+          <Skeleton variant="circle" className="h-24 w-24 flex-shrink-0" />
+          <div className="flex-1"><Skeleton variant="text" lines={4} /></div>
         </div>
       </div>
     );
   }
 
-  // ── Foutmelding ───────────────────────────────────────────────
   if (error && !current) {
     return (
-      <div className="mx-4 rounded-2xl bg-surface-2 border border-[var(--color-border)] p-4 flex items-center justify-between">
+      <div className="mx-4 flex items-center justify-between rounded-2xl border border-line bg-surface-2 p-4" role="alert">
         <div>
-          <p className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
-            Weerdata tijdelijk niet beschikbaar
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-3)" }}>
-            Controleer je verbinding
-          </p>
+          <p className="text-label text-ink">{t("weather.unavailable")}</p>
+          <p className="mt-0.5 text-caption text-ink-3">{t("weather.check_connection")}</p>
         </div>
-        <button
-          onClick={onRefresh}
-          className="p-2 rounded-full bg-surface-3 transition-colors tap-scale"
-          style={{ color: "var(--color-text-2)" }}
-        >
+        <IconButton variant="ghost" aria-label={t("common.refresh")} onClick={onRefresh}>
           <RefreshCw size={16} />
-        </button>
+        </IconButton>
       </div>
     );
   }
@@ -91,57 +66,37 @@ export default function WeatherCard({
   if (!current) return null;
 
   const score      = current.cyclingScore;
-  const color      = cyclingScoreColor(score);
+  const color      = scoreColor(score);
   const dashOffset = CIRC * (1 - score / 100);
-  const icon       = weatherIcon(current.weathercode);
-  const label      = weatherLabel(current.weathercode);
 
   return (
-    <div className="mx-4 rounded-2xl bg-surface-2 shadow-card overflow-hidden">
+    <div className="mx-4 overflow-hidden rounded-2xl bg-surface-2 shadow-card">
 
-      {/* Header-balk */}
-      <div className="px-5 pt-4 flex items-center justify-between">
+      <div className="flex items-center justify-between px-5 pt-3">
         <button
+          type="button"
           onClick={onLocationClick}
           disabled={!onLocationClick}
-          className="flex items-center gap-1 disabled:cursor-default group"
+          className="-ml-2 flex min-h-touch items-center gap-1 rounded-full px-2 disabled:cursor-default
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <MapPin
-            size={11}
-            className="flex-shrink-0 transition-colors"
-            style={{ color: isUsingGPS ? "var(--color-primary)" : "var(--color-text-3)" }}
-          />
-          <p className="text-[11px] font-bold uppercase tracking-wider transition-colors"
-             style={{ color: "var(--color-text-3)" }}>
-            Fietsweer {titleSuffix}
-          </p>
+          <MapPin size={12} className={isUsingGPS ? "text-primary" : "text-ink-3"} aria-hidden />
+          <span className="text-caption font-bold uppercase tracking-wider text-ink-3">
+            {t("weather.cycling_weather_place", { place })}
+          </span>
         </button>
 
-        <button
-          onClick={onRefresh}
-          disabled={isLoading}
-          className="p-1.5 -mr-1 rounded-full transition-colors disabled:opacity-40 tap-scale"
-          style={{ color: "var(--color-text-3)" }}
-          aria-label="Ververs weer"
-        >
-          <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
-        </button>
+        <IconButton variant="ghost" aria-label={t("common.refresh")} onClick={onRefresh} disabled={isLoading} className="-mr-2">
+          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+        </IconButton>
       </div>
 
-      {/* Hoofd-inhoud */}
-      <div className="px-5 py-4 flex items-center gap-5">
+      <div className="flex items-center gap-5 px-5 pb-4 pt-2">
 
         {/* Score-ring */}
         <div className="relative flex-shrink-0" style={{ width: 96, height: 96 }}>
           <svg width={96} height={96} viewBox="0 0 120 120" aria-hidden="true">
-            {/* Achtergrond-ring — past mee met thema */}
-            <circle
-              cx={60} cy={60} r={R}
-              fill="none"
-              stroke="var(--color-surface-3)"
-              strokeWidth={10}
-            />
-            {/* Voortgangs-ring */}
+            <circle cx={60} cy={60} r={R} fill="none" stroke="var(--color-surface-3)" strokeWidth={10} />
             <g transform="rotate(-90 60 60)">
               <motion.circle
                 cx={60} cy={60} r={R}
@@ -156,10 +111,9 @@ export default function WeatherCard({
               />
             </g>
           </svg>
-          {/* Score-getal gecentreerd */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.span
-              className="text-2xl font-extrabold leading-none"
+              className="font-mono text-2xl font-bold leading-none"
               style={{ color }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -167,41 +121,32 @@ export default function WeatherCard({
             >
               {score}
             </motion.span>
-            <span className="text-[9px] font-semibold mt-0.5"
-                  style={{ color: "var(--color-text-3)" }}>
-              / 100
-            </span>
+            <span className="mt-0.5 font-mono text-[10px] font-semibold text-ink-3">/ 100</span>
           </div>
         </div>
 
-        {/* Tekstinfo */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-2xl leading-none">{icon}</span>
-            <span className="text-sm font-medium truncate"
-                  style={{ color: "var(--color-text-2)" }}>
-              {label}
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-1.5">
+            <WeatherIcon code={current.weathercode} size={20} />
+            <span className="truncate text-label font-medium text-ink-2">
+              {t(`weather.condition_${weatherCondition(current.weathercode)}`)}
             </span>
           </div>
-          <p className="text-base font-extrabold leading-tight mb-2.5"
-             style={{ color: "var(--color-text)" }}>
-            {current.cyclingLabel}
+          <p className="mb-2.5 text-headline leading-tight text-ink">
+            {t(`weather.cycling_${scoreBand(score)}`)}
           </p>
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-            <span className="flex items-center gap-1 text-xs font-semibold"
-                  style={{ color: "var(--color-text-2)" }}>
-              <Thermometer size={12} style={{ color: "var(--color-primary)" }} />
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 font-mono text-caption font-semibold text-ink-2">
+            <span className="flex items-center gap-1">
+              <Thermometer size={12} className="text-primary" aria-hidden />
               {Math.round(current.temperature)}°C
             </span>
-            <span className="flex items-center gap-1 text-xs font-semibold"
-                  style={{ color: "var(--color-text-2)" }}>
-              <Wind size={12} className="text-sky-400" />
-              {Math.round(current.windspeed)} km/u {windDirectionLabel(current.winddirection)}
+            <span className="flex items-center gap-1">
+              <Wind size={12} className="text-info" aria-hidden />
+              {Math.round(current.windspeed)} km/h {t(`weather.dir_${windDirectionLabel(current.winddirection)}`)}
             </span>
             {current.precipitation > 0 && (
-              <span className="flex items-center gap-1 text-xs font-semibold"
-                    style={{ color: "var(--color-text-2)" }}>
-                <Droplets size={12} className="text-blue-400" />
+              <span className="flex items-center gap-1">
+                <Droplets size={12} className="text-info" aria-hidden />
                 {current.precipitation.toFixed(1)} mm
               </span>
             )}
@@ -209,15 +154,10 @@ export default function WeatherCard({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-5 pb-4">
-        <p className="text-[10px]" style={{ color: "var(--color-text-3)" }}>
-          {isFallback
-            ? `Locatie onbekend · Gebaseerd op Lisse${lastUpdated ? ` · ${formatTime(lastUpdated)}` : ""}`
-            : `Vandaag in de Bollenstreek${lastUpdated ? ` · Laatste update: ${formatTime(lastUpdated)}` : ""}`
-          }
-        </p>
-      </div>
+      <p className="px-5 pb-4 text-caption text-ink-3">
+        {t(isUsingGPS ? "weather.footer_here" : "weather.footer_fallback")}
+        {time && ` · ${t("weather.updated_at", { time })}`}
+      </p>
     </div>
   );
 }

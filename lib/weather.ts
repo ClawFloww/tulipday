@@ -36,72 +36,41 @@ export interface WeatherState {
 
 // ── WMO Weercodes ─────────────────────────────────────────────────────────────
 
-export const WEATHER_ICONS: Record<number, string> = {
-  0:  "☀️",
-  1:  "🌤️",
-  2:  "⛅",
-  3:  "☁️",
-  45: "🌫️",
-  48: "🌫️",
-  51: "🌦️",
-  53: "🌦️",
-  55: "🌧️",
-  61: "🌧️",
-  63: "🌧️",
-  65: "🌧️",
-  71: "🌨️",
-  73: "🌨️",
-  75: "🌨️",
-  77: "🌨️",
-  80: "🌦️",
-  81: "🌦️",
-  82: "🌧️",
-  85: "🌨️",
-  86: "🌨️",
-  95: "⛈️",
-  96: "⛈️",
-  99: "⛈️",
-};
+export type WeatherCondition =
+  | "clear" | "mostly_clear" | "partly_cloudy" | "cloudy" | "fog"
+  | "drizzle" | "rain" | "snow" | "showers" | "thunder";
 
-export const WEATHER_LABELS: Record<number, string> = {
-  0:  "Helder",
-  1:  "Overwegend helder",
-  2:  "Gedeeltelijk bewolkt",
-  3:  "Bewolkt",
-  45: "Mist",
-  48: "IJsmist",
-  51: "Lichte motregen",
-  53: "Motregen",
-  55: "Zware motregen",
-  61: "Lichte regen",
-  63: "Matige regen",
-  65: "Zware regen",
-  71: "Lichte sneeuw",
-  73: "Matige sneeuw",
-  75: "Zware sneeuw",
-  77: "Sneeuwkorrels",
-  80: "Regenbuien",
-  81: "Matige buien",
-  82: "Zware buien",
-  85: "Sneeuwbuien",
-  86: "Zware sneeuwbuien",
-  95: "Onweer",
-  96: "Onweer met hagel",
-  99: "Zwaar onweer",
-};
-
-export function weatherIcon(code: number): string {
-  if (code in WEATHER_ICONS) return WEATHER_ICONS[code];
-  if (code < 10)  return "🌤️";
-  if (code < 50)  return "☁️";
-  if (code < 70)  return "🌧️";
-  if (code < 80)  return "🌨️";
-  if (code < 90)  return "🌦️";
-  return "⛈️";
+/** WMO-weercode → weertype (vertaling: weather.condition_<type>, icoon: WeatherIcon). */
+export function weatherCondition(code: number): WeatherCondition {
+  if (code === 0) return "clear";
+  if (code === 1) return "mostly_clear";
+  if (code === 2) return "partly_cloudy";
+  if (code === 3) return "cloudy";
+  if (code === 45 || code === 48) return "fog";
+  if (code >= 51 && code <= 57) return "drizzle";
+  if (code >= 61 && code <= 67) return "rain";
+  if (code >= 71 && code <= 77) return "snow";
+  if (code >= 80 && code <= 86) return "showers";
+  if (code >= 95) return "thunder";
+  return "cloudy";
 }
 
-export function weatherLabel(code: number): string {
-  return WEATHER_LABELS[code] ?? "Onbekend";
+export type ScoreBand = "perfect" | "good" | "fair" | "moderate" | "poor";
+
+/** Fiets-/wandelscore → band (vertaling: weather.cycling_<band> / weather.walking_<band>). */
+export function scoreBand(score: number): ScoreBand {
+  if (score >= 80) return "perfect";
+  if (score >= 60) return "good";
+  if (score >= 40) return "fair";
+  if (score >= 20) return "moderate";
+  return "poor";
+}
+
+/** Kleur van een score als CSS-variabele (werkt in licht en donker). */
+export function scoreColor(score: number): string {
+  if (score >= 70) return "var(--color-success)";
+  if (score >= 40) return "var(--color-warning)";
+  return "var(--color-danger)";
 }
 
 // ── Windrichting ──────────────────────────────────────────────────────────────
@@ -203,12 +172,6 @@ export function walkingScoreLabel(score: number): string {
   if (score >= 40) return "Redelijk wandelweer";
   if (score >= 20) return "Matig wandelweer";
   return "Slechte wandeldag";
-}
-
-export function cyclingScoreColor(score: number): string {
-  if (score >= 70) return "#2D7D46";
-  if (score >= 40) return "#E8A020";
-  return "#D94040";
 }
 
 // ── API-response verwerking ───────────────────────────────────────────────────

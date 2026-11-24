@@ -5,28 +5,38 @@
 
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 import { useWeather } from "@/hooks/useWeather";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import WeatherCard from "@/components/weather/WeatherCard";
 import WeatherForecast from "@/components/weather/WeatherForecast";
 import WeatherBanner from "@/components/weather/WeatherBanner";
 import LocationPermissionCard from "@/components/weather/LocationPermissionCard";
+import { IconButton } from "@/components/ui/IconButton";
 
 export default function WeatherPage() {
+  const { t }    = useT();
+  const router   = useRouter();
   const location = useUserLocation();
   const weather  = useWeather(location.coords);
   const [showLocationCard, setShowLocationCard] = useState(false);
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
+    <div className="min-h-screen bg-surface pb-safe-nav">
 
-      {/* Header */}
-      <div className="bg-surface-2 px-5 pt-12 pb-5 border-b border-[var(--color-border)]">
-        <h1 className="font-display font-bold text-2xl text-[var(--color-text)] leading-tight">
-          Fietsweer
-        </h1>
-        <p className="text-sm text-[var(--color-text-3)] mt-0.5">Bollenstreek &amp; omgeving</p>
-      </div>
+      <header className="border-b border-line bg-surface-2 px-3 pb-4 pt-safe">
+        <div className="flex items-center gap-2 pt-3">
+          <IconButton variant="ghost" aria-label={t("common.back")} onClick={() => router.back()}>
+            <ArrowLeft size={20} />
+          </IconButton>
+          <div>
+            <h1 className="font-display text-title leading-tight text-ink">{t("weather.page_title")}</h1>
+            <p className="text-caption text-ink-3">{t("weather.page_subtitle")}</p>
+          </div>
+        </div>
+      </header>
 
       <div className="pt-4 space-y-4">
 
@@ -49,7 +59,6 @@ export default function WeatherPage() {
           error={weather.error}
           lastUpdated={weather.lastUpdated}
           onRefresh={weather.refresh}
-          locationLabel={location.locationLabel}
           isUsingGPS={location.isUsingGPS}
           onLocationClick={() => setShowLocationCard(true)}
         />
