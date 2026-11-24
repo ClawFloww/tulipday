@@ -95,8 +95,14 @@ Fonts: **Inter** (tekst, cijfers) en **Plus Jakarta Sans** (`font-display`, alle
 - **Bezoektijden (min):** normaal `flower_field 25, photo_spot 20, attraction 45, food 50`; bij `2h` korter (`15, 10, 30, 30`) zodat alle gekozen vibes passen; daarna × tempo (`relaxed 1.25, normal 1, active 0.8`), afgerond op 5 min
 
 ### Navigatie-module (`app/[locale]/navigate/`)
-- GPS-navigatie via `watchPosition` met afslagen (OSRM turn-by-turn)
-- Aanrijdroute: grijze lijn van GPS-positie naar eerste stop
+- **Ingangen**: `?slug=` (presetroute), `?generated=true` (planner, localStorage), `?dest=lat,lng&name=&mode=` ("Navigeer hierheen" in `LocationSheet`). Google/Apple Maps alleen als terugvaloptie (`MapsPickerSheet`); **nooit Komoot**.
+- **Kern in `lib/navigation/`** (pure functies, getest in `__tests__/navigation.test.ts`): `geometry.ts` (`buildLine`, `project`, `pointAt`, `bearingAt`; alles `[lng, lat]`), `maneuvers.ts`, `tracker.ts` (`trackFix`), `osrm.ts`, `wakeLock.ts`.
+- **Afslagen**: presetroutes → `deriveManeuvers` uit de eigen BRouter-lijn (klopt altijd met wat er getekend is, geen straatnamen). Planner, aanrijden, terugleiden en losse bestemming → OSRM-stappen via `fromOsrmSteps` (met straatnaam). De Supabase-lijn wordt nooit door OSRM vervangen.
+- **Voortgang** langs de lijn (`along` in meters), niet "dichtstbijzijnde afslagpunt". Zoeken in een venster rond de vorige plek, zodat rondjes niet naar de finish springen.
+- **Off-route**: > 30 m (`OFF_ROUTE_M`) bij 3 fixes op rij met bruikbare nauwkeurigheid → OSRM-"leg" terug naar de route (iets vóór je), max. 1× per 12 s. Een leg (aanrijden/terugleiden) begint bij je echte positie; terug op de hoofdroute of aan het eind → leg los.
+- **Kaart** (`NavigationMap`): de stip schuift per frame (`requestAnimationFrame`) langs de route tussen GPS-fixes; camera via `jumpTo` (heading-up, pitch 55, zoom per vervoer, dichterbij bij een afslag). Handmatig schuiven → knop "Hercentreer". Routelijnen via `addRouteLayers`/`setRouteLines`, stops als symboollaag met `pin-<category>`.
+- **Spraak** (Web Speech, `lib/speech.ts`): vooraankondiging ("Over 200 meter: …") en bij de afslag; afstanden per vervoer in `MODE`. Melding + spraak bij een naderend bollenveld. Scherm aan via de Screen Wake Lock API.
+- **Events** via `lib/analytics.ts`: `nav_start`, `nav_stop`, `nav_reroute`, `nav_finish` (geen PostHog/Sentry in de code).
 - Bloeistatus melden onderweg
 
 ### Kaart (`components/map/`, `lib/map*.ts`)
