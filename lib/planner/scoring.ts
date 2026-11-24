@@ -110,27 +110,27 @@ function buildReasons(
   const cat = loc.category ?? "";
 
   // Bloei
-  if (loc.bloom_status === "peak")     reasons.push("Momenteel op volle bloei");
-  else if (loc.bloom_status === "blooming") reasons.push("Bloemen in bloei");
-  else if (loc.bloom_status === "early")    reasons.push("Eerste bloemen staan open");
+  if (loc.bloom_status === "peak")     reasons.push("reason_peak");
+  else if (loc.bloom_status === "blooming") reasons.push("reason_blooming");
+  else if (loc.bloom_status === "early")    reasons.push("reason_early");
 
   // Vibe-match
   const hits = vibeTags.filter((v) => profile.vibes.includes(v));
-  if (hits.includes("fotografie"))  reasons.push("Prachtige fotoplek");
-  if (hits.includes("bloemen"))     reasons.push("Kleurrijke bollenvelden");
-  if (hits.includes("natuur"))      reasons.push("In het groen");
-  if (hits.includes("cultuur"))     reasons.push("Culturele bezienswaardigheid");
-  if (hits.includes("eten"))        reasons.push("Lekker eten en drinken");
+  if (hits.includes("fotografie"))  reasons.push("reason_photo");
+  if (hits.includes("bloemen"))     reasons.push("reason_flowers");
+  if (hits.includes("natuur"))      reasons.push("reason_nature");
+  if (hits.includes("cultuur"))     reasons.push("reason_culture");
+  if (hits.includes("eten"))        reasons.push("reason_food");
 
   // Groep
-  if (profile.group === "family" && cat === "flower_field") reasons.push("Kindvriendelijk");
-  if (profile.group === "couple"  && cat === "photo_spot")  reasons.push("Romantische sfeer");
+  if (profile.group === "family" && cat === "flower_field") reasons.push("reason_kids");
+  if (profile.group === "couple"  && cat === "photo_spot")  reasons.push("reason_romantic");
 
   // Toegankelijkheid
-  if (loc.access_type === "public_access") reasons.push("Vrij toegankelijk");
+  if (loc.access_type === "public_access") reasons.push("reason_public");
 
   // Uniciteit
-  if ((loc.photo_score ?? 0) >= 8) reasons.push("Unieke plek, weinig bezoekers");
+  if ((loc.photo_score ?? 0) >= 8) reasons.push("reason_unique");
 
   return reasons.slice(0, 3); // max 3 redenen tonen
 }

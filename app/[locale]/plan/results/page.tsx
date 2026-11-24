@@ -6,13 +6,18 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Bike, Car, Footprints, Clock, MapPin, Play } from "lucide-react";
+import { ArrowLeft, Bike, Car, Check, Clock, Flower2, Footprints, MapPin, MapPinOff, Play } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
 import { locationPath } from "@/lib/links";
 import { scoreLocation } from "@/lib/planner/scoring";
 import { buildOptimalRoute } from "@/lib/planner/routeOptimizer";
 import { PLANNER_PROFILE_KEY } from "@/lib/planner/types";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import type { PlannerProfile, DayPlan, LocationCandidate } from "@/lib/planner/types";
 
 const ROUTE_KEY = "tulipday_active_route";
@@ -22,22 +27,6 @@ function formatTime(minutesAfter9: number): string {
   const h     = Math.floor(total / 60);
   const m     = total % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-function transportLabel(t: string): string {
-  if (t === "walking") return "te voet";
-  if (t === "cycling") return "op de fiets";
-  return "met de auto";
-}
-
-function groupLabel(g: string): string {
-  switch (g) {
-    case "solo":    return "Solo";
-    case "couple":  return "Stel";
-    case "family":  return "Familie";
-    case "friends": return "Vrienden";
-    default:        return g;
-  }
 }
 
 function TravelIcon({ transport }: { transport: string }) {
@@ -59,7 +48,7 @@ export default function PlanResultsPage() {
 
   const [plan,    setPlan]    = useState<DayPlan | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error,   setError]   = useState(false);
 
   useEffect(() => {
     async function compute() {
@@ -75,7 +64,7 @@ export default function PlanResultsPage() {
         .not("longitude", "is", null);
 
       if (dbError || !locations?.length) {
-        setError(t("common.load_error"));
+        setError(true);
         setLoading(false);
         return;
       }
@@ -91,7 +80,7 @@ export default function PlanResultsPage() {
     }
 
     compute().catch(() => {
-      setError(t("common.load_error"));
+      setError(true);
       setLoading(false);
     });
   }, [locale, router]);
@@ -113,7 +102,7 @@ export default function PlanResultsPage() {
     const distanceKm = Math.round((plan.totalMin / 60) * speedKmH * 10) / 10;
 
     const route = {
-      name:             `Jouw tulpendag — ${groupLabel(plan.profile.group)}`,
+      name:             t("plan_results.route_name", { group: t(`planner.group.${plan.profile.group}`) }),
       fields:           plan.stops.map((s) => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })),
       geometry: {
         type:        "LineString",
@@ -132,34 +121,25 @@ export default function PlanResultsPage() {
 
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center gap-4"
-        style={{ backgroundColor: "var(--color-surface)" }}
-      >
-        <div className="w-10 h-10 rounded-full border-2 border-tulip-500 border-t-transparent animate-spin" />
-        <p className="text-sm font-semibold" style={{ color: "var(--color-text-3)" }}>
-          Jouw route samenstellen…
-        </p>
+      <div className="min-h-screen bg-surface px-5 pt-safe" role="status" aria-label={t("plan_results.building")}>
+        <div className="space-y-3 pt-6">
+          <Skeleton variant="text" lines={2} className="mb-4" />
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        </div>
       </div>
     );
   }
 
   if (error || !plan || !plan.stops.length) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-4"
-        style={{ backgroundColor: "var(--color-surface)" }}
-      >
-        <p className="text-base font-bold" style={{ color: "var(--color-text)" }}>
-          {error ?? "Geen locaties gevonden voor dit profiel."}
-        </p>
-        <button
-          onClick={() => router.replace(`/${locale}/plan`)}
-          className="px-6 py-3 rounded-2xl text-sm font-bold text-white"
-          style={{ backgroundColor: "var(--color-primary)" }}
-        >
-          Opnieuw plannen
-        </button>
+      <div className="flex min-h-screen items-center justify-center bg-surface px-6">
+        <EmptyState
+          tone={error ? "error" : "neutral"}
+          icon={<MapPinOff size={28} />}
+          title={error ? t("common.load_error") : t("plan_results.no_stops")}
+          actionLabel={t("plan_results.replan")}
+          onAction={() => router.replace(`/${locale}/plan`)}
+        />
       </div>
     );
   }
@@ -168,30 +148,23 @@ export default function PlanResultsPage() {
   const endMin    = lastStop.startMin + lastStop.durationMin;
   const totalH    = Math.floor(endMin / 60);
   const totalM    = endMin % 60;
-  const totalHStr = totalM > 0 ? `${totalH} u ${totalM} min` : `${totalH} uur`;
+  const totalHStr = t("navigation.duration_hm", { h: totalH, m: totalM });
 
   return (
-    <div className="min-h-screen pb-40" style={{ backgroundColor: "var(--color-surface)" }}>
+    <div className="min-h-screen pb-40 bg-surface" >
 
       {/* Header */}
-      <div
-        className="px-5 pt-14 pb-5"
-        style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.replace(`/${locale}/plan`)}
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
-          >
+      <div className="border-b border-line bg-surface-2 px-5 pb-5 pt-safe">
+        <div className="mb-4 flex items-center gap-3 pt-4">
+          <IconButton variant="ghost" aria-label={t("plan_results.back_to_plan")} onClick={() => router.replace(`/${locale}/plan`)}>
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--color-primary)" }}>
-              Jouw dagroute
+            <p className="text-caption font-bold uppercase tracking-widest text-primary">
+              {t("plan_results.eyebrow")}
             </p>
-            <h1 className="text-lg font-bold leading-tight" style={{ color: "var(--color-text)" }}>
-              {plan.stops.length} plekken geselecteerd
+            <h1 className="text-title leading-tight text-ink">
+              {t("plan_results.stops_selected", { count: plan.stops.length })}
             </h1>
           </div>
         </div>
@@ -199,33 +172,33 @@ export default function PlanResultsPage() {
         {/* Samenvatting-pills */}
         <div className="flex gap-2 flex-wrap">
           <span
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-surface-3 text-ink-2"
+            
           >
             <TransportPill transport={plan.profile.transport} />
-            {transportLabel(plan.profile.transport)}
+            {t(`planner.transport.${plan.profile.transport}`)}
           </span>
           <span
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-surface-3 text-ink-2"
+            
           >
             <Clock size={14} />
             {totalHStr}
           </span>
           <span
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-            style={{ backgroundColor: "var(--color-surface-3)", color: "var(--color-text-2)" }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-surface-3 text-ink-2"
+            
           >
             <MapPin size={14} />
-            {groupLabel(plan.profile.group)}
+            {t(`planner.group.${plan.profile.group}`)}
           </span>
         </div>
       </div>
 
       {/* Start-tijd label */}
       <div className="px-5 pt-5 pb-1">
-        <p className="text-xs font-bold" style={{ color: "var(--color-text-3)" }}>
-          Start om 09:00 · klaar om ~{formatTime(endMin)}
+        <p className="text-xs font-bold text-ink-3" >
+          {t("plan_results.timing", { start: formatTime(0), end: formatTime(endMin) })}
         </p>
       </div>
 
@@ -239,19 +212,16 @@ export default function PlanResultsPage() {
           return (
             <div key={stop.id}>
               <div
-                className="flex gap-3 p-4 rounded-2xl"
-                style={{
-                  backgroundColor: "var(--color-surface-2)",
-                  border:          "1px solid var(--color-border)",
-                }}
+                className="flex gap-3 p-4 rounded-2xl bg-surface-2 border border-line"
+                
               >
                 {/* Tijd-kolom */}
                 <div className="flex flex-col items-center flex-shrink-0 pt-0.5" style={{ width: 44 }}>
-                  <span className="text-[11px] font-bold tabular-nums" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-[11px] font-bold tabular-nums text-primary" >
                     {formatTime(stop.startMin)}
                   </span>
-                  <span className="text-[10px] mt-0.5" style={{ color: "var(--color-text-3)" }}>
-                    {stop.durationMin} min
+                  <span className="text-[10px] mt-0.5 text-ink-3" >
+                    {stop.durationMin} {t("navigation.minute_short")}
                   </span>
                 </div>
 
@@ -265,11 +235,8 @@ export default function PlanResultsPage() {
                     className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div
-                    className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: "var(--color-surface-3)" }}
-                  >
-                    🌷
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-primary-subtle text-primary">
+                    <Flower2 size={24} aria-hidden />
                   </div>
                 )}
 
@@ -277,15 +244,13 @@ export default function PlanResultsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-1.5 mb-1.5">
                     <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white mt-0.5"
-                      style={{ backgroundColor: isLast ? "#2D7D46" : "var(--color-primary)" }}
+                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${isLast ? "bg-success" : "bg-primary"}`}
                     >
-                      {isLast ? "✓" : idx + 1}
+                      {isLast ? <Check size={12} strokeWidth={3} aria-hidden /> : idx + 1}
                     </span>
                     <button
                       onClick={() => stop.slug && router.push(locationPath(locale, stop.slug))}
-                      className="text-sm font-bold leading-snug text-left"
-                      style={{ color: "var(--color-text)" }}
+                      className="text-left text-label leading-snug text-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                     >
                       {stop.name}
                     </button>
@@ -295,13 +260,7 @@ export default function PlanResultsPage() {
                   {stop.reasons.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {stop.reasons.map((r, i) => (
-                        <span
-                          key={i}
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: "rgba(232,16,42,0.08)", color: "var(--color-primary)" }}
-                        >
-                          {r}
-                        </span>
+                        <Badge key={i} tone="primary">{t(`plan_results.${r}`)}</Badge>
                       ))}
                     </div>
                   )}
@@ -312,12 +271,12 @@ export default function PlanResultsPage() {
               {!isLast && travelMin !== null && (
                 <div className="flex items-center gap-2 py-2 pl-[56px]">
                   <div
-                    className="w-px h-5 rounded-full"
-                    style={{ backgroundColor: "var(--color-border)" }}
+                    className="w-px h-5 rounded-full bg-line"
+                    
                   />
                   <TravelIcon transport={plan.profile.transport} />
-                  <span className="text-[11px] font-medium" style={{ color: "var(--color-text-3)" }}>
-                    ~{travelMin} min reizen
+                  <span className="text-[11px] font-medium text-ink-3" >
+                    {t("plan_results.travel", { min: travelMin })}
                   </span>
                 </div>
               )}
@@ -326,31 +285,15 @@ export default function PlanResultsPage() {
         })}
       </div>
 
-      {/* CTA — boven BottomNav (60px hoog) */}
-      <div
-        className="fixed bottom-[60px] left-0 right-0 px-5 py-3 z-40"
-        style={{ backgroundColor: "var(--color-surface)", borderTop: "1px solid var(--color-border)" }}
-      >
-        <div className="flex gap-3 max-w-[430px] mx-auto">
-          <button
-            onClick={() => router.replace(`/${locale}/plan`)}
-            className="px-4 py-3.5 rounded-2xl text-sm font-bold flex-shrink-0 transition-all active:scale-95"
-            style={{
-              backgroundColor: "var(--color-surface-2)",
-              color:           "var(--color-text-2)",
-              border:          "1.5px solid var(--color-border)",
-            }}
-          >
-            Aanpassen
-          </button>
-          <button
-            onClick={startRoute}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-95"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            <Play size={16} fill="white" />
-            Start deze route
-          </button>
+      {/* Knoppen boven de navigatiebalk */}
+      <div className="fixed inset-x-0 bottom-nav z-40 border-t border-line bg-surface px-5 py-3">
+        <div className="mx-auto flex max-w-[430px] gap-3">
+          <Button variant="secondary" size="lg" onClick={() => router.replace(`/${locale}/plan`)}>
+            {t("plan_results.adjust")}
+          </Button>
+          <Button size="lg" fullWidth onClick={startRoute} icon={<Play size={16} className="fill-current" aria-hidden />}>
+            {t("plan_results.start")}
+          </Button>
         </div>
       </div>
     </div>

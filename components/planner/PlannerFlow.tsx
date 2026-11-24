@@ -127,11 +127,11 @@ function StepCard<T>({
 
       {/* Vraag */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold leading-snug" style={{ color: "var(--color-text)" }}>
+        <h2 className="text-xl font-bold leading-snug text-ink" >
           {title}
         </h2>
         {sub && (
-          <p className="text-sm mt-1" style={{ color: "var(--color-text-3)" }}>
+          <p className="text-sm mt-1 text-ink-3" >
             {sub}
           </p>
         )}
@@ -192,8 +192,8 @@ function StepCard<T>({
         <button
           onClick={onNext}
           disabled={nextDisabled}
-          className="flex-[2] flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-[0.97] disabled:opacity-40"
-          style={{ backgroundColor: "var(--color-primary)" }}
+          className="flex-[2] flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-[0.97] disabled:opacity-40 bg-primary"
+          
         >
           {displayNextLabel}
           <ChevronRight size={16} />
@@ -265,13 +265,13 @@ export default function PlannerFlow({ onComplete }: PlannerFlowProps = {}) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: "var(--color-surface)" }}>
+    <div className="flex flex-col min-h-screen bg-surface" >
       {/* Header */}
-      <div className="flex-shrink-0 px-5 pt-14 pb-4" style={{ backgroundColor: "var(--color-surface-2)", borderBottom: "1px solid var(--color-border)" }}>
-        <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: "var(--color-primary)" }}>
+      <div className="flex-shrink-0 px-5 pt-14 pb-4 bg-surface-2 border-b border-line" >
+        <p className="text-xs font-bold uppercase tracking-widest mb-0.5 text-primary" >
           {t("planner.header_eyebrow")}
         </p>
-        <h1 className="text-lg font-bold" style={{ color: "var(--color-text)" }}>
+        <h1 className="text-lg font-bold text-ink" >
           {t("planner.header_title")}
         </h1>
       </div>

@@ -30,7 +30,7 @@ export interface LocationCandidate {
 
 export interface ScoredLocation extends LocationCandidate {
   score:       number;
-  reasons:     string[];    // "waarom voor jou" bullets (NL)
+  reasons:     string[];    // "waarom voor jou": vertaalsleutels onder plan_results.*
   vibeTags:    string[];
   accessible:  boolean;
   avgVisitMin: number;
