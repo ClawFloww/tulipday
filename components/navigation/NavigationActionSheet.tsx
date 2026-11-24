@@ -1,7 +1,7 @@
 "use client";
 
-// Uitklap-bottom-sheet voor navigatie. Collapsed: alleen ETA/afstand/aankomst,
-// schoon scherm Google Maps-stijl. Expanded: huidige stop card + TulipDay-
+// Uitklap-onderbalk voor navigatie. Ingeklapt: resterende tijd, afstand,
+// aankomsttijd en een stopknop, Google Maps-stijl. Expanded: huidige stop card + TulipDay-
 // specifieke acties (Bloei melden, Foto, Aftekenen, Externe nav via Maps
 // picker) en de volledige stoplijst. Tap op de drag handle togglet.
 
@@ -12,15 +12,18 @@ import {
   Navigation2,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/Button";
+
 import type { NavStop } from "./NavigationView";
 
 interface Props {
   // Collapsed-view data
-  etaMinutes:    number;
+  etaLabel:      string;
   distanceLabel: string;
   arrivalTime:   string;
   expanded:      boolean;
   onToggle:      () => void;
+  onStop:        () => void;
 
   // Expanded-view: huidige stop
   activeStop:    NavStop | null;
@@ -66,7 +69,7 @@ function ActionButton({
 }
 
 export default function NavigationActionSheet({
-  etaMinutes, distanceLabel, arrivalTime, expanded, onToggle,
+  etaLabel, distanceLabel, arrivalTime, expanded, onToggle, onStop,
   activeStop, approachPhase, routeName,
   stops, currentIdx, visited,
   isFlower, reportedBloom,
@@ -78,46 +81,38 @@ export default function NavigationActionSheet({
     <motion.div
       initial={{ y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="absolute bottom-0 left-0 right-0 z-20 rounded-t-3xl shadow-2xl"
-      style={{
-        backgroundColor: "var(--color-surface-2)",
-        borderTop: "1px solid var(--color-border)",
-        paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
-      }}
+      className="absolute bottom-0 left-0 right-0 z-20 rounded-t-3xl border-t border-line bg-surface-2 pb-safe shadow-sheet"
     >
-      {/* Eén grote tap-zone — drag handle + ETA-balk gecombineerd */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex flex-col text-left active:bg-black/[0.04] dark:active:bg-white/[0.04] transition-colors"
-        aria-label={expanded ? t("navigation.hide_stops") : t("navigation.show_stops")}
-      >
-        <span className="w-full flex justify-center pt-3 pb-1">
-          <span
-            className="block w-10 h-1.5 rounded-full"
-            style={{ backgroundColor: "var(--color-border)" }}
-          />
-        </span>
-        <span className="w-full flex items-center justify-between px-5 pt-1 pb-3">
-          <span className="flex items-baseline gap-2 flex-1 min-w-0">
-            <span
-              className="text-2xl font-extrabold"
-              style={{ color: approachPhase ? "var(--color-text-2)" : "#2D7D46" }}
-            >
-              {etaMinutes} {t("navigation.minute_short")}
-            </span>
-            <span
-              className="text-sm font-semibold flex-shrink-0"
-              style={{ color: "var(--color-text-3)" }}
-            >
-              · {distanceLabel} · {arrivalTime}
-            </span>
+      <div className="flex items-center gap-2 pr-4">
+        {/* Grote tap-zone: handgreep + resterende tijd/afstand */}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary rounded-tl-3xl"
+          aria-expanded={expanded}
+          aria-label={expanded ? t("navigation.hide_stops") : t("navigation.show_stops")}
+        >
+          <span className="flex w-full justify-center pt-3 pb-1">
+            <span className="block h-1.5 w-10 rounded-full bg-line" />
           </span>
-          {expanded
-            ? <ChevronDown size={22} style={{ color: "var(--color-text-3)" }} />
-            : <ChevronUp   size={22} style={{ color: "var(--color-text-3)" }} />}
-        </span>
-      </button>
+          <span className="flex w-full items-center gap-2 pl-5 pt-1 pb-3">
+            <span className="min-w-0 flex-1">
+              <span className={`block font-mono text-[24px] font-bold leading-tight ${approachPhase ? "text-ink-2" : "text-success"}`}>
+                {etaLabel}
+              </span>
+              <span className="block truncate font-mono text-caption text-ink-3">
+                {distanceLabel} · {t("navigation.arrival")} {arrivalTime}
+              </span>
+            </span>
+            {expanded
+              ? <ChevronDown size={22} className="flex-shrink-0 text-ink-3" />
+              : <ChevronUp   size={22} className="flex-shrink-0 text-ink-3" />}
+          </span>
+        </button>
+        <Button variant="danger" onClick={onStop} className="flex-shrink-0">
+          {t("navigation.stop")}
+        </Button>
+      </div>
 
       {/* Expanded: stop card + acties + stoplijst */}
       <AnimatePresence initial={false}>
@@ -141,14 +136,11 @@ export default function NavigationActionSheet({
               {isFlower && !approachPhase && (
                 <div className="flex items-center gap-1.5 mt-1.5 text-xs" style={{ color: "var(--color-text-2)" }}>
                   <span
-                    className="block w-2 h-2 rounded-full"
-                    style={{
-                      backgroundColor:
-                        reportedBloom === "in_bloom" ? "#2D7D46"
-                        : reportedBloom === "fading" ? "#FF9800"
-                        : reportedBloom === "finished" ? "#9E9E9E"
-                        : "var(--color-border)",
-                    }}
+                    className={`block w-2 h-2 rounded-full ${
+                      reportedBloom === "in_bloom" ? "bg-success"
+                      : reportedBloom === "fading" ? "bg-warning"
+                      : reportedBloom === "finished" ? "bg-ink-3"
+                      : "bg-line"}`}
                   />
                   <span>
                     {reportedBloom === "in_bloom" ? t("navigation.reported_in_bloom")
@@ -202,14 +194,14 @@ export default function NavigationActionSheet({
                     className="flex items-center gap-3 px-5 py-2.5"
                     style={{
                       backgroundColor: isActive ? "var(--color-surface-3)" : "transparent",
-                      borderLeft: isActive ? "3px solid #E8102A" : "3px solid transparent",
+                      borderLeft: isActive ? "3px solid var(--color-primary)" : "3px solid transparent",
                       opacity: isVisited ? 0.6 : 1,
                     }}
                   >
                     <div
                       className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-extrabold flex-shrink-0"
                       style={{
-                        backgroundColor: isVisited ? "#2D7D46" : isActive ? "#E8102A" : "var(--color-border)",
+                        backgroundColor: isVisited ? "var(--color-success)" : isActive ? "var(--color-primary)" : "var(--color-border)",
                       }}
                     >
                       {isVisited ? <Check size={12} /> : idx + 1}

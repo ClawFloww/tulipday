@@ -16,7 +16,11 @@ export type EventName =
   | "save"                 // save/unsave toggled
   | "photo_upload"         // photo upload completed
   | "navigate"             // navigate to maps tapped
-  | "filter_applied";      // discover filter chip selected
+  | "filter_applied"       // discover filter chip selected
+  | "nav_start"            // in-app navigation started
+  | "nav_stop"             // navigation stopped before the end
+  | "nav_reroute"          // off route → new route calculated
+  | "nav_finish";          // end of the route reached
 
 export type EventProperties = Record<string, string | number | boolean | null>;
 

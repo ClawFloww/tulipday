@@ -1,10 +1,8 @@
 "use client";
 
-// Grote rode maneuver-banner bovenaan het navigatiescherm — Google Maps-stijl
-// maar dan in TulipDay-rood. Toont het maneuver-icoon links, de straatnaam +
-// afstand groot, en een sluit-knop rechts. Tijdens de aanrijdfase wordt de
-// banner grijs zodat de gebruiker visueel weet dat de echte route nog niet
-// is begonnen.
+// Grote instructiebanner bovenaan het navigatiescherm: pijl, afstand tot de
+// afslag en de straat (of opdracht). Merkrood tijdens het volgen van de route;
+// neutraal ("muted") bij locatie zoeken, herberekenen of van de route af.
 
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
@@ -14,48 +12,41 @@ interface Props {
   icon:          ReactNode;
   distanceLabel: string;
   streetName:    string;
-  approachPhase: boolean;
+  subLabel?:     string | null;
+  muted:         boolean;
+  closeLabel:    string;
   onClose:       () => void;
 }
 
 export default function ManeuverBanner({
-  icon, distanceLabel, streetName, approachPhase, onClose,
+  icon, distanceLabel, streetName, subLabel, muted, closeLabel, onClose,
 }: Props) {
   return (
     <motion.div
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", damping: 22, stiffness: 240 }}
-      className="rounded-2xl shadow-2xl overflow-hidden"
-      style={{
-        backgroundColor: approachPhase ? "#374151" : "#E8102A",
-        boxShadow: approachPhase
-          ? "0 8px 24px rgba(0,0,0,0.35)"
-          : "0 8px 24px rgba(232,16,42,0.35)",
-      }}
+      className={[
+        "rounded-2xl shadow-lg transition-colors duration-base",
+        muted ? "bg-ink text-surface" : "bg-primary text-on-primary",
+      ].join(" ")}
+      role="status"
+      aria-live="polite"
     >
       <div className="flex items-center gap-3 px-3.5 py-3">
-        {/* Maneuver-icoon */}
-        <div className="w-14 h-14 flex items-center justify-center text-white flex-shrink-0">
-          {icon}
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center">{icon}</div>
+
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-[28px] font-bold leading-none tracking-tight">{distanceLabel}</p>
+          <p className="mt-1 truncate text-headline leading-tight">{streetName}</p>
+          {subLabel && <p className="truncate text-caption opacity-80">{subLabel}</p>}
         </div>
 
-        {/* Afstand + straatnaam */}
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-2xl font-extrabold leading-none tracking-tight">
-            {distanceLabel}
-          </p>
-          <p className="text-white/90 text-base font-bold leading-tight mt-1 truncate">
-            {streetName}
-          </p>
-        </div>
-
-        {/* Sluit-knop */}
         <button
           type="button"
           onClick={onClose}
-          className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition-transform"
-          aria-label="Sluit navigatie"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/20 active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          aria-label={closeLabel}
         >
           <X size={18} />
         </button>

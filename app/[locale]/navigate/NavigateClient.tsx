@@ -1,176 +1,61 @@
 "use client";
 
-// Laadt route-data (preset of gegenereerd) en haalt OSRM-stappen op voor afslag-instructies.
-// Toont eerst een keuze-modal voor het startpunt (huidige locatie of kies op
-// kaart), genereert daarna de approach-route vanaf dat punt naar de eerste
-// stop. Geeft een complete NavRoute door aan NavigationView.
+// Laadt de route voor de navigatie en geeft een complete NavRoute door aan
+// NavigationView. Drie ingangen:
+//  • ?slug=…            presetroute uit Supabase; de BRouter-lijn wordt ongewijzigd
+//                        gevolgd en de afslagen komen uit diezelfde lijn
+//  • ?generated=true    plannerroute uit localStorage; OSRM legt de weg langs de stops
+//  • ?dest=lat,lng&name=…  één locatie (vanaf "Navigeer hierheen"), via OSRM
+// Bij route en planner kiest de gebruiker eerst het startpunt; daarna komt er
+// een aanrijdroute (OSRM) van dat punt naar het begin van de route.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { LocateOff, MapPinOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n-context";
-import NavigationView, { type NavRoute, type NavStep } from "@/components/navigation/NavigationView";
+import { buildLine, distanceM, type LngLat } from "@/lib/navigation/geometry";
+import { deriveManeuvers } from "@/lib/navigation/maneuvers";
+import { fetchOsrmRoute, type TravelMode } from "@/lib/navigation/osrm";
+import NavigationView, { type NavRoute, type NavStop } from "@/components/navigation/NavigationView";
 import StartChoiceModal from "@/components/navigation/StartChoiceModal";
 import StartPointPicker from "@/components/navigation/StartPointPicker";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type StartPhase = "choosing" | "picking" | "ready";
 
 const ROUTE_KEY = "tulipday_active_route";
+// Dichterbij dan dit is aanrijden niet nodig
+const APPROACH_MIN_M = 60;
 
-// OSRM-profiel per modus
-const OSRM_PROFILES: Record<string, string> = {
-  bike: "routed-bike",
-  car:  "routed-car",
-  walk: "routed-foot",
-};
-
-// Vertaal OSRM-manoeuvre naar Nederlands
-function buildInstruction(step: {
-  name: string;
-  maneuver: { type: string; modifier?: string };
-}): string {
-  const { type, modifier } = step.maneuver;
-  const street = step.name ? `op ${step.name}` : "";
-
-  switch (type) {
-    case "depart":      return `Vertrek ${street}`.trim();
-    case "arrive":      return "Je bent aangekomen";
-    case "continue":    return `Ga rechtdoor ${street}`.trim();
-    case "new name":    return `Ga over in ${step.name || "de weg"}`;
-    case "roundabout":
-    case "rotary":      return "Neem de rotonde";
-    case "end of road": return modifier === "left" ? "Linksaf aan het einde" : "Rechtsaf aan het einde";
-    case "fork":        return modifier?.includes("left") ? "Neem links" : "Neem rechts";
-    case "turn": {
-      switch (modifier) {
-        case "left":         return `Sla linksaf ${street}`.trim();
-        case "right":        return `Sla rechtsaf ${street}`.trim();
-        case "slight left":  return `Houd links aan ${street}`.trim();
-        case "slight right": return `Houd rechts aan ${street}`.trim();
-        case "sharp left":   return `Scherp linksaf ${street}`.trim();
-        case "sharp right":  return `Scherp rechtsaf ${street}`.trim();
-        case "uturn":        return `Keer om ${street}`.trim();
-        default:             return `Ga rechtdoor ${street}`.trim();
-      }
-    }
-    default: return step.name || "Ga door";
-  }
-}
-
-function subsamplePoints<T>(arr: T[], max: number): T[] {
-  if (arr.length <= max) return arr;
-  const out: T[] = [arr[0]];
-  const step = (arr.length - 1) / (max - 1);
-  for (let i = 1; i < max - 1; i++) out.push(arr[Math.round(i * step)]);
-  out.push(arr[arr.length - 1]);
-  return out;
-}
-
-async function fetchSnappedGeometry(
-  lnglats: [number, number][], // [lng, lat]
-  profile: string,
-): Promise<[number, number][] | null> {
-  if (lnglats.length < 2) return null;
-  const waypoints = subsamplePoints(lnglats, 25);
-  const coords = waypoints.map(([lng, lat]) => `${lng},${lat}`).join(";");
-  try {
-    const res = await fetch(
-      `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-      { signal: AbortSignal.timeout(8000) },
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data.routes?.[0]?.geometry?.coordinates as [number, number][]) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function getUserPosition(): Promise<{ lat: number; lng: number } | null> {
-  if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+function getUserPosition(): Promise<LngLat | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return Promise.resolve(null);
   return new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => resolve([pos.coords.longitude, pos.coords.latitude]),
       ()    => resolve(null),
-      { enableHighAccuracy: true, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 10_000 },
     );
   });
 }
 
-async function fetchOSRMApproach(
-  from: { lat: number; lng: number },
-  to:   { lat: number; lng: number },
-  mode: "bike" | "car" | "walk",
-): Promise<{ geometry: [number, number][]; steps: NavStep[]; distanceM: number } | null> {
-  try {
-    const profile = OSRM_PROFILES[mode];
-    const coords  = `${from.lng},${from.lat};${to.lng},${to.lat}`;
-    const url     = `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?steps=true&overview=full&geometries=geojson`;
-    const res     = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.routes?.[0]) return null;
-
-    const r         = data.routes[0];
-    const geometry  = r.geometry.coordinates as [number, number][];
-    const distanceM = Math.round(r.distance);
-    const steps: NavStep[] = [];
-    for (const leg of r.legs) {
-      for (const step of leg.steps) {
-        steps.push({
-          instruction: buildInstruction(step),
-          streetName:  step.name ?? "",
-          distance:    Math.round(step.distance),
-          location:    step.maneuver.location as [number, number],
-          type:        step.maneuver.type,
-          modifier:    step.maneuver.modifier,
-        });
-      }
-    }
-    return { geometry, steps, distanceM };
-  } catch {
-    return null;
-  }
+function parseMode(value: string | null): TravelMode {
+  return value === "walk" || value === "car" ? value : "bike";
 }
 
-async function fetchOSRMSteps(
-  waypoints: Array<{ lat: number; lng: number }>,
-  mode: "bike" | "car" | "walk",
-): Promise<{ steps: NavStep[]; geometry: [number, number][] | null }> {
-  if (waypoints.length < 2) return { steps: [], geometry: null };
-  try {
-    const profile = OSRM_PROFILES[mode];
-    const coords  = waypoints.map((w) => `${w.lng},${w.lat}`).join(";");
-    const url     = `https://routing.openstreetmap.de/${profile}/route/v1/driving/${coords}?steps=true&overview=full&geometries=geojson&annotations=false`;
-
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return { steps: [], geometry: null };
-
-    const data = await res.json();
-    if (!data.routes?.[0]) return { steps: [], geometry: null };
-
-    const route    = data.routes[0];
-    const geometry = (route.geometry?.coordinates ?? null) as [number, number][] | null;
-
-    const steps: NavStep[] = [];
-    for (const leg of route.legs) {
-      for (const step of leg.steps) {
-        // Sla de "arrive"-stap op tussenstops over (alleen eindstap behouden)
-        if (step.maneuver.type === "arrive" && steps.length > 0 && leg !== route.legs.at(-1)) continue;
-        steps.push({
-          instruction: buildInstruction(step),
-          streetName:  step.name ?? "",
-          distance:    Math.round(step.distance),
-          location:    step.maneuver.location as [number, number],
-          type:        step.maneuver.type,
-          modifier:    step.maneuver.modifier,
-        });
-      }
-    }
-    return { steps, geometry };
-  } catch {
-    return { steps: [], geometry: null };
-  }
+function Preparing({ label }: { label: string }) {
+  return (
+    <div className="fixed inset-0 flex flex-col bg-surface">
+      <Skeleton className="flex-1 rounded-none" />
+      <div className="absolute inset-x-3 top-0 pt-safe">
+        <Skeleton className="mt-3 h-24 rounded-2xl" />
+      </div>
+      <p className="absolute inset-x-0 bottom-0 pb-safe text-center text-label text-ink-2" role="status">
+        <span className="block py-6">{label}</span>
+      </p>
+    </div>
+  );
 }
 
 export default function NavigateClient() {
@@ -179,89 +64,68 @@ export default function NavigateClient() {
   const router        = useRouter();
   const { t }         = useT();
 
-  const [baseRoute,   setBaseRoute]   = useState<NavRoute | null>(null); // zonder approach
-  const [navRoute,    setNavRoute]    = useState<NavRoute | null>(null); // met approach
-  const [error,       setError]       = useState<string | null>(null);
-  const [startPhase,  setStartPhase]  = useState<StartPhase>("choosing");
-  const [customStart, setCustomStart] = useState<[number, number] | null>(null); // [lng, lat]
-
   const slug      = searchParams.get("slug");
   const generated = searchParams.get("generated") === "true";
+  const dest      = searchParams.get("dest");
+  const destName  = searchParams.get("name") ?? t("navigation.destination");
+  const destMode  = parseMode(searchParams.get("mode"));
 
+  const [baseRoute,   setBaseRoute]   = useState<NavRoute | null>(null); // zonder aanrijden
+  const [navRoute,    setNavRoute]    = useState<NavRoute | null>(null); // klaar om te navigeren
+  const [error,       setError]       = useState<"load" | "no_location" | "no_route" | null>(null);
+  const [startPhase,  setStartPhase]  = useState<StartPhase>(dest ? "ready" : "choosing");
+  const [customStart, setCustomStart] = useState<LngLat | null>(null);
+  const [attempt,     setAttempt]     = useState(0);
+
+  const retry = useCallback(() => {
+    setError(null);
+    setNavRoute(null);
+    setAttempt((a) => a + 1);
+  }, []);
+
+  // ── Route laden ────────────────────────────────────────────────────────────
   useEffect(() => {
-    async function load() {
-      // ── Gegenereerde route (bollenveld-tocht uit localStorage) ───────────
+    if (dest) return; // losse bestemming: alles gebeurt in het startpunt-effect
+    let cancelled = false;
+
+    async function load(): Promise<NavRoute | null> {
+      // Plannerroute uit localStorage
       if (generated) {
-        try {
-          const stored = localStorage.getItem(ROUTE_KEY);
-          if (!stored) { router.replace(`/${locale}/home`); return; }
-          const { route, activity } = JSON.parse(stored) as {
-            route: {
-              name: string;
-              fields: Array<{ id: string; name: string; lat: number; lng: number }>;
-              geometry: { type: string; coordinates: [number, number][] };
-              distanceKm: number;
-              estimatedMinutes: number;
-            };
-            activity: string;
+        const stored = localStorage.getItem(ROUTE_KEY);
+        if (!stored) return null;
+        const { route, activity } = JSON.parse(stored) as {
+          route: {
+            name: string;
+            fields: Array<{ id: string; name: string; lat: number; lng: number }>;
+            geometry: { coordinates: LngLat[] };
+            estimatedMinutes: number;
           };
-
-          const mode: "bike" | "car" | "walk" =
-            activity === "cycling" ? "bike"
-            : activity === "walking" ? "walk"
-            : "car";
-
-          const stops = route.fields.map((f) => ({
-            id:          f.id,
-            name:        f.name,
-            lat:         f.lat,
-            lng:         f.lng,
-            category:    "flower_field",
-            location_id: undefined,
-          }));
-
-          const routeStart = route.geometry.coordinates[0] as [number, number] | undefined;
-          const rawGeometry = route.geometry.coordinates as [number, number][];
-
-          // Eén OSRM-call levert zowel de afslag-stappen als de weggebaseerde
-          // geometrie. Approach (van startpunt naar eerste stop) volgt later
-          // in een tweede effect — pas nadat de gebruiker het startpunt heeft
-          // gekozen via StartChoiceModal/StartPointPicker.
-          const { steps, geometry: osrmGeometry } = await fetchOSRMSteps(stops, mode);
-          const displayGeometry = osrmGeometry ?? rawGeometry;
-          // routeStart wordt later gebruikt door het approach-effect, daarom
-          // hoeft hij hier niets meer te doen dan in scope blijven.
-          void routeStart;
-
-          setBaseRoute({
-            name:             route.name,
-            mode,
-            stops,
-            geometry:         displayGeometry,
-            distanceKm:       route.distanceKm,
-            durationMinutes:  route.estimatedMinutes,
-            steps,
-            approachGeometry:  null,
-            approachSteps:     [],
-            approachDistanceM: null,
-          });
-        } catch {
-          router.replace(`/${locale}/home`);
-        }
-        return;
+          activity: string;
+        };
+        const mode: TravelMode = activity === "cycling" ? "bike" : activity === "walking" ? "walk" : "car";
+        const stops: NavStop[] = route.fields.map((f) => ({
+          id: f.id, name: f.name, lat: f.lat, lng: f.lng, category: "flower_field", location_id: f.id,
+        }));
+        // De opgeslagen geometrie zijn rechte lijnen tussen de stops; OSRM legt de echte weg
+        const routed = await fetchOsrmRoute(route.geometry.coordinates, mode);
+        const line = routed?.line ?? buildLine(route.geometry.coordinates);
+        return {
+          name: route.name, mode, stops, line,
+          maneuvers:       routed?.maneuvers ?? deriveManeuvers(line),
+          durationMinutes: routed ? Math.round(routed.durationS / 60) : route.estimatedMinutes,
+          approach:        null,
+        };
       }
 
-      // ── Preset route (routes-tabel) ──────────────────────────────────────
-      if (!slug) { router.replace(`/${locale}/home`); return; }
-
+      // Presetroute uit Supabase
+      if (!slug) return null;
       const { data: route } = await supabase
         .from("routes")
-        .select("id, title, route_type, distance_km, duration_minutes, geometry_points")
+        .select("id, title, route_type, duration_minutes, geometry_points")
         .eq("slug", slug)
         .eq("is_active", true)
         .single();
-
-      if (!route) { setError(t("route_detail.not_found")); return; }
+      if (!route) throw new Error("not_found");
 
       const { data: routeStops } = await supabase
         .from("route_stops")
@@ -269,13 +133,10 @@ export default function NavigateClient() {
         .eq("route_id", route.id)
         .order("sort_order");
 
-      const mode: "bike" | "car" | "walk" =
-        route.route_type === "walk" ? "walk"
-        : route.route_type === "car" ? "car"
-        : "bike";
+      const mode: TravelMode = route.route_type === "walk" ? "walk" : route.route_type === "car" ? "car" : "bike";
 
       type RawStop = { locations: { id: string; title: string; latitude: number; longitude: number; category: string | null; bloom_status: string | null } };
-      const stops = ((routeStops ?? []) as unknown as RawStop[])
+      const stops: NavStop[] = ((routeStops ?? []) as unknown as RawStop[])
         .filter((s) => s.locations?.latitude && s.locations?.longitude)
         .map((s) => ({
           id:           s.locations.id,
@@ -287,115 +148,93 @@ export default function NavigateClient() {
           location_id:  s.locations.id,
         }));
 
-      // geometry_points is opgeslagen als [lat, lng] → omzetten naar [lng, lat] voor MapLibre
-      const geometry: [number, number][] =
-        route.geometry_points?.length
-          ? (route.geometry_points as [number, number][]).map(([lat, lng]) => [lng, lat])
-          : stops.map((s) => [s.lng, s.lat]);
+      // geometry_points is [lat, lng] → [lng, lat]. Al BRouter-gesnapt: ongewijzigd volgen.
+      const coords: LngLat[] = route.geometry_points?.length
+        ? (route.geometry_points as [number, number][]).map(([lat, lng]) => [lng, lat])
+        : stops.map((s) => [s.lng, s.lat]);
+      const line = buildLine(coords);
 
-      // Parallel: OSRM-stappen + geometrie snappen aan wegennetwerk.
-      // Approach komt later in een apart effect, na de startkeuze.
-      const [{ steps }, snappedGeo] = await Promise.all([
-        fetchOSRMSteps(stops, mode),
-        fetchSnappedGeometry(geometry, OSRM_PROFILES[mode]),
-      ]);
-
-      const displayGeometry = snappedGeo ?? geometry;
-
-      setBaseRoute({
-        name:             route.title,
-        mode,
-        stops,
-        geometry:         displayGeometry,
-        distanceKm:       route.distance_km ?? 0,
-        durationMinutes:  route.duration_minutes ?? 0,
-        steps,
-        approachGeometry:  null,
-        approachSteps:     [],
-        approachDistanceM: null,
-      });
+      return {
+        name: route.title, mode, stops, line,
+        maneuvers:       deriveManeuvers(line),
+        durationMinutes: route.duration_minutes ?? 0,
+        approach:        null,
+      };
     }
 
-    load().catch(() => setError(t("common.load_error")));
-  }, [slug, generated, locale, router, t]);
+    load()
+      .then((r) => {
+        if (cancelled) return;
+        if (!r || r.line.coords.length < 2) {
+          if (!r) router.replace(`/${locale}/home`);
+          else setError("no_route");
+          return;
+        }
+        setBaseRoute(r);
+      })
+      .catch(() => { if (!cancelled) setError("load"); });
+    return () => { cancelled = true; };
+  }, [slug, generated, dest, locale, router, attempt]);
 
-  // ── Approach-route genereren zodra het startpunt bekend is ─────────────────
-  // Wordt getriggerd zodra startPhase 'ready' wordt (na de keuze in de modal
-  // of bevestiging in de picker). Bouwt een OSRM-route van het gekozen
-  // startpunt naar de eerste stop en bevestigt dan de complete NavRoute.
+  // ── Startpunt bekend → aanrijdroute of losse bestemming ──────────────────
   useEffect(() => {
-    if (!baseRoute || startPhase !== "ready") return;
-
+    if (startPhase !== "ready" || navRoute) return;
+    if (!dest && !baseRoute) return;
     let cancelled = false;
 
-    async function buildApproach() {
-      // Type-narrowing: baseRoute is hierboven al gegarandeerd niet-null.
-      const base = baseRoute!;
-      const routeStart = base.geometry[0];
-      if (!routeStart) {
-        if (!cancelled) setNavRoute(base);
+    async function prepare() {
+      const origin = customStart ?? await getUserPosition();
+
+      // Losse bestemming: de hele route is één OSRM-route vanaf hier
+      if (dest) {
+        const [lat, lng] = dest.split(",").map(Number);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) { setError("no_route"); return; }
+        if (!origin) { setError("no_location"); return; }
+        const routed = await fetchOsrmRoute([origin, [lng, lat]], destMode);
+        if (cancelled) return;
+        if (!routed) { setError("no_route"); return; }
+        setNavRoute({
+          name: destName, mode: destMode,
+          stops: [{ id: "dest", name: destName, lat, lng, category: "destination" }],
+          line: routed.line, maneuvers: routed.maneuvers,
+          durationMinutes: Math.round(routed.durationS / 60),
+          approach: null,
+        });
         return;
       }
 
-      // Origin = gekozen pin, of fall-back op GPS-positie als "huidige locatie"
-      let origin: { lat: number; lng: number } | null;
-      if (customStart) {
-        origin = { lat: customStart[1], lng: customStart[0] };
-      } else {
-        origin = await getUserPosition();
+      const base = baseRoute!;
+      const start = base.line.coords[0];
+      let approach = null;
+      if (origin && distanceM(origin, start) > APPROACH_MIN_M) {
+        approach = await fetchOsrmRoute([origin, start], base.mode);
       }
-
-      let approachGeometry:  [number, number][] | null = null;
-      let approachSteps:     NavStep[]                 = [];
-      let approachDistanceM: number | null             = null;
-
-      if (origin) {
-        const approach = await fetchOSRMApproach(
-          origin,
-          { lat: routeStart[1], lng: routeStart[0] }, // routeStart is [lng, lat]
-          base.mode,
-        );
-        if (approach) {
-          approachGeometry  = approach.geometry;
-          approachSteps     = approach.steps;
-          approachDistanceM = approach.distanceM;
-        }
-      }
-
-      if (!cancelled) {
-        setNavRoute({ ...base, approachGeometry, approachSteps, approachDistanceM });
-      }
+      if (!cancelled) setNavRoute({ ...base, approach });
     }
 
-    buildApproach();
+    prepare();
     return () => { cancelled = true; };
-  }, [baseRoute, startPhase, customStart]);
+  }, [baseRoute, startPhase, customStart, dest, destName, destMode, navRoute, attempt]);
 
   if (error) {
+    const content = {
+      load:        { icon: <MapPinOff size={28} />, title: t("common.load_error") },
+      no_route:    { icon: <MapPinOff size={28} />, title: t("navigation.no_route_title"), description: t("navigation.no_route_body") },
+      no_location: { icon: <LocateOff size={28} />, title: t("navigation.no_gps_title"), description: t("navigation.no_gps_body") },
+    }[error];
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6 text-center"
-        style={{ backgroundColor: "var(--color-surface)" }}
-      >
-        <p style={{ color: "var(--color-text)" }}>{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-2 px-6 bg-surface pt-safe pb-safe">
+        <EmptyState tone="error" {...content} actionLabel={t("common.retry")} onAction={retry} />
+        <button type="button" onClick={() => router.back()} className="min-h-touch px-4 text-label text-ink-2">
+          {t("common.back")}
+        </button>
       </div>
     );
   }
 
-  // Route nog niet geladen → spinner
-  if (!baseRoute) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "var(--color-surface)" }}
-      >
-        <div className="w-8 h-8 rounded-full border-2 border-tulip-500 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+  if (!dest && !baseRoute) return <Preparing label={t("navigation.preparing")} />;
 
-  // Eerste keuze: huidige locatie of pin op kaart
-  if (startPhase === "choosing") {
+  if (startPhase === "choosing" && baseRoute) {
     return (
       <StartChoiceModal
         routeName={baseRoute.name}
@@ -406,12 +245,11 @@ export default function NavigateClient() {
     );
   }
 
-  // Pin-modus: gebruiker tapt op kaart om startpunt te kiezen
-  if (startPhase === "picking") {
+  if (startPhase === "picking" && baseRoute) {
     return (
       <StartPointPicker
         routeName={baseRoute.name}
-        routeGeometry={baseRoute.geometry}
+        routeGeometry={baseRoute.line.coords}
         stops={baseRoute.stops}
         initialUserPos={null}
         onConfirm={(lngLat) => { setCustomStart(lngLat); setStartPhase("ready"); }}
@@ -420,17 +258,7 @@ export default function NavigateClient() {
     );
   }
 
-  // startPhase === "ready" — wacht op approach-generatie, dan rendert NavigationView
-  if (!navRoute) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "var(--color-surface)" }}
-      >
-        <div className="w-8 h-8 rounded-full border-2 border-tulip-500 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+  if (!navRoute) return <Preparing label={t("navigation.preparing")} />;
 
   return <NavigationView navRoute={navRoute} locale={locale} />;
 }
